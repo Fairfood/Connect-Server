@@ -1,4 +1,4 @@
-"""trace_connect URL Configuration
+"""trace_connect URL Configuration.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.0/topics/http/urls/
@@ -13,39 +13,48 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework import permissions
-
-from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import path, include, register_converter
+from django.contrib import admin
+from django.urls import include
+from django.urls import path
+from django.urls import register_converter
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 
-from base.request_handler import converters, views as base_views
+from base.request_handler import converters
+from base.request_handler import views as base_views
 
-register_converter(converters.IDConverter, 'hashid')
+register_converter(converters.IDConverter, "hashid")
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="RightOrigins V3 API",
-      default_version='v1',
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+    openapi.Info(
+        title="RightOrigins V3 API",
+        default_version="v1",
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 
 urlpatterns = [
-   path('admin/', admin.site.urls),
-   path('v1/constants/', base_views.Constants.as_view(), name='constants'),
-   path('v1/auth/', include('v1.apiauth.urls')),
-   path('v1/accounts/', include('v1.accounts.urls')),
-   path('v1/notifications/', include('v1.notifications.urls')),
-   path('v1/entities/', include('v1.entities.urls')),
+    path("admin/", admin.site.urls),
+    path("v1/constants/", base_views.Constants.as_view(), name="constants"),
+    path("v1/auth/", include("v1.apiauth.urls")),
+    path("v1/accounts/", include("v1.accounts.urls")),
+    path("v1/notifications/", include("v1.notifications.urls")),
+    path("v1/entities/", include("v1.entities.urls")),
 ]
 
 if settings.DEBUG:
-    urlpatterns += path('v1/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    urlpatterns += (
+        path(
+            "v1/",
+            schema_view.with_ui("swagger", cache_timeout=0),
+            name="schema-swagger-ui",
+        ),
+    )
     urlpatterns += static(
-        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
+    )

@@ -51,3 +51,5 @@ django-redis==5.2.0
 
 # Monitoring
 sentry-sdk==1.14.0
+pre-commit==3.4.0
+pytype==2023.10.5

@@ -1,11 +1,11 @@
 import enum
-from django.db.models.enums import Choices, ChoicesMeta
+
+from django.db.models.enums import Choices
+from django.db.models.enums import ChoicesMeta
 
 
 class CallableChoicesMeta(ChoicesMeta):
-    """
-    A metaclass for creating a callable enum choices.
-    """
+    """A metaclass for creating a callable enum choices."""
 
     def __new__(metacls, classname, bases, classdict, **kwds):
         labels = []

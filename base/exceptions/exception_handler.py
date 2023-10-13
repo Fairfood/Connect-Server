@@ -1,14 +1,12 @@
 """Custom exception handler to maintain same format in success and error."""
-
-from sentry_sdk import capture_exception
-
 from rest_framework.views import exception_handler
+from sentry_sdk import capture_exception
 
 
 def custom_exception_handler(exc, context):
     """Function to prepare custom exception."""
     response = exception_handler(exc, context)
-    if getattr(exc, 'send_to_sentry', True):
+    if getattr(exc, "send_to_sentry", True):
         capture_exception(exc)
     if response is not None:
 
@@ -19,16 +17,16 @@ def custom_exception_handler(exc, context):
                 for field, value in response.data.items():
                     errors.append("{} : {}".format(field, " ".join(value)))
                     message = errors
-            except:
+            except Exception:
                 message = response.data
-        message_long = getattr(exc, 'message_long', "")
+        message_long = getattr(exc, "message_long", "")
 
         response.data = {
-            'success': False,
-            'message': message,
-            'detail': message_long,
-            'code': response.status_code,
-            'data': {}
+            "success": False,
+            "message": message,
+            "detail": message_long,
+            "code": response.status_code,
+            "data": {},
         }
 
     return response

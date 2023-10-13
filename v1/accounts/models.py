@@ -1,31 +1,26 @@
 """Models of the app Accounts."""
-
 import datetime
 
-# from fcm_django.models import AbstractFCMDevice
 import pendulum
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser as DjangoAbstractUser
 from django.db import models
-from django.contrib.auth.models import \
-    AbstractUser as DjangoAbstractUser
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from base.authentication import utilities as auth_utils
 from base.db import utilities as db_utils
 from base.db.models import AbstractBaseModel
-
 from utilities import functions as util_functions
-
 from v1.accounts import constants as user_consts
 from v1.apiauth import notifications
 from v1.entities import constants as entity_constants
 
+# from fcm_django.models import AbstractFCMDevice
+
 
 class CustomUser(DjangoAbstractUser, AbstractBaseModel):
-    """
-    Base User model.
+    """Base User model.
 
     Attribs:
         dob(date): Date of birth of user.
@@ -37,7 +32,7 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
             admin ,entity user etc.
         status(int): Current status of the user like created or active.
         blocked(bool): field which shows the active status of user.
-        updated_email(email): While updating email the new email is stored 
+        updated_email(email): While updating email the new email is stored
             here before email verification.
 
     Inherited Attribs:
@@ -47,55 +42,85 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         first_name(char): First name of the user.
         last_name(char): Last name of the user.
         date_joined(date): User added date.
-
     """
+
     dob = models.DateField(
-        null=True, blank=True, verbose_name=_('Date Of Birth'))
+        null=True, blank=True, verbose_name=_("Date Of Birth")
+    )
     phone = models.CharField(
-        default='', max_length=200, null=True, blank=True,
-        verbose_name=_('Phone Number'))
+        default="",
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_("Phone Number"),
+    )
     address = models.CharField(
-        default='', max_length=2000, null=True, blank=True,
-        verbose_name=_('Address'))
+        default="",
+        max_length=2000,
+        null=True,
+        blank=True,
+        verbose_name=_("Address"),
+    )
     language = models.CharField(
-        max_length=10, verbose_name=_('Selected Language'),
-        default=user_consts.Language.ENGLISH, 
-        choices=user_consts.Language.choices)
+        max_length=10,
+        verbose_name=_("Selected Language"),
+        default=user_consts.Language.ENGLISH,
+        choices=user_consts.Language.choices,
+    )
     image = models.ImageField(
         upload_to=db_utils.get_file_path,
-        null=True, default=None, blank=True, verbose_name=_('Photo'))
+        null=True,
+        default=None,
+        blank=True,
+        verbose_name=_("Photo"),
+    )
     type = models.IntegerField(
         default=user_consts.UserType.ENTITY_USER,
-        choices=user_consts.UserType.choices, verbose_name=_('User Type'))
+        choices=user_consts.UserType.choices,
+        verbose_name=_("User Type"),
+    )
     status = models.IntegerField(
-        default=user_consts.UserStatus.CREATED, 
-        choices=user_consts.UserStatus.choices, verbose_name=_('User Status'))
+        default=user_consts.UserStatus.CREATED,
+        choices=user_consts.UserStatus.choices,
+        verbose_name=_("User Status"),
+    )
     is_blocked = models.BooleanField(
-        default=False, verbose_name=_('Block User'))
+        default=False, verbose_name=_("Block User")
+    )
     updated_email = models.EmailField(
-        null=True, blank=True, default='', 
-        verbose_name=_('Last Updated Email'))
+        null=True, blank=True, default="", verbose_name=_("Last Updated Email")
+    )
     default_entity = models.ForeignKey(
-        'entities.Entity', null=True, on_delete=models.SET_NULL,
-        blank=True, verbose_name=_("Default Entity Of User"), 
-        related_name='default_entity_users')
+        "entities.Entity",
+        null=True,
+        on_delete=models.SET_NULL,
+        blank=True,
+        verbose_name=_("Default Entity Of User"),
+        related_name="default_entity_users",
+    )
     accepted_policy = models.ForeignKey(
-        'accounts.PrivacyPolicy', null=True, on_delete=models.SET_NULL,
-        blank=True, verbose_name=_("Latest Accepted Privacy Policy"), 
-        related_name='accepted_users')
+        "accounts.PrivacyPolicy",
+        null=True,
+        on_delete=models.SET_NULL,
+        blank=True,
+        verbose_name=_("Latest Accepted Privacy Policy"),
+        related_name="accepted_users",
+    )
     force_logout = models.BooleanField(
-        default=False, verbose_name=_("Force Logout User"))
+        default=False, verbose_name=_("Force Logout User")
+    )
 
     class Meta:
         """Meta class for the above model."""
 
-        verbose_name = ('Base User')
+        verbose_name = "Base User"
 
     def __str__(self):
         """Object name in django admin."""
-        return f'{self.name} - {self.id}'
+        return f"{self.name} - {self.id}"
 
     def save(self, *args, **kwargs):
+        """Overrides save method."""
         if self.email:
             self.username = self.email
         else:
@@ -107,15 +132,16 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         """Get file url ."""
         try:
             return self.image.url
-        except:
+        except AttributeError:
             return None
 
     @property
     def name(self):
         """Get user full name."""
-        return f'{self.get_full_name()}'
+        return f"{self.get_full_name()}"
 
     def get_default_entity(self):
+        """Get the default entity."""
         def_entity = self.default_entity
         if not def_entity or def_entity not in self.entities.all():
             self.default_entity = self.entities.all().first()
@@ -123,6 +149,7 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         return self.default_entity
 
     def set_default_entity(self, entity):
+        """Set the default entity."""
         if self.status == user_consts.UserStatus.ACTIVE:
             entity.status = entity_constants.EntityStatus.ACTIVE
             entity.save()
@@ -133,13 +160,20 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
     def reset_password(self, ip="", location="", device=""):
         """Function to set password."""
         token = ValidationToken.initialize(
-            self, user_consts.ValidationTokenType.RESET_PASS, ip, location, device)
+            self,
+            user_consts.ValidationTokenType.RESET_PASS,
+            ip,
+            location,
+            device,
+        )
         notification_manager = notifications.PasswordResetNotificationManager(
-            user=self, action_object=token, token=token)
+            user=self, action_object=token, token=token
+        )
         notification_manager.send_notification()
         return True
 
     def set_active(self):
+        """Set status of the account."""
         self.status = user_consts.UserStatus.ACTIVE
         self.save()
         def_entity = self.get_default_entity()
@@ -149,15 +183,13 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
 
     @property
     def policy_accepted(self):
-        """
-        Return privacy info related to the user.
-        """
+        """Return privacy info related to the user."""
         if self.accepted_policy == PrivacyPolicy.current_privacy_policy():
-           return True
+            return True
         return False
 
     def make_force_logout(self):
-        """Method makes force logout true"""
+        """Method makes force logout true."""
         self.force_logout = True
         self.save()
         return True
@@ -169,10 +201,9 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         return True
 
     def get_notification_pref(self, notif_manager):
-        """
-        Function to return notification preferences for a user.
-        """
+        """Function to return notification preferences for a user."""
         from v1.notifications.constants import NotificationCondition
+
         def get_pref(config: dict) -> bool:
             if "__all__" not in config.keys():
                 raise ValueError(_("Config not defined."))
@@ -183,20 +214,18 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
             elif config["__all__"] == NotificationCondition.IF_USER_ACTIVE:
                 return self.status == user_consts.UserStatus.ACTIVE
             return False
+
         prefs = {
             "visibility": get_pref(notif_manager.visibility),
             "push": get_pref(notif_manager.push),
             "email": get_pref(notif_manager.email),
-            "sms": get_pref(notif_manager.sms)
+            "sms": get_pref(notif_manager.sms),
         }
         return prefs
 
 
-
-
 class ValidationToken(AbstractBaseModel):
-    """
-    Class to store the validation token data.
+    """Class to store the validation token data.
 
     This is a generic model to store and validate all
     sort of tokens including password setters, one time
@@ -217,38 +246,44 @@ class ValidationToken(AbstractBaseModel):
     """
 
     user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE,
-        related_name='validation_tokens', verbose_name=_('Token User'), 
-        null=True, blank=True)
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="validation_tokens",
+        verbose_name=_("Token User"),
+        null=True,
+        blank=True,
+    )
 
-    ip = models.CharField(default='', max_length=500, blank=True)
-    location = models.CharField(default='', max_length=500, blank=True)
-    device = models.CharField(default='', max_length=500, blank=True)
+    ip = models.CharField(default="", max_length=500, blank=True)
+    location = models.CharField(default="", max_length=500, blank=True)
+    device = models.CharField(default="", max_length=500, blank=True)
 
-    key = models.CharField(max_length=200, verbose_name=_('Token'))
+    key = models.CharField(max_length=200, verbose_name=_("Token"))
     status = models.IntegerField(
-        default=user_consts.ValidationTokenStatus.UNUSED, 
-        choices=user_consts.ValidationTokenStatus.choices, 
-        verbose_name=_('Token Status'))
+        default=user_consts.ValidationTokenStatus.UNUSED,
+        choices=user_consts.ValidationTokenStatus.choices,
+        verbose_name=_("Token Status"),
+    )
     expiry = models.DateTimeField(
-        default=timezone.now, verbose_name=_('Token Expiry Date'))
+        default=timezone.now, verbose_name=_("Token Expiry Date")
+    )
     type = models.IntegerField(
-        default=user_consts.ValidationTokenType.VERIFY_EMAIL, 
-        choices=user_consts.ValidationTokenType.choices, 
-        verbose_name=_('Token Type'))
+        default=user_consts.ValidationTokenType.VERIFY_EMAIL,
+        choices=user_consts.ValidationTokenType.choices,
+        verbose_name=_("Token Type"),
+    )
 
     def __str__(self):
         """Object name in django admin."""
-        return f'{self.user.name} : {self.key} :  {self.id.hashid}'
+        return f"{self.user.name} : {self.key} :  {self.id.hashid}"
 
     def save(self, *args, **kwargs):
-        """
-        Overriding the default save signal.
+        """Overriding the default save signal.
 
-        This function will generate the token key based on the
-        type of the token and save when the save() function
-        is called if the key is empty. It. will. also set the
-        expiry when the object is created for the first time.
+        This function will generate the token key based on the type of
+        the token and save when the save() function is called if the key
+        is empty. It. will. also set the expiry when the object is
+        created for the first time.
         """
         if not self.key:
             self.key = self.generate_unique_key()
@@ -258,17 +293,19 @@ class ValidationToken(AbstractBaseModel):
 
     @property
     def creation_time_str(self):
+        """returns the creation time."""
         return pendulum.instance(self.created_on).format(
-            "hh:mm A on dddd, DD-MM-YYYY")
+            "hh:mm A on dddd, DD-MM-YYYY"
+        )
 
     def get_validity_period(self):
+        """Returns the validity period."""
         return user_consts.TOKEN_VALIDITY[self.type]
 
     def get_expiry(self):
         """Function to get the validity based on type."""
         validity = self.get_validity_period()
-        return (timezone.now() + datetime.timedelta(
-            minutes=validity))
+        return timezone.now() + datetime.timedelta(minutes=validity)
 
     def generate_unique_key(self):
         """Function to generate unique key."""
@@ -278,13 +315,18 @@ class ValidationToken(AbstractBaseModel):
             key = util_functions.generate_random_number(settings.OTP_LENGTH)
 
         if ValidationToken.objects.filter(
-                key=key, type=self.type,
-                status=user_consts.ValidationTokenStatus.UNUSED).exists():
+            key=key,
+            type=self.type,
+            status=user_consts.ValidationTokenStatus.UNUSED,
+        ).exists():
             key = self.generate_unique_key()
         return key
 
     def validate(self):
-        """Function to. validate the token."""
+        """Function to.
+
+        validate the token.
+        """
         status = True
         if not self.is_valid:
             status = False
@@ -304,7 +346,7 @@ class ValidationToken(AbstractBaseModel):
         return True
 
     def mark_as_used(self):
-        """ Function to mark validation token as used """
+        """Function to mark validation token as used."""
         self.status = user_consts.ValidationTokenStatus.USED
         self.save()
 
@@ -312,8 +354,10 @@ class ValidationToken(AbstractBaseModel):
     def initialize(user, type, ip="", location="", device=""):
         """Function to initialize verification."""
         token = ValidationToken.objects.create(
-            user=user, status=user_consts.ValidationTokenStatus.UNUSED,
-            type=type)
+            user=user,
+            status=user_consts.ValidationTokenStatus.UNUSED,
+            type=type,
+        )
         token.ip = ip
         token.location = location
         token.device = device
@@ -333,15 +377,14 @@ class ValidationToken(AbstractBaseModel):
     def is_valid(self):
         """Function  which check if Validator is valid."""
         if self.expiry > timezone.now() and (
-                self.status == user_consts.ValidationTokenStatus.UNUSED):
+            self.status == user_consts.ValidationTokenStatus.UNUSED
+        ):
             return True
         return False
 
     def invalidate(self):
-        """
-        Function chnage the status of the token into used and change the 
-        expiry date of the token.
-        """
+        """Function chnage the status of the token into used and change the
+        expiry date of the token."""
         self.mark_as_used()
         self.expiry = timezone.now()
         self.save()
@@ -350,8 +393,7 @@ class ValidationToken(AbstractBaseModel):
 
 # class UserDevice(AbstractFCMDevice, AbstractBaseModel):
 class UserDevice(AbstractBaseModel):
-    """
-    Class for user devices.
+    """Class for user devices.
 
     This is inherited from the AbstractFCMDevice and
     AbstractBaseModel.
@@ -368,29 +410,34 @@ class UserDevice(AbstractBaseModel):
     """
 
     user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, 
-        verbose_name=_('Device User'), related_name='devices', 
-        null=True, blank=True)
+        CustomUser,
+        on_delete=models.CASCADE,
+        verbose_name=_("Device User"),
+        related_name="devices",
+        null=True,
+        blank=True,
+    )
     type = models.IntegerField(
-        default=user_consts.DeviceType.ANDROID, 
-        choices=user_consts.DeviceType.choices , 
-        verbose_name=_('Device Type'))
+        default=user_consts.DeviceType.ANDROID,
+        choices=user_consts.DeviceType.choices,
+        verbose_name=_("Device Type"),
+    )
     registration_id = models.TextField(
-        verbose_name=_("Registration token"), blank=True, default='')
+        verbose_name=_("Registration token"), blank=True, default=""
+    )
 
     class Meta:
         """Meta data."""
 
-        verbose_name = _('User device')
-        verbose_name_plural = _('User devices')
+        verbose_name = _("User device")
+        verbose_name_plural = _("User devices")
 
     def activate(self, types=user_consts.MOBILE_DEVICE_TYPES):
-        """
-        Function for set device as active and set other
-        devices of same user as inactive.
-        """
+        """Function for set device as active and set other devices of same user
+        as inactive."""
         for device in UserDevice.objects.filter(
-                user=self.user, type__in=types):
+            user=self.user, type__in=types
+        ):
             if device.active:
                 device.active = False
                 device.updater = self.user
@@ -401,39 +448,44 @@ class UserDevice(AbstractBaseModel):
 
 
 class PrivacyPolicy(AbstractBaseModel):
-    """
-    Privacy Policy model.
-    """
+    """Privacy Policy model."""
+
     content = models.TextField(
-        default='', blank=True, null=True, 
-        verbose_name=_('Policy Content'))
+        default="", blank=True, null=True, verbose_name=_("Policy Content")
+    )
     version = models.PositiveIntegerField(
-        default=0, verbose_name=_('Version'), unique=True)
+        default=0, verbose_name=_("Version"), unique=True
+    )
     date = models.DateField(
-        default=datetime.date.today, blank=True, null=True,
-        verbose_name=_('Privacy Policy Date'))
+        default=datetime.date.today,
+        blank=True,
+        null=True,
+        verbose_name=_("Privacy Policy Date"),
+    )
     since = models.DateField(
-        default=datetime.date.today, blank=True, null=True, 
-        verbose_name=_('Start Date'))
+        default=datetime.date.today,
+        blank=True,
+        null=True,
+        verbose_name=_("Start Date"),
+    )
 
     class Meta:
         """Meta data."""
 
-        verbose_name_plural = _('Privacy Policies')
-    
+        verbose_name_plural = _("Privacy Policies")
+
     def __str__(self):
-        """
-        Object value django admin.
-        """
-        return f'{self.version} : {self.since} - {self.id}'
+        """Object value django admin."""
+        return f"{self.version} : {self.since} - {self.id}"
 
     @staticmethod
     def latest_privacy_policy():
-        """Return latest privacy policy"""
-        return PrivacyPolicy.objects.latest('id')
+        """Return latest privacy policy."""
+        return PrivacyPolicy.objects.latest("id")
 
     @staticmethod
     def current_privacy_policy():
-        """Return current privacy policy"""
+        """Return current privacy policy."""
         return PrivacyPolicy.objects.exclude(
-            since__gt=datetime.date.today()).latest('version')
+            since__gt=datetime.date.today()
+        ).latest("version")

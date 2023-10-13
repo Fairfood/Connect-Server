@@ -1,35 +1,29 @@
-"""
-Utility functions used across apps
-"""
+"""Utility functions used across apps."""
+import calendar
+import hashlib
+from datetime import date
+from datetime import datetime
+from datetime import timedelta
 from random import randint
 
-import pytz
-import hashlib
-import requests
-import calendar
 import phonenumbers
+import pytz
+import requests
+from django.conf import settings
 from django.contrib.auth import password_validation
+from django.utils.functional import Promise
 from django.utils.timezone import localtime
+from django.utils.translation import gettext_lazy as _
 from hashids import Hashids
-from datetime import datetime
-from datetime import date
-from datetime import timedelta
-from dateutil.relativedelta import relativedelta
 from pytz import timezone
 from rest_framework.exceptions import ValidationError
-
 from ua_parser import user_agent_parser
-
-from django.conf import settings
-from django.utils.translation import gettext_lazy as _
-from django.utils.functional import Promise
 
 from base.exceptions.custom_exceptions import BadRequest
 
 
 def encode(value):
-    """
-    Function to hash encode an integer value.
+    """Function to hash encode an integer value.
 
     Input Params:
         value(int): int value
@@ -44,13 +38,16 @@ def encode(value):
     try:
         value = int(value)
         return hasher.encode(value)
-    except Exception as e:
-        raise ValueError(_("Invalid input {value} for Encoder. Should be of type int").format(value=value))
+    except Exception:
+        raise ValueError(
+            _(
+                "Invalid input {value} for Encoder. Should be of type int"
+            ).format(value=value)
+        )
 
 
 def is_decodable(value):
-    """
-    Function to hash decode a hash value to int.
+    """Function to hash decode a hash value to int.
 
     Input Params:
         value(str): str value
@@ -66,8 +63,7 @@ def is_decodable(value):
 
 
 def decode(value):
-    """
-    Function to hash decode a hash value to int.
+    """Function to hash decode a hash value to int.
 
     Input Params:
         value(str): str value
@@ -81,13 +77,14 @@ def decode(value):
     )
     try:
         return hasher.decode(value)[0]
-    except Exception as e:
-        raise ValueError(_("Invalid input({value}) for Decoder.").format(value=value))
+    except Exception:
+        raise ValueError(
+            _("Invalid input({value}) for Decoder.").format(value=value)
+        )
 
 
 def validate_phone(number):
-    """
-    Function to validate phone number.
+    """Function to validate phone number.
 
     Input Params:
         number(str): international phone number
@@ -97,13 +94,13 @@ def validate_phone(number):
         code(str): country code
     """
     try:
-        number = number.replace(' ', '')
-        number = number.replace('-', '')
-        if not number.startswith('+'):
-            number = '+' + number
+        number = number.replace(" ", "")
+        number = number.replace("-", "")
+        if not number.startswith("+"):
+            number = "+" + number
         number = phonenumbers.parse(number)
         phone = str(number.national_number)
-        code = '+' + str(number.country_code)
+        code = "+" + str(number.country_code)
         return code + phone
     except Exception as e:
         print(e)
@@ -114,22 +111,20 @@ def list_to_sentence(word_list):
     """Function to convert list to sentence."""
     word_list = list(map(str, word_list))
     if not word_list[:-1]:
-        return ' '.join(word_list)
-    return "%s %s %s" % (', '.join(word_list[:-1]), _('and'), word_list[-1])
+        return " ".join(word_list)
+    return "%s %s %s" % (", ".join(word_list[:-1]), _("and"), word_list[-1])
 
 
 def hash_file(file):
-    """
-    Function to compute the hash of a file
+    """Function to compute the hash of a file.
 
     Args:
         file: file to be hashed.
 
     Returns:
-
     """
     if not file:
-        return ''
+        return ""
     md5 = hashlib.md5()
     for chunk in file.chunks():
         md5.update(chunk)
@@ -137,33 +132,47 @@ def hash_file(file):
 
 
 def serialize_promises(data):
-    """
-    Function to serialize complex data structures with promises.
-    """
+    """Function to serialize complex data structures with promises."""
     if isinstance(data, list):
         return [serialize_promises(i) for i in data]
     if isinstance(data, tuple):
         return (serialize_promises(i) for i in data)
     if isinstance(data, dict):
-        return {serialize_promises(k): serialize_promises(v) for k, v in data.items()}
+        return {
+            serialize_promises(k): serialize_promises(v)
+            for k, v in data.items()
+        }
     if isinstance(data, Promise):
         return str(data)
     return data
 
 
 def read_date(time_string: str) -> datetime.date:
-    """
-    Reads date from most common date string formats.
+    """Reads date from most common date string formats.
+
     Note :  It does not support the middle-endian format of USA
     """
-    time_string = " ".join(time_string.replace(',', ' ').split()).title()
+    time_string = " ".join(time_string.replace(",", " ").split()).title()
     formats = [
-        '%d-%m-%Y', '%d/%m/%Y', '%d %m %Y', '%d.%m.%Y',  # 18-12-2020
-        '%Y-%m-%d', '%Y/%m/%d', '%Y %m %d', '%Y.%m.%d',  # 2020-12-18
-        '%b %d %Y', '%B %d %Y',  # Dec 18 2022 or December 18 2020
-        '%d %b %Y', '%d %B %Y',  # 18 Dec 2022 or 18 December 2020
-        '%d-%m-%y', '%d/%m/%y', '%d %m %y', '%d.%m.%y'  # 18-12-20
-        '%y/%m/%d', '%y-%m-%d', '%y %m %d', '%y.%m.%d',  # 20-12-18
+        "%d-%m-%Y",
+        "%d/%m/%Y",
+        "%d %m %Y",
+        "%d.%m.%Y",  # 18-12-2020
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%Y %m %d",
+        "%Y.%m.%d",  # 2020-12-18
+        "%b %d %Y",
+        "%B %d %Y",  # Dec 18 2022 or December 18 2020
+        "%d %b %Y",
+        "%d %B %Y",  # 18 Dec 2022 or 18 December 2020
+        "%d-%m-%y",
+        "%d/%m/%y",
+        "%d %m %y",
+        "%d.%m.%y" "%y/%m/%d",  # 18-12-20
+        "%y-%m-%d",
+        "%y %m %d",
+        "%y.%m.%d",  # 20-12-18
     ]
     for fmt in formats:
         try:
@@ -172,7 +181,7 @@ def read_date(time_string: str) -> datetime.date:
         except ValueError:
             continue
     else:
-        raise ValueError('Not a valid date.')
+        raise ValueError("Not a valid date.")
 
 
 def percentage(value, total):
@@ -195,44 +204,40 @@ def percentage(value, total):
 
 
 def get_ip_from_request(request):
-    """
-    Function to get the IP address from the request.
-    """
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    """Function to get the IP address from the request."""
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
-        return x_forwarded_for.split(',')[0]
-    return request.META.get('REMOTE_ADDR')
+        return x_forwarded_for.split(",")[0]
+    return request.META.get("REMOTE_ADDR")
 
 
 def get_location_from_ip(ip):
-    """
-    Function to get the location data from the IP address.
-    """
+    """Function to get the location data from the IP address."""
     location_data = requests.get(settings.IP_API_URL.format(ip=ip)).json()
-    location_info = [location_data.get(i) for i in ['city', 'region', 'country_name'] if location_data.get(i, None)]
-    return ', '.join(location_info)
+    location_info = [
+        location_data.get(i)
+        for i in ["city", "region", "country_name"]
+        if location_data.get(i, None)
+    ]
+    return ", ".join(location_info)
 
 
 def device_name_from_request(request):
-    """
-    Function to get the device details from the request
-    """
-    user_agent_string = request.headers['User-Agent']
+    """Function to get the device details from the request."""
+    user_agent_string = request.headers["User-Agent"]
     user_agent = user_agent_parser.Parse(user_agent_string)
-    brand = user_agent['device'].get('brand', 'Unknown')
-    model = user_agent['device'].get('model', 'Device')
-    device = ' '.join(i for i in [brand, model] if i)
-    family = user_agent['user_agent']['family']
-    os = user_agent['os']['family']
-    browser_device = ' on '.join(i for i in [family, device] if i)
-    device_string = ' running '.join(i for i in [browser_device, os] if i)
+    brand = user_agent["device"].get("brand", "Unknown")
+    model = user_agent["device"].get("model", "Device")
+    device = " ".join(i for i in [brand, model] if i)
+    family = user_agent["user_agent"]["family"]
+    os = user_agent["os"]["family"]
+    browser_device = " on ".join(i for i in [family, device] if i)
+    device_string = " running ".join(i for i in [browser_device, os] if i)
     return device_string
 
 
 def client_details(request):
-    """
-    Get IP, Location and device of requester
-    """
+    """Get IP, Location and device of requester."""
     ip = get_ip_from_request(request)
     location = get_location_from_ip(ip)
     device = device_name_from_request(request)
@@ -240,16 +245,12 @@ def client_details(request):
 
 
 def encode_list(id_list):
-    """
-    Function encodes list of ids.
-    """
+    """Function encodes list of ids."""
     return [encode(id) for id in id_list]
 
 
 def decode_list(id_list):
-    """
-    Function decodes list of hash ids.
-    """
+    """Function decodes list of hash ids."""
     return [decode(id) for id in id_list]
 
 
@@ -270,14 +271,26 @@ def month_start_end():
 
 def start_of_day(day):
     return datetime(
-        day.year, day.month, day.day, hour=00, minute=00, second=00,
-        tzinfo=pytz.timezone(settings.TIME_ZONE))
+        day.year,
+        day.month,
+        day.day,
+        hour=00,
+        minute=00,
+        second=00,
+        tzinfo=pytz.timezone(settings.TIME_ZONE),
+    )
 
 
 def end_of_day(day):
     return datetime(
-        day.year, day.month, day.day, hour=23, minute=59, second=59,
-        tzinfo=pytz.timezone(settings.TIME_ZONE))
+        day.year,
+        day.month,
+        day.day,
+        hour=23,
+        minute=59,
+        second=59,
+        tzinfo=pytz.timezone(settings.TIME_ZONE),
+    )
 
 
 def get_start_end_time(day):
@@ -287,8 +300,7 @@ def get_start_end_time(day):
 
 
 def validate_password(password):
-    """
-    Function to validate password.
+    """Function to validate password.
 
     Input Params:
         password(str): password.
@@ -299,23 +311,22 @@ def validate_password(password):
     try:
         password_validation.validate_password(password)
         valid = True
-        message = 'Valid Password.'
+        message = "Valid Password."
     except ValidationError as e:
         valid = False
-        message = '; '.join(e.messages)
+        message = "; ".join(e.messages)
     return (valid, message)
 
 
 def generate_random_number(digits):
-    """
-    Function to generate n dig random number.
+    """Function to generate n dig random number.
 
     Input Params:
         digits(int): number of digits
     Returns:
         (int): number
     """
-    range_start = 10**(digits - 1)
+    range_start = 10 ** (digits - 1)
     range_end = (10**digits) - 1
     return randint(range_start, range_end)
 
@@ -324,10 +335,10 @@ def date_time_desc(date):
     """Function to format date time."""
     try:
         date = localtime(date)
-    except:
+    except Exception:
         pass
-    date = date.strftime('%d %B %Y, %H:%M %p')
-    date += ', Timezone: %s' % settings.TIME_ZONE
+    date = date.strftime("%d %B %Y, %H:%M %p")
+    date += ", Timezone: %s" % settings.TIME_ZONE
     return date
 
 
@@ -338,5 +349,5 @@ def unix_to_datetime(unix_time):
         localtz = timezone(settings.TIME_ZONE)
         date = localtz.localize(datetime.fromtimestamp(unix_time))
         return date
-    except:
-        raise BadRequest('Unix timestamps must be float or int')
+    except ValueError:
+        raise BadRequest("Unix timestamps must be float or int")

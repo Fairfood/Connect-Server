@@ -1,11 +1,9 @@
-
 import pendulum
 from django.utils.crypto import get_random_string
 
 
 def formatter(fmt=""):
-    """
-    Function to generate random strings of a defined format.
+    """Function to generate random strings of a defined format.
 
     Example use as defaul for models
     from functools import partial
@@ -28,13 +26,13 @@ def formatter(fmt=""):
     """
     today = pendulum.today()
     variables = {
-        'd': today.strftime('%d'),
-        'm': today.strftime('%m'),
-        'y': today.strftime('%y'),
-        'Y': today.strftime('%Y'),
-        'r5': get_random_string(5),
-        'r10': get_random_string(10),
-        'R5': get_random_string(5).upper(),
-        'R10': get_random_string(10).upper(),
+        "d": today.strftime("%d"),
+        "m": today.strftime("%m"),
+        "y": today.strftime("%y"),
+        "Y": today.strftime("%Y"),
+        "r5": get_random_string(5),
+        "r10": get_random_string(10),
+        "R5": get_random_string(5).upper(),
+        "R10": get_random_string(10).upper(),
     }
     return fmt.format(**variables)

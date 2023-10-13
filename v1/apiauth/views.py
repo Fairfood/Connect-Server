@@ -1,41 +1,42 @@
-
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.views import TokenRefreshView as SJWTTokenRefreshView
-
 from rest_framework import generics
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import (
+    TokenRefreshView as SJWTTokenRefreshView,
+)
 
 from . import serializers as auth_serializers
 
 
 # Create your views here.
 
+
 class LoginView(TokenObtainPairView):
-    """
-    API to login User
+    """API to login User.
 
     Takes in Email and password to login user with a session.
     """
+
     serializer_class = auth_serializers.APILoginSerializer
 
 
 class TokenRefreshView(SJWTTokenRefreshView):
-    """
-    API to Refresh Token
+    """API to Refresh Token.
 
     Takes in the refresh token to provide a new Refresh and Access.
     Refresh token is refreshed to ensure that the user is only logged
     out if inactive for a long time
     """
+
     serializer_class = auth_serializers.TokenRefreshSerializer
 
 
 class ResetPasswordView(generics.CreateAPIView):
-    """
-    API to reset user password
+    """API to reset user password.
 
-    Open API to reset user's password. An email will be sent to the email ID
-    to verify and reset the password
+    Open API to reset user's password. An email will be sent to the
+    email ID to verify and reset the password
     """
+
     permission_classes = ()
     authentication_classes = ()
 
@@ -43,15 +44,17 @@ class ResetPasswordView(generics.CreateAPIView):
 
 
 class ValidationView(generics.CreateAPIView):
-    """
-    API to verify Validate Email, password or Token
+    """API to verify Validate Email, password or Token.
 
-    This API can be used to validate any of Email-ID, Password or Validation token.
+    This API can be used to validate any of Email-ID, Password or Validation
+    token.
 
     Email and password fields are optional and can be sent alone.
 
-    For validating Validation token, user id received in the url should also be supplied.
+    For validating Validation token, user id received in the url should also be
+    supplied.
     """
+
     permission_classes = ()
     authentication_classes = ()
 
@@ -59,12 +62,12 @@ class ValidationView(generics.CreateAPIView):
 
 
 class PasswordResetConfirmView(generics.CreateAPIView):
-    """
-    API to set user password
+    """API to set user password.
 
-    Takes in the validation token and other information to change the user's
-    password after validating the validation token
+    Takes in the validation token and other information to change the
+    user's password after validating the validation token
     """
+
     permission_classes = ()
     authentication_classes = ()
 
@@ -72,11 +75,10 @@ class PasswordResetConfirmView(generics.CreateAPIView):
 
 
 class CheckPasswordView(generics.CreateAPIView):
-    """
-    Api to check user password.
+    """Api to check user password.
 
-    By taking the password as a parameter checks the password is belong the
-    logged-in user.
+    By taking the password as a parameter checks the password is belong
+    the logged-in user.
     """
 
     serializer_class = auth_serializers.CheckPasswordSerializer

@@ -12,7 +12,10 @@ def get_file_path(instance, filename):
         path: Path of file
     """
     type = instance.__class__.__name__.lower()
-    path = '%s/%s_%s:%s' % (
-        type, instance.id.id,
-        get_random_string(10), filename)
+    path = "%s/%s_%s:%s" % (
+        type,
+        instance.id.id,
+        get_random_string(10),
+        filename,
+    )
     return path

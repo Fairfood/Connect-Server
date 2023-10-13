@@ -1,22 +1,17 @@
-"""
-Notification Models
-"""
-
-from django.db import models
-from django.utils import translation
-from django.template.loader import render_to_string
-from django.contrib.contenttypes.models import ContentType
+"""Notification Models."""
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.template.loader import render_to_string
+from django.utils import translation
 
 from base.db.models import AbstractBaseModel
-
 from utilities import email
 from utilities import sms
 
 
 class Notification(AbstractBaseModel):
-    """
-    Class for managing user notification.
+    """Class for managing user notification.
 
     Attribs:
         user(obj): User object
@@ -35,54 +30,74 @@ class Notification(AbstractBaseModel):
     """
 
     user = models.ForeignKey(
-        'accounts.CustomUser', on_delete=models.CASCADE, related_name='notifications')
+        "accounts.CustomUser",
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
     is_read = models.BooleanField(default=False)
     visibility = models.BooleanField(default=True)
-    title = models.CharField(default='', max_length=300)
-    body = models.CharField(default='', max_length=500)
+    title = models.CharField(default="", max_length=300)
+    body = models.CharField(default="", max_length=500)
 
-    action_url = models.CharField(default='', max_length=500, blank=True)
+    action_url = models.CharField(default="", max_length=500, blank=True)
 
     actor_entity = models.ForeignKey(
-        'entities.Entity', on_delete=models.CASCADE, blank=True, null=True,
-        related_name='actions')
+        "entities.Entity",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="actions",
+    )
     target_entity = models.ForeignKey(
-        'entities.Entity', on_delete=models.CASCADE, blank=True, null=True,
-        related_name='notifications')
+        "entities.Entity",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="notifications",
+    )
 
     action_push = models.BooleanField(default=False)
     action_sms = models.BooleanField(default=False)
     action_email = models.BooleanField(default=False)
 
     event_type = models.ForeignKey(
-        ContentType, related_name="notification_event_types", 
-        on_delete=models.SET_NULL, null=True)
+        ContentType,
+        related_name="notification_event_types",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
     event_id = models.PositiveIntegerField(null=True, blank=True)
-    event = GenericForeignKey('event_type', 'event_id')
+    event = GenericForeignKey("event_type", "event_id")
     redirect_id = models.PositiveIntegerField(
-        null=True, blank=True, default=None)
+        null=True, blank=True, default=None
+    )
     redirect_type = models.CharField(
-        max_length=200, blank=True, null=True, default='')
+        max_length=200, blank=True, null=True, default=""
+    )
 
     type = models.CharField(max_length=100)
 
     context = models.JSONField(null=True, blank=True)
-    send_to = models.EmailField(null=True, blank=True, default='')
+    send_to = models.EmailField(null=True, blank=True, default="")
 
     validation_token = models.OneToOneField(
-        'accounts.ValidationToken', on_delete=models.SET_NULL,
-        related_name='notification', null=True, blank=True)
+        "accounts.ValidationToken",
+        on_delete=models.SET_NULL,
+        related_name="notification",
+        null=True,
+        blank=True,
+    )
 
     aws_sms_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         """Meta class for the above model."""
 
-        ordering = ('-created_on',)
+        ordering = ("-created_on",)
 
     def __str__(self):
         """Function to return value in django admin."""
-        return '%s - %s | %s' % (self.user.name, self.title, self.id)
+        return "%s - %s | %s" % (self.user.name, self.title, self.id)
 
     def send_email(self):
         notification_manager = self.notification_manager()
@@ -95,12 +110,14 @@ class Notification(AbstractBaseModel):
         template_name = notification_manager.email_template
 
         render_context = {
-            'action_object': self.event,
-            'notification': self,
-            'context': self.context,
-            'action_text': notification_manager.action_text
+            "action_object": self.event,
+            "notification": self,
+            "context": self.context,
+            "action_text": notification_manager.action_text,
         }
-        html = render_to_string(template_name=template_name, context=render_context)
+        html = render_to_string(
+            template_name=template_name, context=render_context
+        )
         email.send_email.delay(
             subject=self.title, to_email=self.send_to, html=html
         )
@@ -111,7 +128,11 @@ class Notification(AbstractBaseModel):
         pass
 
     def send_sms(self):
-        if not self.action_sms or not self.user.phone or len(self.user.phone) < 7:
+        if (
+            not self.action_sms
+            or not self.user.phone
+            or len(self.user.phone) < 7
+        ):
             return False
         self.aws_sms_id = sms.send_sms.delay(self.user.phone, self.body)
         self.save()
@@ -131,12 +152,12 @@ class Notification(AbstractBaseModel):
 
     def notification_manager(self):
         from .manager import NOTIFICATION_TYPES
+
         return NOTIFICATION_TYPES[self.type]
 
 
 class SMSAlerts(AbstractBaseModel):
-    """
-    Model to track all the SMSs sent and log the response
+    """Model to track all the SMSs sent and log the response.
 
     Attributes:
         phone(str)          : The phone number to send SMS to.

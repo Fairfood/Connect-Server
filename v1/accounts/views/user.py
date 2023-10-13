@@ -1,29 +1,29 @@
-
 from rest_framework import generics
 
 from base.request_handler.views import IdDecodeModelViewSet
-
 from v1.accounts import models as user_models
 from v1.accounts.serializers import user as user_serializers
-# from v1.apiauth import permissions as auth_permissions
 
-from base.authentication import session
+# from v1.apiauth import permissions as auth_permissions
 
 
 class UserViewSet(IdDecodeModelViewSet):
-    """
-    A simple ViewSet for viewing and editing accounts.
-    """
+    """A simple ViewSet for viewing and editing accounts."""
 
-    queryset = user_models.CustomUser.objects.all().select_related(
-            'default_entity').prefetch_related(
-            'managing_entitys')
+    queryset = (
+        user_models.CustomUser.objects.all()
+        .select_related("default_entity")
+        .prefetch_related("managing_entitys")
+    )
     serializer_class = user_serializers.UserSerializer
-    http_method_names = ['get', 'patch',]
+    http_method_names = [
+        "get",
+        "patch",
+    ]
 
 
 class PrivacyPolicy(generics.RetrieveAPIView):
-    """Api to rerive data about latest privacy policy"""
+    """Api to rerive data about latest privacy policy."""
 
     serializer_class = user_serializers.PrivacyPolicySerializer
     authentication_classes = []

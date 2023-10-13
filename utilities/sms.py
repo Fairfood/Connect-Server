@@ -1,33 +1,29 @@
-"""
-Celery function to send sms
-"""
+"""Celery function to send sms."""
 import boto3
+from celery.decorators import task
 from django.conf import settings
 from sentry_sdk import capture_exception
-from celery.decorators import task
 
 
-@task(name='send_sms', queue='high')
+@task(name="send_sms", queue="high")
 def send_sms(phone_number: str, message: str):
     """Function to send SMS."""
     if not phone_number:
         return False
 
     from v1.notifications.models import SMSAlerts
+
     sms = SMSAlerts.objects.create(phone=phone_number, message=message)
     try:
         session = boto3.session.Session(
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_DEFAULT_REGION
+            region_name=settings.AWS_DEFAULT_REGION,
         )
-        sns = session.client('sns')
+        sns = session.client("sns")
 
         # publish the message to the phone number
-        response = sns.publish(
-            PhoneNumber=phone_number,
-            Message=message
-        )
+        response = sns.publish(PhoneNumber=phone_number, Message=message)
         sms.response = response
         sms.save()
         return response["MessageId"]
