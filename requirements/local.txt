@@ -1,0 +1,3 @@
+-r base.txt
+tqdm
+pyinstrument==4.2.0

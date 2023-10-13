@@ -1,0 +1,4 @@
+-r base.txt
+gevent==21.12.0
+greenlet==1.1.2
+tqdm

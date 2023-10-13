@@ -1,0 +1,98 @@
+version: '3.3'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web/Dockerfile
+    restart: unless-stopped
+    entrypoint: /usr/src/app/docker/entrypoint.sh
+    command: gunicorn trace_connect.wsgi --bind 0.0.0.0:8000
+    volumes:
+      - ..:/usr/src/app
+      - /etc/secret/:/etc/secret/
+      - static_volume:/usr/src/app/static/
+      - media_volume:/usr/src/app/media/
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - redis
+    expose:
+      - 8000
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file:
+      - ../.env
+
+  pgbouncer:
+    image: edoburu/pgbouncer:1.18.0
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis:/data
+    depends_on:
+      - db
+
+  celery:
+    build:
+      context: ..
+      dockerfile: docker/web/Dockerfile
+    command: celery -A trace_connect worker -l info
+    volumes:
+      - ../:/usr/src/app/
+      - /etc/secret/:/etc/secret/
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - redis
+      - web
+
+  celery-beat:
+    build:
+      context: ..
+      dockerfile: docker/web/Dockerfile
+    command: celery -A trace_connect beat -l info
+    volumes:
+      - ../:/usr/src/app/
+      - /etc/secret/:/etc/secret/
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - redis
+      - web
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: docker/nginx/Dockerfile
+    volumes:
+      - static_volume:/usr/src/app/static-files/
+      - media_volume:/usr/src/app/media-files/
+    depends_on:
+      - web
+    ports:
+      - 8000:80
+
+volumes:
+  media_volume: {}
+  static_volume: {}
+  postgres_data:
+  redis:
+    driver: local
