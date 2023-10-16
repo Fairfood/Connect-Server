@@ -179,13 +179,13 @@ DATABASES = {
         "USER": env.get("DB_USER"),
         "PASSWORD": env.get("DB_PASSWORD"),
         "PORT": "5432",
-        "HOST": env.get("DB_HOST", fallback="localhost"),
+        "HOST": env.get("DB_HOST", default="localhost"),
         "DISABLE_SERVER_SIDE_CURSORS": True,
     }
 }
 
-REDIS_URL = env.get("REDIS_URL", fallback="redis://127.0.0.1")
-REDIS_PORT = env.get("REDIS_PORT", fallback=6379)
+REDIS_URL = env.get("REDIS_URL", default="redis://127.0.0.1")
+REDIS_PORT = env.get("REDIS_PORT", default=6379)
 
 CACHES = {
     "default": {

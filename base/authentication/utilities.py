@@ -8,10 +8,12 @@ def get_current_user():
 
     Otherwise, returns None.
     """
-    from v1.accounts.models import CustomUser
+    from django.contrib.auth import get_user_model
+
+    UserModel = get_user_model()
 
     user = get_from_local("user", None)
-    current_user = CustomUser.objects.filter(
+    current_user = UserModel.objects.filter(
         id=get_from_local("user_id")
     ).first()
     if user and user == current_user:
