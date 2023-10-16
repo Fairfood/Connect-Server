@@ -6,7 +6,7 @@ import os
 
 from celery import Celery
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "trace_connect.settings.local")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "trace_connect.settings")
 
 app = Celery("trace_connect")
 

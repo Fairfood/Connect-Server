@@ -9,24 +9,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os  # noqa
-from configparser import RawConfigParser
 from datetime import timedelta
 from pathlib import Path
 
-PROJECT_NAME = "trace_connect"
+from . import env
 
-SECRETS_DIR = Path("/etc/secret") / PROJECT_NAME
-SECRET_FILE = SECRETS_DIR / "secret.ini"
 
-config = RawConfigParser(allow_no_value=True)
-config.read(SECRET_FILE)
-
-ENVIRONMENT = config.get("app", "ENVIRONMENT")
-DEPLOYMENT = config.get("app", "DEPLOYMENT")
+ENVIRONMENT = env.get("ENVIRONMENT")
+DEPLOYMENT = env.get("DEPLOYMENT")
 ENTERPRISE_MODE = False
 
-ROOT_URL = config.get("app", "ROOT_URL")
-FRONT_ROOT_URL = config.get("app", "FRONT_ROOT_URL")
+ROOT_URL = env.get("ROOT_URL")
+FRONT_ROOT_URL = env.get("FRONT_ROOT_URL")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -36,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config.get("django", "SECRET_KEY")
+SECRET_KEY = env.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -74,9 +68,9 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "admin_extra_buttons",
     # Internal Apps (V1)
+    "v1.catalogs",
     "v1.accounts",
     "v1.apiauth",
-    "v1.blockchain",
     "v1.entities",
     "v1.notifications",
 ]
@@ -181,17 +175,17 @@ WSGI_APPLICATION = "trace_connect.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config.get("database", "DB_NAME"),
-        "USER": config.get("database", "DB_USER"),
-        "PASSWORD": config.get("database", "DB_PASSWORD"),
+        "NAME": env.get("DB_NAME"),
+        "USER": env.get("DB_USER"),
+        "PASSWORD": env.get("DB_PASSWORD"),
         "PORT": "5432",
-        "HOST": config.get("database", "HOST"),
+        "HOST": env.get("DB_HOST", fallback="localhost"),
         "DISABLE_SERVER_SIDE_CURSORS": True,
     }
 }
 
-REDIS_URL = config.get("database", "REDIS_URL", fallback="redis://127.0.0.1")
-REDIS_PORT = config.get("database", "REDIS_PORT", fallback=6379)
+REDIS_URL = env.get("REDIS_URL", fallback="redis://127.0.0.1")
+REDIS_PORT = env.get("REDIS_PORT", fallback=6379)
 
 CACHES = {
     "default": {
@@ -273,8 +267,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Hash id encoding.
 
-HASHID_SALT = config.get("django", "HASHID_SALT")
-HASHID_FIELD_SALT = config.get("django", "HASHID_SALT")
+HASHID_SALT = env.get("HASHID_SALT")
+HASHID_FIELD_SALT = env.get("HASHID_SALT")
 HASHID_MIN_LENGTH = 10
 HASHID_FIELD_MIN_LENGTH = 10
 HASHID_ALPHABETS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
@@ -346,10 +340,10 @@ SWAGGER_SETTINGS = {
 # Email setup
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = config.get("email", "EMAIL_HOST")
-EMAIL_PORT = config.get("email", "EMAIL_PORT")
-EMAIL_HOST_USER = config.get("email", "EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = config.get("email", "EMAIL_HOST_PASSWORD")
+EMAIL_HOST = env.get("EMAIL_HOST")
+EMAIL_PORT = env.get("EMAIL_PORT")
+EMAIL_HOST_USER = env.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env.get("EMAIL_HOST_PASSWORD")
 FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
@@ -367,27 +361,3 @@ CELERY_ROUTES = {
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-
-# hedera settings
-HEDERA_NETWORK = 1  # For testnet
-BLOCKCHAIN_CLIENT_ID = "4AemO8oBMlKx3ElL6Y09"
-BLOCKCHAIN_PRIVATE_KEY_PATH = SECRETS_DIR / "hedera"
-BLOCKCHAIN_ENCRYPTION_KEY = config.get(
-    "blockchain", "BLOCKCHAIN_ENCRYPTION_KEY"
-)
-BC_MIDDLEWARE_BASE_URL = (
-    "https://v1.api.bcmiddleware.cied.in/v1/registry/requests/"
-)
-
-TREASURY_ACCOUNT_ID = config.get("blockchain", "TREASURY_ACCOUNT_ID")
-TREASURY_ENCRYPED_PRIVATE = config.get(
-    "blockchain", "TREASURY_ENCRYPED_PRIVATE"
-)
-HUB_TOPIC_ID = "0.0.47654162"
-IP_API_URL = "https://ipapi.co/{ip}/json/"
-
-
-# RO-AI Secrets
-ROAI_BASE_URL = config.get("roai", "ROAI_BASE_URL", fallback="")
-ROAI_BEARER_TOKEN = config.get("roai", "ROAI_BEARER_TOKEN", fallback="")
-ROAI_CLIENT_ID = config.get("roai", "ROAI_CLIENT_ID", fallback="")

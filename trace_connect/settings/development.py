@@ -4,8 +4,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa
-from .base import config
 from .base import DEPLOYMENT
+from .base import env
 from .base import INSTALLED_APPS
 from .base import REST_FRAMEWORK
 
@@ -30,9 +30,9 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
 # Media file settings for S3
 
 AWS_DEFAULT_REGION = "eu-central-1"
-AWS_ACCESS_KEY_ID = config.get("libs", "AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = config.get("libs", "AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = config.get("libs", "AWS_STORAGE_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = env.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env.get("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = env.get("AWS_STORAGE_BUCKET_NAME")
 AWS_QUERYSTRING_AUTH = False
 AWS_PRELOAD_METADATA = True
 AWS_DEFAULT_ACL = "public-read"
@@ -43,7 +43,7 @@ MEDIA_URL = "//%s.s3.amazonaws.com/media/" % AWS_STORAGE_BUCKET_NAME
 
 # SENTRY SETUP AWS_STORAGE_BUCKET_NAME:
 sentry_sdk.init(
-    dsn=config.get("libs", "SENTRY_DSN"),
+    dsn=env.get("SENTRY_DSN"),
     integrations=[
         DjangoIntegration(),
         CeleryIntegration(),

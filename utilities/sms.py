@@ -1,11 +1,11 @@
 """Celery function to send sms."""
 import boto3
-from celery.decorators import task
+from celery import current_app as app
 from django.conf import settings
 from sentry_sdk import capture_exception
 
 
-@task(name="send_sms", queue="high")
+@app.task(name="send_sms", queue="high")
 def send_sms(phone_number: str, message: str):
     """Function to send SMS."""
     if not phone_number:

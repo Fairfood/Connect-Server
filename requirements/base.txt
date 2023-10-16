@@ -41,7 +41,7 @@ pycryptodome==3.15.0  # For blockchain
 
 
 # Celery
-celery==4.4.2
+celery==5.3.4
 django-celery-beat==2.0.0
 redis==4.3.1
 python-dotenv==0.13.0
@@ -50,6 +50,6 @@ python-dotenv==0.13.0
 django-redis==5.2.0
 
 # Monitoring
-sentry-sdk==1.14.0
+sentry-sdk==1.32.0
 pre-commit==3.4.0
 pytype==2023.10.5
