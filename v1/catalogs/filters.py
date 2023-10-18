@@ -1,7 +1,7 @@
 """Filters used in the catalogs api."""
 from django_filters import rest_framework as filters
 
-from v1.catalogs import models as catalog_models
+from v1.catalogs.models import common_models as catalog_models
 
 
 class CurrencyFilter(filters.FilterSet):

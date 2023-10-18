@@ -71,8 +71,9 @@ INSTALLED_APPS = [
     "v1.catalogs",
     "v1.accounts",
     "v1.apiauth",
-    "v1.entities",
+    "v1.supply_chains",
     "v1.notifications",
+    "v1.transactions",
 ]
 
 MIDDLEWARE = [

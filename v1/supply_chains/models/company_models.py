@@ -1,0 +1,254 @@
+"""Models of the app entities."""
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+from . import base_models
+from .. import constants as sc_consts
+from ... import notifications
+from ...accounts import constants as acc_constants
+from ...accounts.models import ValidationToken
+from base.authentication import utilities as auth_utils
+from base.db import models as abstarct_models
+from v1.catalogs.models.product_models import ConnectCard
+
+
+class AbstractCompanyModel(
+    abstarct_models.AbstractBaseModel,
+    abstarct_models.AbstractAddressModel,
+    abstarct_models.AbstractContactModel,
+    base_models.AbstarctEntityModel,
+):
+    """
+    An abstract base model for a company, providing fields for basic company
+    information such as address, contact details, and a unique identifier.
+    """
+
+    class Meta:
+        abstract = True
+
+
+class Company(AbstractCompanyModel):
+    """
+    Model representing a company entity.
+
+    This model is used to represent a company entity within the system. It
+    contains fields for the company's name, registration number, members,
+    incharge, and default currency.
+
+    Attributes:
+        name (str): The name of the company.
+        registration_no (str): The registration number of the company.
+        members (ManyToManyField): The members associated with the company.
+        incharge (ForeignKey): The user who is in charge of the company.
+        currency (ForeignKey): The default currency used by the company.
+
+    """
+
+    name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name=_("Company Name"),
+    )
+    registration_no = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name=_("Company Registartion Number"),
+    )
+    members = models.ManyToManyField(
+        "accounts.CustomUser",
+        related_name="entities",
+        verbose_name=_("Member Companies"),
+        through="supply_chains.CompanyMember",
+        through_fields=("company", "user"),
+    )
+    incharge = models.ForeignKey(
+        "accounts.CustomUser",
+        null=True,
+        on_delete=models.SET_NULL,
+        blank=True,
+        related_name="managing_companies",
+        verbose_name=_("Incharge"),
+    )
+    currency = models.ForeignKey(
+        "catalogs.Currency",
+        null=True,
+        on_delete=models.SET_NULL,
+        blank=True,
+        related_name="using_companies",
+        verbose_name=_("Default Currency"),
+    )
+    card = models.OneToOneField(
+        ConnectCard,
+        on_delete=models.SET_NULL,
+        related_name="company",
+        verbose_name=_("Connect Card"),
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        """Meta class defines class level configurations."""
+
+        verbose_name_plural = _("Companies")
+
+    def __str__(self):
+        """Object name in django admin."""
+        return f"{self.name}"
+
+    def can_be_edited_by(self, company=None):
+        company = company or auth_utils.get_current_company()
+        checks = (
+            not company,
+            self.status != sc_consts.EntityStatus.INACTIVE,
+            self.invited_by != company,
+        )
+        if any(checks):
+            return False
+        return True
+
+
+class CompanyMember(abstarct_models.AbstractBaseModel):
+    """Model saves members under entities.
+
+    Attribs:
+        user(obj)       : user account object of the company member.
+        company(obj)       : company which the member is related.
+        type(int)       : member type of the company member like admin,
+            operator...
+        active(bool)    : is the unit still active or not.
+
+    Inherited Attribs:
+        creator(obj): Creator user of the object.
+        updater(obj): Updater of the object.
+        created_on(datetime): Added date of the object.
+        updated_on(datetime): Last updated date of the object.
+    """
+
+    user = models.ForeignKey(
+        "accounts.CustomUser",
+        on_delete=models.CASCADE,
+        related_name="member_companies",
+        verbose_name=_("Member User"),
+    )
+    company = models.ForeignKey(
+        "supply_chains.Company",
+        on_delete=models.CASCADE,
+        related_name="company_members",
+        verbose_name=_("Company"),
+    )
+    type = models.CharField(
+        max_length=3,
+        default=sc_consts.CompanyMemberType.ADMIN,
+        choices=sc_consts.CompanyMemberType.choices,
+        verbose_name=_("Member Type"),
+    )
+    is_active = models.BooleanField(
+        default=True, verbose_name=_("Is Member Active")
+    )
+
+    def __str__(self):
+        """Object name in django admin."""
+        return f"{self.user.name} - " f"{self.company.name} - " f"{self.type}"
+
+    class Meta:
+        unique_together = ("company", "user")
+
+    def send_invite(self):
+        token = None
+        user = self.user
+        if not user.password or not user.has_usable_password():
+            token = ValidationToken.initialize(
+                user, acc_constants.ValidationTokenType.INVITE
+            )
+        notification_manager = notifications.MemberInviteNotificationManager(
+            user=user, action_object=self, token=token
+        )
+        notification_manager.send_notification()
+
+    def get_notification_pref(self, notif_manager):
+        """Function to return notification preferences for a user."""
+        from v1.notifications.constants import NotificationCondition
+
+        def get_pref(config: dict) -> bool:
+            if self.type not in config.keys():
+                raise ValueError(_("Config not defined."))
+            if config[self.type] == NotificationCondition.ENABLED:
+                return True
+            elif config[self.type] == NotificationCondition.DISABLED:
+                return False
+            elif config[self.type] == NotificationCondition.IF_USER_ACTIVE:
+                return self.user.status == acc_constants.UserStatus.ACTIVE
+            return False
+
+        prefs = {
+            "visibility": get_pref(notif_manager.visibility),
+            "push": get_pref(notif_manager.push),
+            "email": get_pref(notif_manager.email),
+            "sms": get_pref(notif_manager.sms),
+        }
+        return prefs
+
+
+class CompanyAdditionalField(abstarct_models.AbstractBaseModel):
+    """
+    Model to save additional fields of a company.
+
+    Attribs:
+        label(str)      : label of the additional field.
+        type(str)       : type of the additional field like text, number...
+        required(bool)  : is the field required or not.
+        company(obj)    : company which the additional field is related.
+    """
+
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
+    type = models.CharField(
+        max_length=3,
+        choices=sc_consts.CompanyFieldType.choices,
+        default=sc_consts.CompanyFieldType.TEXT,
+        verbose_name=_("Type"),
+    )
+    required = models.BooleanField(default=True, verbose_name=_("Required"))
+    company = models.ForeignKey(
+        "supply_chains.Company",
+        on_delete=models.CASCADE,
+        related_name="additional_fields",
+        verbose_name=_("Company"),
+    )
+
+    def __str__(self):
+        return f"{self.name} - {self.company.name}"
+
+
+class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):
+    """
+    Model to save field visibilities of a company created Farmers and
+    Transactions.
+
+    Attribs:
+        name(str)       : name of the field visibility.
+        visibility(bool): visibility of the field.
+        type(str)       : type of the field like transaction, farmer...
+        company(obj)    : company which the field visibility is related.
+    """
+
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
+    visibility = models.BooleanField(
+        default=True, verbose_name=_("Visibility")
+    )
+    type = models.CharField(
+        max_length=3,
+        choices=sc_consts.CompanyFieldVisibiltyType.choices,
+        default=sc_consts.CompanyFieldVisibiltyType.TRANSACTION,
+        verbose_name=_("Type"),
+    )
+    company = models.ForeignKey(
+        "supply_chains.Company",
+        on_delete=models.CASCADE,
+        related_name="field_visibilities",
+        verbose_name=_("Company"),
+    )
+
+    def __str__(self):
+        return f"{self.name} - {self.company.name}"

@@ -14,9 +14,7 @@ from base.db.models import AbstractBaseModel
 from utilities import functions as util_functions
 from v1.accounts import constants as user_consts
 from v1.apiauth import notifications
-from v1.entities import constants as entity_constants
-
-# from fcm_django.models import AbstractFCMDevice
+from v1.supply_chains import constants as sc_constants
 
 
 class CustomUser(DjangoAbstractUser, AbstractBaseModel):
@@ -91,7 +89,7 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         null=True, blank=True, default="", verbose_name=_("Last Updated Email")
     )
     default_entity = models.ForeignKey(
-        "entities.Entity",
+        "supply_chains.Company",
         null=True,
         on_delete=models.SET_NULL,
         blank=True,
@@ -151,7 +149,7 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
     def set_default_entity(self, entity):
         """Set the default entity."""
         if self.status == user_consts.UserStatus.ACTIVE:
-            entity.status = entity_constants.EntityStatus.ACTIVE
+            entity.status = sc_constants.EntityStatus.ACTIVE
             entity.save()
         self.default_entity = entity
         self.save()
@@ -177,7 +175,7 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         self.status = user_consts.UserStatus.ACTIVE
         self.save()
         def_entity = self.get_default_entity()
-        def_entity.status = entity_constants.EntityStatus.ACTIVE
+        def_entity.status = sc_constants.EntityStatus.ACTIVE
         def_entity.joined_on = pendulum.now()
         def_entity.save()
 

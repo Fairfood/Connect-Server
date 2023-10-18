@@ -2,7 +2,7 @@
 from rest_framework import serializers
 
 from base.drf import fields
-from v1.entities import models as entity_models
+from v1.supply_chains.models import company_models
 
 
 class UserEntitySerializer(serializers.ModelSerializer):
@@ -18,5 +18,5 @@ class UserEntitySerializer(serializers.ModelSerializer):
     class Meta:
         """Meta Info."""
 
-        model = entity_models.EntityMember
-        fields = ("id", "name", "entity_type", "member_role", "image", "email")
+        model = company_models.CompanyMember
+        fields = ("id", "name", "member_role", "image", "email")

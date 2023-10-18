@@ -29,14 +29,14 @@ class BaseNotificationManager:
 
     def __init__(self, user, action_object, token=None, context=None):
         """Initialize notification."""
-        from v1.entities.models import EntityMember
+        from v1.supply_chains.models import CompanyMember
 
         # curr_language = translation.get_language()
         context = context or {}
         self.user = user
         self.action_object = action_object
         target_entity = self.get_target_entity()
-        member = EntityMember.objects.filter(
+        member = CompanyMember.objects.filter(
             entity=target_entity, user=user
         ).first()
         notif_prefs = (
@@ -123,7 +123,7 @@ class BaseNotificationManager:
 
 
 def validate_notifications():
-    from v1.entities.constants import EntityMemberType
+    from v1.supply_chains.constants import CompanyMemberType
 
     def check_pref(pref: dict) -> bool:
         pref_keys = pref.keys()
@@ -133,12 +133,12 @@ def validate_notifications():
             raise AssertionError(
                 _("Cannot specify '__all__' and Member Types together")
             )
-        for member_type in EntityMemberType:
+        for member_type in CompanyMemberType:
             if member_type not in pref_keys:
                 raise AssertionError(
                     _(
                         "Notification preference not defined for {member_type}"
-                    ).format(member_type=EntityMemberType(member_type).label)
+                    ).format(member_type=CompanyMemberType(member_type).label)
                 )
         return True
 

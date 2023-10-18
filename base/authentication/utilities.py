@@ -29,10 +29,10 @@ def get_current_entity():
 
     Otherwise, returns None.
     """
-    from v1.entities.models import Entity
+    from v1.supply_chains.models import Company
 
     entity = get_from_local("entity", None)
-    current_entity = Entity.objects.filter(
+    current_entity = Company.objects.filter(
         id=get_from_local("entity_id")
     ).first()
     if entity and entity == current_entity:

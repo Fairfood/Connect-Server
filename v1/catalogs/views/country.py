@@ -4,7 +4,7 @@ from rest_framework import filters
 
 from base.request_handler.views import IdDecodeModelViewSet
 from v1.catalogs import filters as catalog_filters
-from v1.catalogs import models as catalog_models
+from v1.catalogs.models import common_models as catalog_models
 from v1.catalogs.serializers import country as country_serializer
 
 # from v1.apiauth import permissions as auth_permissions

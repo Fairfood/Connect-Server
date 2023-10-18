@@ -1,7 +1,7 @@
 from modeltranslation.translator import TranslationOptions
 from modeltranslation.translator import translator
 
-from v1.catalogs import models as catalog_models
+from v1.catalogs.models import common_models as catalog_models
 
 """
 As per the Translation option class registered

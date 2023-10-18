@@ -3,6 +3,7 @@ import copy
 
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from hashid_field import HashidAutoField
 
 from base.authentication import utilities as auth_utils
@@ -47,9 +48,10 @@ class AbstractBaseModel(models.Model):
     def save(self, *args, **kwargs):
         current_user = auth_utils.get_current_user()
         if current_user:
-            if not self.id:
+            if not self.pk:
                 self.creator = current_user
             self.updater = current_user
+        self.new_instance = not self.pk
         super(AbstractBaseModel, self).save(*args, **kwargs)
 
     @classmethod
@@ -76,30 +78,18 @@ class AbstractBaseModel(models.Model):
         return n_data
 
 
-class Address(models.Model):
+class AbstractAddressModel(models.Model):
     """Abstract model to group fields related to address."""
 
-    house_name = models.CharField(
-        max_length=100, default="", null=True, blank=True
-    )
-    street = models.CharField(
-        max_length=500, default="", null=True, blank=True
-    )
-    city = models.CharField(max_length=500, default="", null=True, blank=True)
-    sub_province = models.CharField(
-        max_length=500, default="", null=True, blank=True
-    )
-    province = models.CharField(
-        max_length=500, default="", null=True, blank=True
-    )
-    country = models.CharField(
-        max_length=500, default="", null=True, blank=True
-    )
+    house_name = models.CharField(max_length=100, null=True, blank=True)
+    street = models.CharField(max_length=500, null=True, blank=True)
+    city = models.CharField(max_length=500, null=True, blank=True)
+    sub_province = models.CharField(max_length=500, null=True, blank=True)
+    province = models.CharField(max_length=500, null=True, blank=True)
+    country = models.CharField(max_length=500, null=True, blank=True)
     latitude = models.FloatField(default=0.0)
     longitude = models.FloatField(default=0.0)
-    zipcode = models.CharField(
-        max_length=50, default="", null=True, blank=True
-    )
+    zipcode = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         """Meta class defines class level configurations."""
@@ -107,7 +97,7 @@ class Address(models.Model):
         abstract = True
 
 
-class NumberedModel(models.Model):
+class AbstractNumberedModel(models.Model):
     """Abstract base class to use to automatically add a number field to track
     a number tracked that can be shown in the frontend."""
 
@@ -117,110 +107,56 @@ class NumberedModel(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        super(NumberedModel, self).save(*args, **kwargs)
+        super(AbstractNumberedModel, self).save(*args, **kwargs)
         if not self.number:
             self.number = self.id.id + 1000
             self.save()
 
 
-class GraphModel(models.Model):
-    """Abstract model for creating Directed Acyclic Graph.
+class AbstractContactModel(models.Model):
+    """Abstract model to group fields related to contact."""
 
-    This can only be used for basic operations. This does not scale
-    well. For scalable application with large datasets, you should
-    instead use a graph DB like Neo4j
-    """
+    email = models.EmailField(
+        max_length=100, blank=True, null=True, verbose_name=_("Email Address")
+    )
+    phone = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name=_("Phone Number"),
+    )
 
     class Meta:
-        ordering = ("-id",)
+        """Meta class defines class level configurations."""
+
         abstract = True
 
-    def __unicode__(self):
-        return "%s" % self.pk
 
-    def add_parent(self, ancestor):
-        """Function to add a parent."""
-        self.circular_checker(ancestor, self)
-        self.parents.add(ancestor)
-        self.save()
+class AbstarctAditionalField(AbstractBaseModel):
+    """
+    An abstract model for additional fields associated an entity
+    (Farmer, Transaction etc.).
 
-    def add_child(self, child):
-        """Function to add a child."""
-        child.add_parent(self)
+    Attributes:
+    - field (CompanyAdditionalField): The specific additional field.
+    - value (str): The value associated with the additional field.
 
-    def remove_parent(self, ancestor):
-        """Function to remove a parent."""
-        self.parents.remove(ancestor)
-        self.save()
+    Note:
+    This is an abstract model that defines the structure for handling
+    additional fields associated with payments. It should be used as a base for
+    concrete models that capture payment-specific additional fields.
+    """
 
-    def remove_child(self, child):
-        """Function to remove a child."""
-        child.remove_parent(self)
+    field = models.ForeignKey(
+        "supply_chains.CompanyAdditionalField",
+        on_delete=models.CASCADE,
+        related_name="%(class)s_payment_values",
+        verbose_name=_("Field"),
+    )
+    value = models.CharField(max_length=100, verbose_name=_("Value"))
 
-    def get_descendants(self, include_self=False):
-        """Gets all children and their children recursively."""
-        descendants_set = self.children.all().order_by("-id").distinct("id")
-        for child in self.children.all():
-            grand_children = child.get_descendants()
-            descendants_set |= grand_children
-        if include_self:
-            descendants_set |= (
-                self.__class__.objects.filter(id=self.id)
-                .order_by("-id")
-                .distinct("id")
-            )
-        return descendants_set
+    class Meta:
+        abstract = True
 
-    def get_ancestors(self, include_self=False):
-        """Gets all parents and their parents recursively."""
-        ancestors_set = self.parents.all().order_by("-id").distinct("id")
-        for parent in self.parents.all():
-            grand_parent = parent.get_ancestors()
-            ancestors_set |= grand_parent
-        if include_self:
-            ancestors_set |= (
-                self.__class__.objects.filter(id=self.id)
-                .order_by("-id")
-                .distinct("id")
-            )
-        return ancestors_set
-
-    def get_leaf_nodes(self):
-        """Gets the ending nodes."""
-        leaf_nodes = self.__class__.objects.none()
-        children = self.children.all().order_by("-id").distinct("id")
-        if not children:
-            return (
-                self.__class__.objects.filter(id=self.id)
-                .order_by("-id")
-                .distinct("id")
-            )
-        for child in children:
-            leaf_nodes |= child.get_leaf_nodes()
-        return leaf_nodes
-
-    def get_root_nodes(self):
-        """Gets the starting nodes."""
-        root_nodes = self.__class__.objects.none()
-        parents = self.parents.all().order_by("-id").distinct("id")
-        if not parents:
-            return (
-                self.__class__.objects.filter(id=self.id)
-                .order_by("-id")
-                .distinct("id")
-            )
-        for parent in parents:
-            root_nodes |= parent.get_root_nodes()
-        return root_nodes
-
-    def is_island(self):
-        """Check if nod1e is separated from the rest of the graph."""
-        return not bool(self.parents.all() or self.children.all())
-
-    @staticmethod
-    def circular_checker(parent, child):
-        """Checks that the object is not an ancestor, avoid self links."""
-        if parent == child:
-            raise ValueError("Self links are not allowed.")
-        if child in parent.get_ancestors():
-            raise ValueError("The object is an ancestor.")
+    def __str__(self):
+        return f"{self.field.name} -> {self.value}"

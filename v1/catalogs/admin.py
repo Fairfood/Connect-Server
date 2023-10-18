@@ -2,7 +2,7 @@
 from django.contrib import admin
 
 from base.db.admin import BaseAdmin
-from v1.catalogs import models as catalog_models
+from v1.catalogs.models import common_models as catalog_models
 
 
 class CountryAdmin(BaseAdmin):

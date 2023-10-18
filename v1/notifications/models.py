@@ -42,14 +42,14 @@ class Notification(AbstractBaseModel):
     action_url = models.CharField(default="", max_length=500, blank=True)
 
     actor_entity = models.ForeignKey(
-        "entities.Entity",
+        "supply_chains.Company",
         on_delete=models.CASCADE,
         blank=True,
         null=True,
         related_name="actions",
     )
     target_entity = models.ForeignKey(
-        "entities.Entity",
+        "supply_chains.Company",
         on_delete=models.CASCADE,
         blank=True,
         null=True,

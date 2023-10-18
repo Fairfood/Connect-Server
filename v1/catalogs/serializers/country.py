@@ -2,7 +2,7 @@
 from rest_framework import serializers
 
 from base.drf import fields
-from v1.catalogs import models as catalog_models
+from v1.catalogs.models import common_models as catalog_models
 
 
 class VillageSerializer(serializers.ModelSerializer):

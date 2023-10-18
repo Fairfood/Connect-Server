@@ -18,15 +18,15 @@ from v1.accounts import constants as acc_constants
 from v1.accounts.models import CustomUser
 from v1.accounts.models import PrivacyPolicy
 from v1.accounts.models import ValidationToken
-from v1.entities.models import Entity
-from v1.entities.models import EntityMember
+from v1.supply_chains.models.company_models import Company
+from v1.supply_chains.models.company_models import CompanyMember
 
 
 class APILoginSerializer(TokenObtainPairSerializer):
     """Serializer to validate and return token after logging in the user."""
 
-    entity: Entity = None
-    entity_member: EntityMember = None
+    entity: Company = None
+    entity_member: CompanyMember = None
 
     def validate(self, attrs):
         """Along with the inherited auth token and refresh token, id of user,
@@ -43,10 +43,10 @@ class APILoginSerializer(TokenObtainPairSerializer):
                 _("User does not have access any Entities")
             )
         try:
-            entity_member = EntityMember.objects.get(
+            entity_member = CompanyMember.objects.get(
                 entity=self.entity, user=user, is_active=True
             )
-        except EntityMember.DoesNotExist:
+        except CompanyMember.DoesNotExist:
             raise exceptions.AuthenticationFailed(
                 _("Invalid Entity or User does not have access."),
                 "invalid_entity",
@@ -65,7 +65,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
 class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
     """API to refresh token along with entity change."""
 
-    entity = fields.SerializableRelatedField(queryset=Entity.objects.all())
+    entity = fields.SerializableRelatedField(queryset=Company.objects.all())
 
     def validate(self, attrs):
         super(TokenRefreshSerializer, self).validate(attrs)
@@ -85,10 +85,10 @@ class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
             )
 
         try:
-            entity_member = EntityMember.objects.get(
+            entity_member = CompanyMember.objects.get(
                 entity=entity, user=user, is_active=True
             )
-        except EntityMember.DoesNotExist:
+        except CompanyMember.DoesNotExist:
             raise exceptions.AuthenticationFailed(
                 _("Invalid Entity or User does not have access."),
                 "invalid_entity",
@@ -143,7 +143,7 @@ class ValidationSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)
     password = serializers.CharField(required=False)
     entity = fields.SerializableRelatedField(
-        queryset=Entity.objects.all(), required=False, allow_null=True
+        queryset=Company.objects.all(), required=False, allow_null=True
     )
 
     def validate_validation_token(self, value):

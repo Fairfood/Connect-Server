@@ -44,7 +44,7 @@ urlpatterns = [
     path("v1/auth/", include("v1.apiauth.urls")),
     path("v1/accounts/", include("v1.accounts.urls")),
     path("v1/notifications/", include("v1.notifications.urls")),
-    path("v1/entities/", include("v1.entities.urls")),
+    path("v1/supply-chains/", include("v1.supply_chains.urls")),
 ]
 
 if settings.DEBUG:
