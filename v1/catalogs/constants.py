@@ -1,17 +1,5 @@
-"""Constants under the catalogs section are stored here."""
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
-
-class CategoryType(models.IntegerChoices):
-    """A class to define integer choices for the 'Category' model's 'type'
-    field.
-
-    Choices:
-    - ENTITY_DOCUMENT: Represents an entity document with a value of 101.
-    """
-
-    ENTITY_DOCUMENT = 101, _("Entity Document")
 
 
 class PremiumCategory(models.TextChoices):
@@ -25,8 +13,8 @@ class PremiumCategory(models.TextChoices):
         'TRA'.
     """
 
-    BASE_PREMIUM = "PRE", _("Premium")
-    TRANSACTION_PREMIUM = "TRA", _("Transaction Premium")
+    BASE = "BASE", _("Base Premium")
+    TRANSACTION = "TRANSACTION", _("Transaction Premium")
 
 
 class PremiumType(models.TextChoices):
@@ -42,10 +30,10 @@ class PremiumType(models.TextChoices):
     - PER_FARMER: Represents a per farmer premium with a value of 'PFA'.
     """
 
-    PER_TRANSACTION = "PTR", _("Per Transaction")
-    PER_KG = "PKG", _("Per KG")
-    PER_UNIT_CURRENCY = "PUC", _("Per Unit Currency")
-    PER_FARMER = "PFA", _("Per Farmer")
+    PER_TRANSACTION = "PER_TRANSACTION", _("Per Transaction")
+    PER_KG = "PER_KG", _("Per KG")
+    PER_UNIT_CURRENCY = "PER_UNIT_CURRENCY", _("Per Unit Currency")
+    PER_FARMER = "PER_FARMER", _("Per Farmer")
 
 
 class PremiumActivity(models.TextChoices):
@@ -58,7 +46,7 @@ class PremiumActivity(models.TextChoices):
     """
 
     BUY = "BUY", _("Buy")
-    SELL = "SEL", _("Sell")
+    SELL = "SELL", _("Sell")
 
 
 class PremiumCalculationType(models.TextChoices):
@@ -72,6 +60,6 @@ class PremiumCalculationType(models.TextChoices):
     - OPTIONS: Represents an options calculation type with a value of 'OPT'.
     """
 
-    NORMAL = "NOR", _("Normal")
-    MANUAL = "MAN", _("Manual")
-    OPTIONS = "OPT", _("Options")
+    NORMAL = "NORMAL", _("Normal")
+    MANUAL = "MANUAL", _("Manual")
+    OPTIONS = "OPTIONS", _("Options")

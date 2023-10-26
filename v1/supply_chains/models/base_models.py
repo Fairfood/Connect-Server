@@ -1,11 +1,13 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .. import constants as company_consts
+from base.db.models import AbstractBaseModel
 from base.db.utilities import get_file_path
+from v1.catalogs.models.product_models import ConnectCard
+from v1.supply_chains import managers
 
 
-class AbstarctEntityModel(models.Model):
+class Entity(AbstractBaseModel):
     """
     Abstract base model for entities in the supply chain system.
 
@@ -37,47 +39,84 @@ class AbstarctEntityModel(models.Model):
         blank=True,
         verbose_name=_("Description"),
     )
-    invited_by = models.ForeignKey(
-        "supply_chains.Company",
-        on_delete=models.SET_NULL,
-        related_name="invited_%(class)s",
-        null=True,
-        blank=True,
-        verbose_name=_("Invited By"),
-    )
-    refferenced_by = models.ForeignKey(
-        "accounts.CustomUser",
-        null=True,
-        on_delete=models.SET_NULL,
-        blank=True,
-        related_name="refered_%(class)ss",
-        verbose_name=_("Referenced By"),
-    )
-    invited_on = models.DateTimeField(
-        null=True, blank=True, verbose_name=_("Invited Date")
-    )
-    joined_on = models.DateTimeField(
-        null=True, blank=True, verbose_name=_("Joining Date")
-    )
-    status = models.CharField(
-        max_length=3,
-        default=company_consts.EntityStatus.INACTIVE,
-        choices=company_consts.EntityStatus.choices,
-        verbose_name=_("Company Current Status"),
-    )
-    is_verified = models.BooleanField(
-        default=False, verbose_name=_("Is Entity Verified")
-    )
     buyer = models.ForeignKey(
-        "supply_chains.Company",
+        "self",
         on_delete=models.SET_NULL,
         related_name="%(class)s_supplers",
         null=True,
         blank=True,
         verbose_name=_("Buyer"),
     )
+    entity_card = models.ForeignKey(
+        "supply_chains.EntityCard",
+        on_delete=models.SET_NULL,
+        related_name="entities",
+        null=True,
+        blank=True,
+        verbose_name=_("Entity Card"),
+    )
+
+    def __str__(self):
+        """Function to return value in django admin."""
+        return f"{self.name}"
+
+
+class EntityCard(AbstractBaseModel):
+    """
+    A model representing the relationship between a ConnectCard and an Entity.
+
+    Attributes:
+        card (ConnectCard): The ConnectCard associated with this EntityCard.
+        entity (Entity): The Entity associated with this EntityCard.
+        is_active (bool): Whether this EntityCard is currently active.
+
+    Managers:
+        objects: The default manager for EntityCard, which provides additional
+            query methods.
+
+    Constraints:
+        unique_entity_card: A database constraint that ensures that each
+            ConnectCard can only be associated with each Entity once.
+
+    Methods:
+        __str__: Returns a string representation of this EntityCard.
+        save: Overrides the default save method to deactivate other EntityCards
+            associated with the same ConnectCard if this EntityCard is active.
+    """
+
+    card = models.ForeignKey(
+        ConnectCard,
+        related_name="entity_cards",
+        on_delete=models.CASCADE,
+        verbose_name=_("Card"),
+    )
+    entity = models.ForeignKey(
+        Entity,
+        related_name="card_entities",
+        on_delete=models.CASCADE,
+        verbose_name=_("Entity"),
+    )
+    is_active = models.BooleanField(default=True, verbose_name=_("Is Active"))
+
+    objects = managers.EntityCardQuerySet.as_manager()
 
     class Meta:
-        """Meta class for the above model."""
+        constraints = [
+            models.UniqueConstraint(
+                fields=["card", "entity"], name="unique_entity_card"
+            )
+        ]
 
-        abstract = True
+    def __str__(self):
+        return f"{self.card} - {self.entity.name}"
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            self.__class__.objects.deactivate_other_entities(self.card)
+            self.set_default(self.entity)
+        super().save(*args, **kwargs)
+
+    def set_default(self, entity):
+        """Set default entity card for entity"""
+        entity.entity_card = self
+        entity.save()

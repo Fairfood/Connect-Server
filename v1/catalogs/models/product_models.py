@@ -22,8 +22,6 @@ class Product(AbstractBaseModel):
 
     name = models.CharField(
         max_length=500,
-        null=True,
-        blank=True,
         verbose_name=_("Product Name"),
     )
     description = models.CharField(
@@ -74,15 +72,23 @@ class ConnectCard(AbstractBaseModel):
         """Function to return value in django admin."""
         return f"{self.display_id} - {self.card_id}"
 
-    @property
-    def is_farmer_card(self):
-        """Check if the card is a farmer card."""
-        return hasattr(self, "farmer")
+    def assign_entity(self, entity):
+        """
+        Assigns the given entity to this ConnectCard.
 
-    @property
-    def is_assigned(self):
-        """Check if the card is assigned to a farmer or a company."""
-        return self.is_farmer_card or hasattr(self, "company")
+        Args:
+            entity (Entity): The Entity to assign to this ConnectCard.
+
+        Returns:
+            EntityCard: The EntityCard object representing the relationship
+                between this ConnectCard and the given Entity.
+        """
+        created, ec = self.entity_cards.model.objects.get_or_create(
+            card=self, entity=entity
+        )
+        if not created:
+            ec.is_active = True
+            ec.save()
 
 
 class Premium(AbstractBaseModel):
@@ -109,9 +115,9 @@ class Premium(AbstractBaseModel):
     """
 
     category = models.CharField(
-        max_length=3,
+        max_length=11,
         choices=constants.PremiumCategory.choices,
-        default=constants.PremiumCategory.TRANSACTION_PREMIUM,
+        default=constants.PremiumCategory.TRANSACTION,
         verbose_name=_("Premium Category"),
     )
     name = models.CharField(max_length=100, verbose_name=_("Premium Name"))
@@ -124,7 +130,7 @@ class Premium(AbstractBaseModel):
         verbose_name=_("Owner"),
     )
     type = models.CharField(
-        max_length=3,
+        max_length=17,
         default=constants.PremiumType.PER_UNIT_CURRENCY,
         choices=constants.PremiumType.choices,
         verbose_name=_("Premium Type"),
@@ -137,13 +143,13 @@ class Premium(AbstractBaseModel):
         default=False, verbose_name=_("Dependant on Card")
     )
     applicable_activity = models.CharField(
-        max_length=3,
+        max_length=4,
         default=constants.PremiumActivity.BUY,
         choices=constants.PremiumActivity.choices,
         verbose_name=_("Applicable Activity"),
     )
     calculation_type = models.CharField(
-        max_length=3,
+        max_length=7,
         default=constants.PremiumCalculationType.NORMAL,
         choices=constants.PremiumCalculationType.choices,
         verbose_name=_("Calculation Type"),
@@ -151,7 +157,7 @@ class Premium(AbstractBaseModel):
     is_active = models.BooleanField(default=True, verbose_name=_("Is Active"))
 
     def __str__(self):
-        return f"{self.name} - {self.owner.full_name} | {self.id}"
+        return f"{self.name} - {self.owner.full_name}"
 
 
 class PremiumOption(AbstractBaseModel):

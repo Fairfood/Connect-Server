@@ -1,9 +1,11 @@
 """Notification Models."""
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 
 from base.db.models import AbstractBaseModel
 from utilities import email
@@ -11,35 +13,66 @@ from utilities import sms
 
 
 class Notification(AbstractBaseModel):
-    """Class for managing user notification.
+    """
+    A class for managing user notifications.
 
-    Attribs:
-        user(obj): User object
-        is_read(bool): to mark if the notification is
-            read by the user.
-        title_en(str): notification message title in English.
-        body_en(str): notification message body in English
-        title_loc(str): notification message title in local language.
-        body_loc(str): notification message body in local language
-        action(int): notification type based on which
-            sending emails or push notification is decided.
-        event(int): notification event
-        event_id(int): event id.
-        type(int): notification type for identifying the notification
-            when it is pushed to devices.
+    Attributes:
+        user (UserModel): The user associated with the notification.
+        is_read (bool): Indicates whether the notification has been read by
+            the user.
+        visibility (bool): Indicates if the notification is visible.
+        title (str): The title of the notification.
+        body (str): The content of the notification.
+        action_url (str): URL related to the notification action.
+        actor_entity (Company): The company that initiated the action.
+        target_entity (Company): The company that is the target of
+            the notification.
+        action_push (bool): Whether to send push notifications for this action.
+        action_sms (bool): Whether to send SMS notifications for this action.
+        action_email (bool): Whether to send email notifications for this
+            action.
+        event_type (ContentType): The content type of the related event.
+        event_id (int): The ID of the related event.
+        event (GenericForeignKey): A reference to the related event.
+        redirect_id (int): The ID used for redirection.
+        redirect_type (str): The type of redirection.
+        type (str): The type of notification for identification.
+        context (dict): Additional context for the notification.
+        send_to (str): Email address to send the notification.
+        validation_token (ValidationToken): Validation token related to
+            the notification.
+        aws_sms_id (str): ID for AWS SMS service.
+
+    Meta:
+        ordering: Specifies the default ordering for notifications.
+
+    Methods:
+        send_email: Sends an email notification.
+        send_push: Sends a push notification.
+        send_sms: Sends an SMS notification.
+        send: Sends the notification via all available channels.
+        read: Marks the notification as read.
+        notification_manager: Returns the notification manager based on the
+            notification type.
+
     """
 
     user = models.ForeignKey(
-        "accounts.CustomUser",
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="notifications",
+        verbose_name=_("User"),
     )
-    is_read = models.BooleanField(default=False)
-    visibility = models.BooleanField(default=True)
-    title = models.CharField(default="", max_length=300)
-    body = models.CharField(default="", max_length=500)
+    is_read = models.BooleanField(default=False, verbose_name=_("Is read?"))
+    visibility = models.BooleanField(
+        default=True, verbose_name=_("Visibility")
+    )
+    title = models.CharField(max_length=300, verbose_name=_("Title"))
+    body = models.CharField(max_length=500, verbose_name=_("Body"))
 
-    action_url = models.CharField(default="", max_length=500, blank=True)
+    action_url = models.CharField(
+        max_length=500, blank=True, verbose_name=_("Action URL")
+    )
 
     actor_entity = models.ForeignKey(
         "supply_chains.Company",
@@ -47,6 +80,7 @@ class Notification(AbstractBaseModel):
         blank=True,
         null=True,
         related_name="actions",
+        verbose_name=_("Actor Entity"),
     )
     target_entity = models.ForeignKey(
         "supply_chains.Company",
@@ -54,31 +88,45 @@ class Notification(AbstractBaseModel):
         blank=True,
         null=True,
         related_name="notifications",
+        verbose_name=_("Target Entity"),
     )
 
-    action_push = models.BooleanField(default=False)
-    action_sms = models.BooleanField(default=False)
-    action_email = models.BooleanField(default=False)
+    action_push = models.BooleanField(
+        default=False, verbose_name=_("Push Notification")
+    )
+    action_sms = models.BooleanField(
+        default=False, verbose_name=_("Sms Notification")
+    )
+    action_email = models.BooleanField(
+        default=False, verbose_name=_("Email Notification")
+    )
 
     event_type = models.ForeignKey(
         ContentType,
         related_name="notification_event_types",
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        verbose_name=_("Event Type"),
     )
     event_id = models.PositiveIntegerField(null=True, blank=True)
     event = GenericForeignKey("event_type", "event_id")
+
     redirect_id = models.PositiveIntegerField(
-        null=True, blank=True, default=None
+        null=True, blank=True, default=None, verbose_name=_("Redirect ID")
     )
     redirect_type = models.CharField(
-        max_length=200, blank=True, null=True, default=""
+        max_length=200, blank=True, null=True, verbose_name=_("Redirect type")
     )
 
-    type = models.CharField(max_length=100)
+    type = models.CharField(max_length=100, verbose_name=_("Type"))
 
-    context = models.JSONField(null=True, blank=True)
-    send_to = models.EmailField(null=True, blank=True, default="")
+    context = models.JSONField(
+        null=True, blank=True, verbose_name=_("Context")
+    )
+    send_to = models.EmailField(
+        null=True, blank=True, verbose_name=_("Send To")
+    )
 
     validation_token = models.OneToOneField(
         "accounts.ValidationToken",
@@ -86,9 +134,12 @@ class Notification(AbstractBaseModel):
         related_name="notification",
         null=True,
         blank=True,
+        verbose_name=_("Validation Token"),
     )
 
-    aws_sms_id = models.CharField(max_length=100, null=True, blank=True)
+    aws_sms_id = models.CharField(
+        max_length=100, null=True, blank=True, verbose_name=_("AWS SMS ID")
+    )
 
     class Meta:
         """Meta class for the above model."""
@@ -100,6 +151,13 @@ class Notification(AbstractBaseModel):
         return "%s - %s | %s" % (self.user.name, self.title, self.id)
 
     def send_email(self):
+        """
+        Sends an email notification.
+
+        This method sends an email notification to the user. It uses the
+        email template specified by the notification manager and includes
+        relevant context.
+        """
         notification_manager = self.notification_manager()
         if not self.action_email:
             return False
@@ -125,9 +183,22 @@ class Notification(AbstractBaseModel):
         return True
 
     def send_push(self):
-        pass
+        """
+         Sends a push notification.
+
+        This method is responsible for sending push notifications.
+
+        """
+        raise NotImplementedError("Push notifications are not implemented.")
 
     def send_sms(self):
+        """
+        Sends an SMS notification.
+
+        This method sends an SMS notification to the user if the
+        'action_sms' flag is set to True and the user's phone number is
+        valid.
+        """
         if (
             not self.action_sms
             or not self.user.phone
@@ -139,31 +210,51 @@ class Notification(AbstractBaseModel):
         return True
 
     def send(self):
-        """Send notification."""
+        """
+        Sends the notification via all available channels.
+
+        This method orchestrates the sending of a notification via email,
+        push notification, and SMS. It returns True if at least one of these
+        channels successfully sends the notification.
+        """
         self.send_email()
         self.send_push()
         self.send_sms()
         return True
 
     def read(self):
-        """Function to read notification."""
+        """
+        Marks the notification as read.
+
+        This method sets the 'is_read' attribute to True, indicating that
+        the user has read the notification.
+        """
         self.is_read = True
         self.save()
 
     def notification_manager(self):
+        """
+        Returns the notification manager based on the
+        notification type.
+
+        This method returns the appropriate notification manager based on
+        the 'type' attribute of the notification. The notification manager
+        is used to customize the notification's behavior."""
         from .manager import NOTIFICATION_TYPES
 
         return NOTIFICATION_TYPES[self.type]
 
 
 class SMSAlerts(AbstractBaseModel):
-    """Model to track all the SMSs sent and log the response.
+    """
+    Model to track all the SMSs sent and log the response.
 
     Attributes:
-        phone(str)          : The phone number to send SMS to.
-        message(text)       : The message to send.
-        response(json)      : The response received from SMS API.
-        response_text(text) : The response received in case of error.
+        phone (str): The phone number to which the SMS is sent.
+        message (text): The message content of the SMS.
+        response (json): The response received from the SMS API.
+        response_text (text): The response received in case of an error.
+
     """
 
     phone = models.CharField(max_length=20)

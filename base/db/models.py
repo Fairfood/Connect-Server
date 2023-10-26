@@ -27,6 +27,7 @@ class AbstractBaseModel(models.Model):
         blank=True,
         related_name="creator_%(class)s_objects",
         on_delete=models.SET_NULL,
+        verbose_name=_("Creator"),
     )
     updater = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -35,9 +36,14 @@ class AbstractBaseModel(models.Model):
         blank=True,
         related_name="updater_%(class)s_objects",
         on_delete=models.SET_NULL,
+        verbose_name=_("Updater"),
     )
-    updated_on = models.DateTimeField(auto_now=True)
-    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(
+        auto_now=True, verbose_name=_("Updated On")
+    )
+    created_on = models.DateTimeField(
+        auto_now_add=True, verbose_name=_("Updated On")
+    )
 
     class Meta:
         """Meta class for the above model."""
@@ -85,8 +91,9 @@ class AbstractAddressModel(models.Model):
     street = models.CharField(max_length=500, null=True, blank=True)
     city = models.CharField(max_length=500, null=True, blank=True)
     sub_province = models.CharField(max_length=500, null=True, blank=True)
-    province = models.CharField(max_length=500, null=True, blank=True)
-    country = models.CharField(max_length=500, null=True, blank=True)
+    province = models.ForeignKey(
+        "catalogs.Province", blank=True, null=True, on_delete=models.SET_NULL
+    )
     latitude = models.FloatField(default=0.0)
     longitude = models.FloatField(default=0.0)
     zipcode = models.CharField(max_length=50, null=True, blank=True)
@@ -95,6 +102,11 @@ class AbstractAddressModel(models.Model):
         """Meta class defines class level configurations."""
 
         abstract = True
+
+    @property
+    def country(self):
+        """Returns the country of the address."""
+        return self.province.country if self.province else None
 
 
 class AbstractNumberedModel(models.Model):
@@ -130,33 +142,3 @@ class AbstractContactModel(models.Model):
         """Meta class defines class level configurations."""
 
         abstract = True
-
-
-class AbstarctAditionalField(AbstractBaseModel):
-    """
-    An abstract model for additional fields associated an entity
-    (Farmer, Transaction etc.).
-
-    Attributes:
-    - field (CompanyAdditionalField): The specific additional field.
-    - value (str): The value associated with the additional field.
-
-    Note:
-    This is an abstract model that defines the structure for handling
-    additional fields associated with payments. It should be used as a base for
-    concrete models that capture payment-specific additional fields.
-    """
-
-    field = models.ForeignKey(
-        "supply_chains.CompanyAdditionalField",
-        on_delete=models.CASCADE,
-        related_name="%(class)s_payment_values",
-        verbose_name=_("Field"),
-    )
-    value = models.CharField(max_length=100, verbose_name=_("Value"))
-
-    class Meta:
-        abstract = True
-
-    def __str__(self):
-        return f"{self.field.name} -> {self.value}"

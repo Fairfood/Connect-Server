@@ -9,14 +9,12 @@ from ...accounts import constants as acc_constants
 from ...accounts.models import ValidationToken
 from base.authentication import utilities as auth_utils
 from base.db import models as abstarct_models
-from v1.catalogs.models.product_models import ConnectCard
 
 
 class AbstractCompanyModel(
-    abstarct_models.AbstractBaseModel,
     abstarct_models.AbstractAddressModel,
     abstarct_models.AbstractContactModel,
-    base_models.AbstarctEntityModel,
+    base_models.Entity,
 ):
     """
     An abstract base model for a company, providing fields for basic company
@@ -50,26 +48,12 @@ class Company(AbstractCompanyModel):
         blank=True,
         verbose_name=_("Company Name"),
     )
-    registration_no = models.CharField(
-        max_length=500,
-        null=True,
-        blank=True,
-        verbose_name=_("Company Registartion Number"),
-    )
     members = models.ManyToManyField(
         "accounts.CustomUser",
         related_name="entities",
         verbose_name=_("Member Companies"),
         through="supply_chains.CompanyMember",
         through_fields=("company", "user"),
-    )
-    incharge = models.ForeignKey(
-        "accounts.CustomUser",
-        null=True,
-        on_delete=models.SET_NULL,
-        blank=True,
-        related_name="managing_companies",
-        verbose_name=_("Incharge"),
     )
     currency = models.ForeignKey(
         "catalogs.Currency",
@@ -78,14 +62,6 @@ class Company(AbstractCompanyModel):
         blank=True,
         related_name="using_companies",
         verbose_name=_("Default Currency"),
-    )
-    card = models.OneToOneField(
-        ConnectCard,
-        on_delete=models.SET_NULL,
-        related_name="company",
-        verbose_name=_("Connect Card"),
-        null=True,
-        blank=True,
     )
 
     class Meta:
@@ -133,13 +109,13 @@ class CompanyMember(abstarct_models.AbstractBaseModel):
         verbose_name=_("Member User"),
     )
     company = models.ForeignKey(
-        "supply_chains.Company",
+        Company,
         on_delete=models.CASCADE,
         related_name="company_members",
         verbose_name=_("Company"),
     )
     type = models.CharField(
-        max_length=3,
+        max_length=11,
         default=sc_consts.CompanyMemberType.ADMIN,
         choices=sc_consts.CompanyMemberType.choices,
         verbose_name=_("Member Type"),
@@ -238,7 +214,7 @@ class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):
         default=True, verbose_name=_("Visibility")
     )
     type = models.CharField(
-        max_length=3,
+        max_length=11,
         choices=sc_consts.CompanyFieldVisibiltyType.choices,
         default=sc_consts.CompanyFieldVisibiltyType.TRANSACTION,
         verbose_name=_("Type"),

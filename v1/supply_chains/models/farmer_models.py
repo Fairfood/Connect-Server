@@ -4,11 +4,10 @@ from django.utils.translation import gettext_lazy as _
 from . import base_models
 from .. import constants as sc_consts
 from base.db import models as abstarct_models
-from v1.catalogs.models.product_models import ConnectCard
+from v1.forms.models import Form
 
 
 class AbstractFarmerModel(
-    abstarct_models.AbstractBaseModel,
     abstarct_models.AbstractAddressModel,
     abstarct_models.AbstractNumberedModel,
     abstarct_models.AbstractContactModel,
@@ -56,13 +55,8 @@ class Farmer(AbstractFarmerModel):
         default=sc_consts.FarmerConsentStatus.GRANTED,
         verbose_name=_("Consent Status"),
     )
-    card = models.OneToOneField(
-        ConnectCard,
-        on_delete=models.SET_NULL,
-        related_name="farmer",
-        verbose_name=_("Connect Card"),
-        null=True,
-        blank=True,
+    form = models.ForeignKey(
+        Form, models.SET_NULL, null=True, blank=True, verbose_name=_("Form")
     )
 
     def __str__(self):

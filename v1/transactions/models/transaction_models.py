@@ -1,22 +1,11 @@
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from hashid_field import HashidField
 
-from base.db.models import AbstarctAditionalField
-from base.db.models import AbstractBaseModel
-from base.db.models import AbstractNumberedModel
-from base.db.utilities import get_file_path
-from v1.catalogs.models.common_models import Currency
-from v1.catalogs.models.product_models import ConnectCard
 from v1.catalogs.models.product_models import Product
-from v1.supply_chains.models.company_models import Company
-from v1.transactions import constants
+from v1.transactions.models.base_models import BaseTransaction
 
 
-class BatchTransaction(AbstractBaseModel, AbstractNumberedModel):
+class ProductTransaction(BaseTransaction):
     """
     Represents batch transactions between farmer/company and a destination
     destination company.
@@ -58,48 +47,10 @@ class BatchTransaction(AbstractBaseModel, AbstractNumberedModel):
         blank=True,
         verbose_name=_("Parent Transactions"),
     )
-    destination = models.ForeignKey(
-        Company,
-        on_delete=models.PROTECT,
-        related_name="incoming_transactions",
-        verbose_name=_("Destination"),
-    )
-
-    # source can be a company or a farmer
-    source_type = models.ForeignKey(
-        ContentType,
-        on_delete=models.PROTECT,
-        verbose_name=_("Source Type"),
-        limit_choices_to={"model__in": ["company", "farmer"]},
-    )
-    source_id = HashidField(verbose_name=_("Source ID"))
-    source = GenericForeignKey(
-        "source_type",
-        "source_id",
-    )
-
-    date = models.DateTimeField(default=timezone.now, verbose_name=_("Date"))
-    invoice_number = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name=_("Invoice Number")
-    )
-    invoice = models.FileField(
-        upload_to=get_file_path,
-        null=True,
-        blank=True,
-        verbose_name=_("Invoice"),
-    )
-    card = models.ForeignKey(
-        ConnectCard,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        verbose_name=_("Card"),
-    )
     quality_correction = models.FloatField(
         default=100.00, verbose_name=_("Quality Correction")
     )
 
-    deleted = models.BooleanField(default=False, verbose_name=_("Deleted"))
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, verbose_name=_("Product")
     )
@@ -111,27 +62,6 @@ class BatchTransaction(AbstractBaseModel, AbstractNumberedModel):
         null=True,
         blank=True,
         verbose_name=_("Quantity"),
-    )
-    verification_method = models.IntegerField(
-        default=constants.VerificationMethodType.NONE,
-        choices=constants.VerificationMethodType.choices,
-        verbose_name=_("Verification Method"),
-    )
-    price = models.FloatField(
-        default=0, null=True, blank=True, verbose_name=_("Price")
-    )
-    currency = models.ForeignKey(
-        Currency,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name=_("Currency"),
-    )
-    verification_latitude = models.FloatField(
-        default=0.0, verbose_name=_("Verification Latitude")
-    )
-    verification_longitude = models.FloatField(
-        default=0.0, verbose_name=_("Verification Longitude")
     )
 
     def __str__(self):
@@ -151,23 +81,3 @@ class BatchTransaction(AbstractBaseModel, AbstractNumberedModel):
         the transaction.
         """
         return self.parents.aggregate(models.Sum("quantity"))["quantity__sum"]
-
-
-class BatchTransactionAdditionalFields(AbstarctAditionalField):
-    """
-    Represents additional fields associated with a batch transaction.
-
-    Attributes:
-    - transation (ForeignKey): The transaction associated with the additional
-        field.
-    """
-
-    transation = models.ForeignKey(
-        BatchTransaction,
-        on_delete=models.CASCADE,
-        related_name="additional_fields",
-        verbose_name=_("Transaction"),
-    )
-
-    def __str__(self):
-        return f"{self.field}: {self.value}"

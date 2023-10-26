@@ -32,24 +32,6 @@ class ProvinceAdmin(BaseAdmin):
     search_fields = ["name"]
 
 
-class RegionAdmin(BaseAdmin):
-    list_display = (
-        "province",
-        "name",
-        "id",
-    )
-    search_fields = ["name"]
-
-
-class VillageAdmin(BaseAdmin):
-    list_display = (
-        "region",
-        "name",
-        "id",
-    )
-    search_fields = ["name"]
-
-
 class CurrencyAdmin(BaseAdmin):
     list_display = (
         "name",
@@ -59,18 +41,6 @@ class CurrencyAdmin(BaseAdmin):
     search_fields = ["name"]
 
 
-class CategoryAdmin(BaseAdmin):
-    list_display = (
-        "name",
-        "id",
-    )
-    search_fields = ["name"]
-    list_filter = ("type",)
-
-
 admin.site.register(catalog_models.Country, CountryAdmin)
 admin.site.register(catalog_models.Province, ProvinceAdmin)
 admin.site.register(catalog_models.Currency, CurrencyAdmin)
-admin.site.register(catalog_models.Category, CategoryAdmin)
-admin.site.register(catalog_models.Region, RegionAdmin)
-admin.site.register(catalog_models.Village, VillageAdmin)
