@@ -11,7 +11,7 @@ class AbstractFarmerModel(
     abstarct_models.AbstractAddressModel,
     abstarct_models.AbstractNumberedModel,
     abstarct_models.AbstractContactModel,
-    base_models.AbstarctEntityModel,
+    base_models.Entity,
 ):
     """
     An abstract base model for a company, providing fields for basic company
@@ -66,30 +66,3 @@ class Farmer(AbstractFarmerModel):
     def name(self):
         """Returns the full name of the farmer."""
         return f"{self.first_name} {self.last_name}"
-
-
-class FarmerAditionalField(abstarct_models.AbstarctAditionalField):
-    """
-    Represents an additional field associated with a farmer.
-
-    This model captures additional fields associated with a farmer. It includes
-    a foreign key reference to the associated farmer.
-
-    Attributes:
-    - farmer (Farmer): The farmer to which this additional field is associated.
-
-    Note:
-    This model is used to store additional fields related to a farmer and is
-    linked to the farmer it belongs to.
-
-    """
-
-    farmer = models.ForeignKey(
-        Farmer,
-        on_delete=models.CASCADE,
-        related_name="farmer_additional_fields",
-        verbose_name=_("Farmer"),
-    )
-
-    def __str__(self):
-        return f"{self.field.name} -> {self.value}"
