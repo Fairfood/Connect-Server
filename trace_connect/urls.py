@@ -40,11 +40,15 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("connect/admin/", admin.site.urls),
-    path("v1/constants/", base_views.Constants.as_view(), name="constants"),
-    path("v1/auth/", include("v1.apiauth.urls")),
-    path("v1/accounts/", include("v1.accounts.urls")),
-    path("v1/notifications/", include("v1.notifications.urls")),
-    path("v1/supply-chains/", include("v1.supply_chains.urls")),
+    path(
+        "connect/v1/constants/",
+        base_views.Constants.as_view(),
+        name="constants",
+    ),
+    path("connect/v1/auth/", include("v1.apiauth.urls")),
+    path("connect/v1/accounts/", include("v1.accounts.urls")),
+    path("connect/v1/notifications/", include("v1.notifications.urls")),
+    path("connect/v1/supply-chains/", include("v1.supply_chains.urls")),
 ]
 
 if settings.DEBUG:
