@@ -39,7 +39,7 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("connect/admin/", admin.site.urls),
     path("v1/constants/", base_views.Constants.as_view(), name="constants"),
     path("v1/auth/", include("v1.apiauth.urls")),
     path("v1/accounts/", include("v1.accounts.urls")),
