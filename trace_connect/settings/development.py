@@ -14,10 +14,10 @@ ENVIRONMENT = "development"
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "ro-api-v3-dev.rightorigins.com",
+    "v2.dev.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://ro-api-v3-dev.rightorigins.com",)
+CORS_ORIGIN_WHITELIST = ("https://v2.dev.api.fairfood.org/",)
 
 DEBUG = True
 
