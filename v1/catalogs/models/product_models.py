@@ -72,24 +72,6 @@ class ConnectCard(AbstractBaseModel):
         """Function to return value in django admin."""
         return f"{self.display_id} - {self.card_id}"
 
-    def assign_entity(self, entity):
-        """
-        Assigns the given entity to this ConnectCard.
-
-        Args:
-            entity (Entity): The Entity to assign to this ConnectCard.
-
-        Returns:
-            EntityCard: The EntityCard object representing the relationship
-                between this ConnectCard and the given Entity.
-        """
-        created, ec = self.entity_cards.model.objects.get_or_create(
-            card=self, entity=entity
-        )
-        if not created:
-            ec.is_active = True
-            ec.save()
-
 
 class Premium(AbstractBaseModel):
     """
@@ -157,16 +139,19 @@ class Premium(AbstractBaseModel):
     is_active = models.BooleanField(default=True, verbose_name=_("Is Active"))
 
     def __str__(self):
-        return f"{self.name} - {self.owner.full_name}"
+        return f"{self.name} - {self.owner.name}"
 
 
 class PremiumOption(AbstractBaseModel):
-    """Represents a premium slab for a project's premium.
+    """
+    Represents a premium slab for a project's premium.
 
     Attributes:
         premium (ForeignKey): The project premium associated with the slab.
         name (str): Name showing in the drop-down.
         amount (float): The amount for the premium slab.
+
+    # TODO: Write an example (Moisture Premium.)
     """
 
     premium = models.ForeignKey(
@@ -180,4 +165,4 @@ class PremiumOption(AbstractBaseModel):
     is_active = models.BooleanField(default=True, verbose_name=_("Is Active"))
 
     def __str__(self):
-        return f"{self.premium.name} : {self.name} : {self.amount} | {self.pk}"
+        return f"{self.premium.name} : {self.name} : {self.amount}"

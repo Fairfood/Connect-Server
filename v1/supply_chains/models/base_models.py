@@ -57,8 +57,15 @@ class Entity(AbstractBaseModel):
     )
 
     def __str__(self):
-        """Function to return value in django admin."""
         return f"{self.name}"
+
+    @property
+    def name(self):
+        """property name of the entity."""
+        if hasattr(self, "company"):
+            return self.company.name
+        elif hasattr(self, "farmer"):
+            return self.farmer.name
 
 
 class EntityCard(AbstractBaseModel):

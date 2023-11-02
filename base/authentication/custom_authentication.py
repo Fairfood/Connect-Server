@@ -21,6 +21,7 @@ class CustomAuthentication(JWTAuthentication):
         if not user_token:
             return None
         user, validated_token = user_token
+        print(">>>>>", validated_token["session_data"])
 
         session_data = {
             k: decode(v) if k.endswith("_id") else v

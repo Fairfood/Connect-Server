@@ -22,9 +22,7 @@ class IdDecodeModelViewSet(viewsets.ModelViewSet):
     """Viewset to decode id to normal id."""
 
     lookup_url_kwarg = "hashid"
-
-    def get_object(self):
-        return self.basename.objects.get(id=self.kwargs["hashid"])
+    lookup_field = "id"
 
 
 class Constants(APIView):

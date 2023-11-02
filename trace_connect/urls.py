@@ -30,7 +30,7 @@ register_converter(converters.IDConverter, "hashid")
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="RightOrigins V3 API",
+        title="Trace Connect API",
         default_version="v1",
     ),
     public=True,
@@ -49,6 +49,8 @@ urlpatterns = [
     path("connect/v1/accounts/", include("v1.accounts.urls")),
     path("connect/v1/notifications/", include("v1.notifications.urls")),
     path("connect/v1/supply-chains/", include("v1.supply_chains.urls")),
+    path("connect/v1/catalogs/", include("v1.catalogs.urls")),
+    path("connect/v1/transactions/", include("v1.transactions.urls")),
 ]
 
 if settings.DEBUG:

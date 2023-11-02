@@ -39,13 +39,12 @@ class Company(AbstractCompanyModel):
         members (ManyToManyField): The members associated with the company.
         incharge (ForeignKey): The user who is in charge of the company.
         currency (ForeignKey): The default currency used by the company.
+        premiums (ManyToManyField): The premiums associated with the company.
 
     """
 
     name = models.CharField(
         max_length=500,
-        null=True,
-        blank=True,
         verbose_name=_("Company Name"),
     )
     members = models.ManyToManyField(
@@ -62,6 +61,17 @@ class Company(AbstractCompanyModel):
         blank=True,
         related_name="using_companies",
         verbose_name=_("Default Currency"),
+    )
+    premiums = models.ManyToManyField(
+        "catalogs.Premium",
+        related_name="companies",
+        verbose_name=_("Premiums"),
+        blank=True,
+    )
+    products = models.ManyToManyField(
+        "catalogs.Product",
+        related_name="companies",
+        verbose_name=_("Products"),
     )
 
     class Meta:
@@ -165,36 +175,6 @@ class CompanyMember(abstarct_models.AbstractBaseModel):
             "sms": get_pref(notif_manager.sms),
         }
         return prefs
-
-
-class CompanyAdditionalField(abstarct_models.AbstractBaseModel):
-    """
-    Model to save additional fields of a company.
-
-    Attribs:
-        label(str)      : label of the additional field.
-        type(str)       : type of the additional field like text, number...
-        required(bool)  : is the field required or not.
-        company(obj)    : company which the additional field is related.
-    """
-
-    name = models.CharField(max_length=100, verbose_name=_("Name"))
-    type = models.CharField(
-        max_length=3,
-        choices=sc_consts.CompanyFieldType.choices,
-        default=sc_consts.CompanyFieldType.TEXT,
-        verbose_name=_("Type"),
-    )
-    required = models.BooleanField(default=True, verbose_name=_("Required"))
-    company = models.ForeignKey(
-        "supply_chains.Company",
-        on_delete=models.CASCADE,
-        related_name="additional_fields",
-        verbose_name=_("Company"),
-    )
-
-    def __str__(self):
-        return f"{self.name} - {self.company.name}"
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):

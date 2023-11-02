@@ -38,7 +38,7 @@ class PaymentTransaction(BaseTransaction):
     payment_type = models.CharField(
         max_length=3,
         choices=constants.PaymentType.choices,
-        default=constants.PaymentType.TRANSACTION,
+        default=constants.PaymentType.TRANSACTION_PREMIUM,
         verbose_name=_("Payment Type"),
     )
     premium = models.ForeignKey(
@@ -72,15 +72,31 @@ class PaymentTransaction(BaseTransaction):
         blank=True,
     )
 
-    class Meta:
-        abstract = True
-
     def save(self, **kwargs):
         """save() override to pre and post save functions."""
-        # self._update_from_transaction()
+        self._update_from_transaction()
         self._update_payment_status()
         self._update_verification_method()
         super().save(**kwargs)
+
+    def _update_from_transaction(self):
+        """To update payment_from and payment_to from the available
+        transaction."""
+        if self.transaction:
+            self.source = self.transaction.destination
+            self.destination = self.transaction.source
+
+            # invoice will get from transaction if not available.
+            if not self.invoice:
+                self.invoice = self.transaction.invoice
+            self.card = self.transaction.card
+            self.invoice_number = self.transaction.invoice_number
+
+            # getting verification lat-long
+            lat = self.transaction.verification_latitude
+            lon = self.transaction.verification_longitude
+            self.verification_latitude = lat
+            self.verification_longitude = lon
 
     def _update_payment_status(self):
         """To update payment_status with available relations."""

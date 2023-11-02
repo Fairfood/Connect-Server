@@ -21,7 +21,7 @@ class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
     )
     destination = models.ForeignKey(
         Entity,
-        on_delete=models,
+        on_delete=models.CASCADE,
         related_name="incoming_transactions",
         verbose_name=_("Destination"),
     )
@@ -54,7 +54,7 @@ class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
         blank=True,
         choices=constants.VerificationMethodType.choices,
     )
-    form = models.ForeignKey(
+    form = models.OneToOneField(
         Form, models.SET_NULL, null=True, blank=True, verbose_name=_("Form")
     )
 

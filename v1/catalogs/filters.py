@@ -1,10 +1,12 @@
 """Filters used in the catalogs api."""
 from django_filters import rest_framework as filters
 
+from .models import product_models
+from base.authentication import utilities as utils
 from v1.catalogs.models import common_models as catalog_models
 
 
-class CurrencyFilter(filters.FilterSet):
+class CurrencyFilterSet(filters.FilterSet):
     """Filterclass for currency-list api."""
 
     all = filters.BooleanFilter(method="all_filter")
@@ -26,7 +28,7 @@ class CurrencyFilter(filters.FilterSet):
         return query
 
 
-class ProvinceFilter(filters.FilterSet):
+class ProvinceFilterSet(filters.FilterSet):
     """Filterclass for province."""
 
     class Meta:
@@ -36,19 +38,46 @@ class ProvinceFilter(filters.FilterSet):
         ]
 
 
-class RegionFilter(filters.FilterSet):
-    """Filterclass for Region."""
+class ProductFilterSet(filters.FilterSet):
+    """Filterclass for product-list api."""
+
+    updated_after = filters.DateTimeFilter(
+        field_name="updated_at", lookup_expr="gt"
+    )
 
     class Meta:
-        model = catalog_models.Region
-        fields = [
-            "province",
-        ]
+        """Meta Info."""
+
+        model = product_models.Product
+        fields = (
+            "name",
+            "description",
+        )
+
+    @property
+    def qs(self):
+        """Return queryset."""
+        parent = super().qs
+        entity = utils.get_current_entity()
+        return parent.filter(companies=entity)
 
 
-class VillageFilter(filters.FilterSet):
-    """Filterclass for province."""
+class PremiumFilterSet(filters.FilterSet):
+    """Filterclass for product-list api."""
+
+    updated_after = filters.DateTimeFilter(
+        field_name="updated_at", lookup_expr="gt"
+    )
 
     class Meta:
-        model = catalog_models.Village
-        fields = ["region,"]
+        """Meta Info."""
+
+        model = product_models.Premium
+        fields = ("name",)
+
+    @property
+    def qs(self):
+        """Return queryset."""
+        parent = super().qs
+        entity = utils.get_current_entity()
+        return parent.filter(owner=entity)

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from v1.catalogs.models.product_models import Product
+from v1.transactions import constants
 from v1.transactions.models.base_models import BaseTransaction
 
 
@@ -67,6 +68,14 @@ class ProductTransaction(BaseTransaction):
     def __str__(self):
         return f"{self.number}: {self.source} -> {self.destination}"
 
+    def base_payment(self):
+        """
+        Base payment without any premium
+        """
+        return self.transaction_payments.filter(
+            payment_type=constants.PaymentType.TRANSACTION
+        ).first()
+
     def source_poducts(self):
         """
         Returns a queryset of products associated with the source of the
@@ -75,6 +84,7 @@ class ProductTransaction(BaseTransaction):
         product_ids = self.parents.values_list("product", flat=True)
         return Product.objects.filter(id__in=product_ids)
 
+    @property
     def source_quantity(self):
         """
         Returns the total quantity of products associated with the source of

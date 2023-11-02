@@ -5,54 +5,10 @@ from base.drf import fields
 from v1.catalogs.models import common_models as catalog_models
 
 
-class VillageSerializer(serializers.ModelSerializer):
-    """Serializer for Region data."""
-
-    id = fields.SerializableRelatedField(read_only=True)
-    region = fields.SerializableRelatedField(
-        write_only=True, queryset=catalog_models.Region.objects.all()
-    )
-
-    class Meta:
-        """Meta Info."""
-
-        model = catalog_models.Village
-        exclude = (
-            "creator",
-            "updater",
-            "created_on",
-            "updated_on",
-        )
-
-
-class RegionSerializer(serializers.ModelSerializer):
-    """Serializer for Region data."""
-
-    id = fields.SerializableRelatedField(read_only=True)
-    villages = fields.SerializableRelatedField(
-        serializer=VillageSerializer, read_only=True, many=True
-    )
-
-    class Meta:
-        """Meta Info."""
-
-        model = catalog_models.Region
-        exclude = (
-            "creator",
-            "updater",
-            "created_on",
-            "updated_on",
-            "province",
-        )
-
-
 class ProvinceSerializer(serializers.ModelSerializer):
     """Serializer for country data."""
 
     id = fields.SerializableRelatedField(read_only=True)
-    regions = fields.SerializableRelatedField(
-        serializer=RegionSerializer, read_only=True, many=True
-    )
 
     class Meta:
         """Meta Info."""
@@ -75,43 +31,3 @@ class CountrySerializer(serializers.ModelSerializer):
 
         model = catalog_models.Country
         exclude = ("creator", "updater", "created_on", "updated_on")
-
-
-class BaseCountrySerializer(serializers.ModelSerializer):
-    """Serializer for province data."""
-
-    id = fields.SerializableRelatedField(read_only=True)
-
-    class Meta:
-        """Meta Info."""
-
-        model = catalog_models.Country
-        exclude = ("creator", "updater", "created_on", "updated_on")
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        return data
-
-
-class BaseRegionSerializer(serializers.ModelSerializer):
-    """Serializer for Region data."""
-
-    id = fields.SerializableRelatedField(read_only=True)
-
-    class Meta:
-        """Meta Info."""
-
-        model = catalog_models.Region
-        fields = ("id", "name")
-
-
-class BaseProvinceSerializer(serializers.ModelSerializer):
-    """Serializer for country data."""
-
-    id = fields.SerializableRelatedField(read_only=True)
-
-    class Meta:
-        """Meta Info."""
-
-        model = catalog_models.Province
-        fields = ("id", "name")

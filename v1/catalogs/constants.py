@@ -8,12 +8,12 @@ class PremiumCategory(models.TextChoices):
     field.
 
     Choices:
-    - BASE_PREMIUM: Represents a base premium with a value of 'PRE'.
-    - TRANSACTION_PREMIUM: Represents a transaction premium with a value of
-        'TRA'.
+    - PAYOUT: Represents a payout premium. (Payment without Transaction)
+            example: Yearly Bonus.
+    - TRANSACTION: Represents a transaction premium with a value
     """
 
-    BASE = "BASE", _("Base Premium")
+    PAYOUT = "PAYOUT", _("Payout Premium")
     TRANSACTION = "TRANSACTION", _("Transaction Premium")
 
 

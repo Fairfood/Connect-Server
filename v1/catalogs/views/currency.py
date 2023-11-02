@@ -16,7 +16,7 @@ class CurrencyViewSet(IdDecodeModelViewSet):
     http_method_names = [
         "get",
     ]
-    filterset_class = catalog_filters.CurrencyFilter
+    filterset_class = catalog_filters.CurrencyFilterSet
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = [
         "name",

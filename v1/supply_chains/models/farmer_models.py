@@ -55,7 +55,7 @@ class Farmer(AbstractFarmerModel):
         default=sc_consts.FarmerConsentStatus.GRANTED,
         verbose_name=_("Consent Status"),
     )
-    form = models.ForeignKey(
+    form = models.OneToOneField(
         Form, models.SET_NULL, null=True, blank=True, verbose_name=_("Form")
     )
 

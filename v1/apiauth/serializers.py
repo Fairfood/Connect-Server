@@ -44,7 +44,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
             )
         try:
             entity_member = CompanyMember.objects.get(
-                entity=self.entity, user=user, is_active=True
+                company=self.entity, user=user, is_active=True
             )
         except CompanyMember.DoesNotExist:
             raise exceptions.AuthenticationFailed(
