@@ -2,15 +2,12 @@
 from django.urls import path
 from rest_framework import routers
 
-from v1.accounts import models as user_models
 from v1.accounts.views import user as user_viewset
 
 
 router = routers.SimpleRouter()
 
-router.register(
-    r"users", user_viewset.UserViewSet, basename=user_models.CustomUser
-)
+router.register(r"users", user_viewset.UserViewSet, basename="users")
 
 urlpatterns = router.urls
 

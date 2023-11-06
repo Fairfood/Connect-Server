@@ -484,6 +484,8 @@ class PrivacyPolicy(AbstractBaseModel):
     @staticmethod
     def current_privacy_policy():
         """Return current privacy policy."""
-        return PrivacyPolicy.objects.exclude(
+        policies = PrivacyPolicy.objects.exclude(
             since__gt=datetime.date.today()
-        ).latest("version")
+        )
+        if policies.exists():
+            return policies.latest("version")
