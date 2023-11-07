@@ -50,7 +50,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_current_policy(self, obj):
         """Return current policy."""
-        return user_models.PrivacyPolicy.current_privacy_policy().id
+        policy = user_models.PrivacyPolicy.current_privacy_policy()
+        return policy.id if policy else None
 
     @staticmethod
     def create_update_user(validated_data, instance=None):
