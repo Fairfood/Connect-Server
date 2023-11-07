@@ -11,12 +11,11 @@ class UserEntitySerializer(serializers.ModelSerializer):
     id = fields.SerializableRelatedField(source="entity.id", read_only=True)
     name = serializers.CharField(source="entity.name")
     image = serializers.FileField(source="entity.image")
-    entity_type = serializers.IntegerField(source="entity.type")
-    member_role = serializers.IntegerField(source="type")
+    member_role = serializers.CharField(source="type")
     email = serializers.EmailField(source="entity.email")
 
     class Meta:
         """Meta Info."""
 
         model = company_models.CompanyMember
-        fields = ("id", "name", "member_role", "image", "email")
+        fields = ("id", "company", "member_role", "image", "email")
