@@ -14,7 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
     managing_entitys = fields.SerializableRelatedField(
         read_only=True,
         serializer=UserEntitySerializer,
-        source="member_entitys",
+        source="member_companies",
         many=True,
     )
 
