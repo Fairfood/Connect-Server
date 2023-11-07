@@ -18,4 +18,4 @@ class UserEntitySerializer(serializers.ModelSerializer):
         """Meta Info."""
 
         model = company_models.CompanyMember
-        fields = ("id", "company", "member_role", "image", "email")
+        fields = ("id", "name", "member_role", "image", "email")
