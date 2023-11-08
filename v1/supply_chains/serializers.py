@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.forms.serializers import FormSerializer
@@ -56,6 +57,7 @@ class CompanySerializer(DynamicModelSerializer):
     field_visibilties = CompanyFieldVisibiltySerilizer(
         many=True, read_only=True
     )
+    owned_premiums = SerializableRelatedField(read_only=True, many=True)
 
     class Meta:
         model = Company

@@ -63,12 +63,6 @@ class Company(AbstractCompanyModel):
         related_name="using_companies",
         verbose_name=_("Default Currency"),
     )
-    premiums = models.ManyToManyField(
-        "catalogs.Premium",
-        related_name="companies",
-        verbose_name=_("Premiums"),
-        blank=True,
-    )
     products = models.ManyToManyField(
         "catalogs.Product",
         related_name="companies",
