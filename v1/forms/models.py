@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -5,45 +6,71 @@ from . import constants as from_consts
 from base.db.models import AbstractBaseModel
 
 
-class ReferenceForm(AbstractBaseModel):
+class Form(AbstractBaseModel):
     """
-    Model representing a reference form.
+    Represents a Form related to a Company in a supply chain.
 
     Attributes:
-        owner (Company): The company that owns the reference form.
-        form_type (str): The type of the reference form.
+    - owner (models.ForeignKey): The Company that owns this Form.
+    - form_type (models.CharField): The type of the Form.
+
+    Related Names:
+    - reference_forms: A reverse relation to access Forms owned by a Company.
+
+    Note:
+    This model extends AbstractBaseModel.
+
     """
 
     owner = models.ForeignKey(
         "supply_chains.Company",
-        related_name="reference_forms",
+        related_name="forms",
         on_delete=models.CASCADE,
         verbose_name=_("Owner"),
     )
     form_type = models.CharField(
         max_length=20,
         choices=from_consts.FormType.choices,
+        default=from_consts.FormType.TRANSACTION,
         verbose_name=_("Form Type"),
     )
 
     def __str__(self):
         return f"{self.owner} - {self.form_type}"
 
+    @property
+    def product(self):
+        """
+        Get the associated product for this form.
 
-class ReferenceFormField(AbstractBaseModel):
+        If the Form has an associated `company_product`, it returns the product
+        associated with it. Otherwise, it returns None.
+
+        Returns:
+        product: The associated product or None if not available.
+        """
+        if hasattr(self, "company_product"):
+            return self.company_product.product
+        return None
+
+
+class FormField(AbstractBaseModel):
     """
-    Model representing a field within a reference form.
+    Represents a field within a Form.
 
     Attributes:
-        reference_form (ReferenceForm): The reference form to which this field
-            belongs.
-        label (str): The label or name of the form field.
-        type (str): The type of the field.
-        required (bool): Indicates whether the field is required.
+    - form (models.ForeignKey): The Form to which this field belongs.
+    - label (models.CharField): The label for this field.
+    - type (models.CharField): The type of the field.
+    - required (models.BooleanField): Indicates whether the field is required.
+
+    Related Names:
+    - fields: A reverse relation to access fields associated with a Form.
+
     """
 
-    reference_form = models.ForeignKey(
-        ReferenceForm,
+    form = models.ForeignKey(
+        Form,
         related_name="fields",
         on_delete=models.CASCADE,
         verbose_name=_("Form"),
@@ -60,45 +87,53 @@ class ReferenceFormField(AbstractBaseModel):
         return f"{self.form} - {self.label}"
 
 
-class Form(AbstractBaseModel):
+class Submission(AbstractBaseModel):
     """
-    Model representing a specific form instance.
+    Represents a submission of a Form.
 
     Attributes:
-        reference (ReferenceForm): The reference form associated with this
-        instance.
-    """
+    - form (models.ForeignKey): The Form associated with this submission.
 
-    reference = models.ForeignKey(
-        ReferenceForm,
-        related_name="forms",
-        on_delete=models.CASCADE,
-        verbose_name=_("Reference"),
-    )
+    Related Names:
+    - submissions: A reverse relation to access submissions related to a Form.
 
-    def __str__(self):
-        return f"{self.reference}"
-
-
-class FormValues(AbstractBaseModel):
-    """
-    Model representing values associated with form fields within a specific
-    form instance.
-
-    Attributes:
-        form (Form): The specific form instance.
-        field (ReferenceFormField): The form field.
-        value (str): The actual value for the form field.
     """
 
     form = models.ForeignKey(
         Form,
-        related_name="values",
+        related_name="submissions",
         on_delete=models.CASCADE,
         verbose_name=_("Form"),
     )
+
+    def __str__(self):
+        return f"{self.form}"
+
+
+class SubmissionValues(AbstractBaseModel):
+    """
+    Represents the values of fields submitted within a Form.
+
+    Attributes:
+    - submission (models.ForeignKey): The Submission associated with these
+        values.
+    - field (models.ForeignKey): The FormField associated with these values.
+    - value (models.CharField): The actual value for the field.
+
+    Meta:
+    - constraints: Defines a UniqueConstraint to ensure the uniqueness
+        of pairs (submission, field).
+
+    """
+
+    submission = models.ForeignKey(
+        Submission,
+        related_name="values",
+        on_delete=models.CASCADE,
+        verbose_name=_("Submission"),
+    )
     field = models.ForeignKey(
-        ReferenceFormField,
+        FormField,
         related_name="values",
         on_delete=models.CASCADE,
         verbose_name=_("Field"),
@@ -106,7 +141,24 @@ class FormValues(AbstractBaseModel):
     value = models.CharField(max_length=100, verbose_name=_("Value"))
 
     class Meta:
-        unique_together = ("form", "field")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["submission", "field"], name="unique_submission_field"
+            )
+        ]
+
+    def clean(self):
+        """
+        Validates that the field and submission belong to the same Form.
+
+        Raises:
+        ValidationError: If the field and submission do not belong to the same
+            Form.
+        """
+        if self.field.form != self.submission.form:
+            raise ValidationError(
+                _("Field and Submission must belong to the same Form.")
+            )
 
     def __str__(self):
-        return f"{self.form} - {self.field} - {self.value}"
+        return f"{self.submission} - {self.field} - {self.value}"

@@ -9,6 +9,7 @@ from ...accounts import constants as acc_constants
 from ...accounts.models import ValidationToken
 from base.authentication import utilities as auth_utils
 from base.db import models as abstarct_models
+from v1.forms.models import Form
 
 
 class AbstractCompanyModel(
@@ -175,6 +176,51 @@ class CompanyMember(abstarct_models.AbstractBaseModel):
             "sms": get_pref(notif_manager.sms),
         }
         return prefs
+
+
+class CompanyProduct(abstarct_models.AbstractBaseModel):
+    """
+    Represents the association between a Company and a Product.
+
+    Attributes:
+    - company (models.ForeignKey): The Company associated with the Product.
+    - product (models.ForeignKey): The Product associated with the Company.
+    - form (models.OneToOneField): An optional Form associated with the
+        Company-Product relationship.
+
+    Related Names:
+    - company_products (related_name): A reverse relation to access
+        Company-Product associations for a Company.
+    - company_products (related_name): A reverse relation to access
+        Company-Product associations for a Product.
+    - company_product (related_name): A reverse relation to access the Form
+        associated with this Company-Product relationship.
+
+    """
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="company_products",
+        verbose_name=_("Company"),
+    )
+    product = models.ForeignKey(
+        "catalogs.Product",
+        on_delete=models.CASCADE,
+        related_name="company_products",
+        verbose_name=_("Product"),
+    )
+    form = models.OneToOneField(
+        Form,
+        on_delete=models.SET_NULL,
+        related_name="company_product",
+        null=True,
+        blank=True,
+        verbose_name=_("Form"),
+    )
+
+    def __str__(self):
+        return f"{self.company.name} - {self.product.name}"
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):

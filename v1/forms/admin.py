@@ -1,70 +1,75 @@
-# from django.contrib import admin
-# Register your models here.
-from django.contrib.admin import TabularInline
+from django.contrib import admin
 
-from base.db import admin
-from v1.forms.models import FormValues
-from v1.forms.serializers import ReferenceFormFieldSerializer
+from .models import Form
+from .models import FormField
+from .models import Submission
+from .models import SubmissionValues
+from base.db.admin import BaseAdmin
 
 
-class ReferenceFormFieldTabularInline(TabularInline):
+class FormFieldInline(admin.TabularInline):
     """
-    A tabular inline form for editing reference form fields in the admin
-    interface.
+    Inline form for FormField within the Form admin page.
 
-    This class is used to define a tabular inline form for editing reference
-    form fields in the admin interface. It inherits from Django's built-in
-    `TabularInline` class and uses the `ReferenceFormFieldSerializer` model
-    to define the fields that can be edited.
+    Attributes:
+    - model (model): The model being represented in this inline form.
+    - extra (int): The number of empty forms to display.
+    - fields (list): The fields to display in the inline form.
+    - fk_name (str): The name of the foreign key field that relates to the
+        parent form.
 
     """
 
-    model = ReferenceFormFieldSerializer
+    model = FormField
     extra = 0
+    fields = ["label", "type", "required"]
+    fk_name = "form"
 
 
-class ReferenceFormAdmin(admin.BaseAdmin):
+@admin.register(Form)
+class FormAdmin(BaseAdmin):
     """
-    Admin interface for managing reference forms.
+    Admin class for managing Form instances.
 
-    This class defines the behavior of the admin interface for managing
-    reference forms. It specifies the fields to be
-    displayed in the list view, as well as the fields that can be searched.
-    """
+    Attributes:
+    - list_display (list): The fields to display in the admin list view.
+    - inlines (list): Specifies the inlines to be used with this admin class.
 
-    list_display = (
-        "owner",
-        "id",
-    )
-    inlines = [ReferenceFormFieldTabularInline]
-
-
-class FormValueTabularInline(TabularInline):
-    """
-    A tabular inline form for editing form values in the admin interface.
-
-    This class is used to define a tabular inline form for editing form values
-    in the admin interface. It inherits from Django's built-in `TabularInline`
-    class and uses the `FormValuesSerializer` model to define the fields that
-    can be edited.
     """
 
-    model = FormValues
+    list_display = ["id", "owner", "form_type"]
+    inlines = [FormFieldInline]
+
+
+class SubmissionValuesInline(admin.TabularInline):
+    """
+    Inline form for SubmissionValues within the Submission admin page.
+
+    Attributes:
+    - model (model): The model being represented in this inline form.
+    - extra (int): The number of empty forms to display.
+    - fields (list): The fields to display in the inline form.
+    - fk_name (str): The name of the foreign key field that relates to the
+        parent form.
+
+    """
+
+    model = SubmissionValues
     extra = 0
+    fields = ["field", "value"]
+    fk_name = "submission"
 
 
-class FormAdmin(admin.BaseAdmin):
+@admin.register(Submission)
+class SubmissionAdmin(BaseAdmin):
     """
-    Admin interface for managing forms.
+    Admin class for managing Submission instances.
 
-    This class defines the behavior of the admin interface for managing forms.
-    It specifies the fields to be displayed in the list view, as well as the
-    fields that can be searched.
+    Attributes:
+    - list_display (list): The fields to display in the admin list view.
+    - inlines (list): Specifies the inlines to be used with this admin class.
+
     """
 
-    list_display = (
-        "reference",
-        "type",
-        "id",
-    )
-    inlines = [FormValueTabularInline]
+    list_display = ["id", "form"]
+    inlines = [SubmissionValuesInline]

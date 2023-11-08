@@ -18,6 +18,7 @@ class FormType(models.TextChoices):
     TRANSACTION = "TRANSACTION", _("Transaction")
     FARMER = "FARMER", _("Farmer")
     PAYMENT = "PAYMENT", _("Payment")
+    PRODUCT = "PRODUCT", _("Product")
 
 
 class FormFieldType(models.TextChoices):

@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from . import base_models
 from .. import constants as sc_consts
 from base.db import models as abstarct_models
-from v1.forms.models import Form
+from v1.forms.models import Submission
 
 
 class AbstractFarmerModel(
@@ -55,8 +55,12 @@ class Farmer(AbstractFarmerModel):
         default=sc_consts.FarmerConsentStatus.GRANTED,
         verbose_name=_("Consent Status"),
     )
-    form = models.OneToOneField(
-        Form, models.SET_NULL, null=True, blank=True, verbose_name=_("Form")
+    submission = models.OneToOneField(
+        Submission,
+        models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("Submission"),
     )
 
     def __str__(self):
