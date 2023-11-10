@@ -73,8 +73,8 @@ class FarmerSerializer(DynamicModelSerializer):
     Serializer for the Farmer model.
     """
 
-    province = ProvinceSerializer(read_only=True)
-    country = CountrySerializer(read_only=True)
+    province_details = ProvinceSerializer(source="province", read_only=True)
+    country_details = CountrySerializer(source="country", read_only=True)
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer()
 

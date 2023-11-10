@@ -2,6 +2,7 @@
 from django.contrib import admin
 
 from .models import company_models
+from .models import farmer_models
 from base.db.admin import BaseAdmin
 
 
@@ -34,9 +35,10 @@ class FarmerAdmin(BaseAdmin):
     Model representing a company entity.
     """
 
-    list_display = ("      ", "last_name", "id", "buyer")
+    list_display = ("first_name", "last_name", "id", "buyer")
     search_fields = ["name"]
 
 
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
+admin.site.register(farmer_models.Farmer, FarmerAdmin)
