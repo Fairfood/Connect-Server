@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
@@ -25,6 +26,15 @@ class EntityCardSerializer(DynamicModelSerializer):
     class Meta:
         model = EntityCard
         fields = "__all__"
+
+    def create(self, validated_data):
+        """Override the default create."""
+        card_data = validated_data.pop("card")
+        instance = super().create(validated_data)
+        card = self.card.create(card_data)
+        instance.card = card
+        instance.save()
+        return super().create(validated_data)
 
 
 class EntitySerializer(DynamicModelSerializer):
@@ -83,7 +93,14 @@ class FarmerSerializer(DynamicModelSerializer):
         model = Farmer
         fields = "__all__"
 
+    @transaction.atomic
     def create(self, validated_data):
         """Override the default create."""
         validated_data["buyer"] = utils.get_current_entity()
-        return super().create(validated_data)
+        submission_data = validated_data.pop("submission")
+        instance = super().create(validated_data)
+        if submission_data:
+            submission = self.submission.create(submission_data)
+        instance.submission = submission
+        instance.save()
+        return instance
