@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from base.authentication import utilities as utils
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.serializers.country import CountrySerializer
@@ -81,3 +82,8 @@ class FarmerSerializer(DynamicModelSerializer):
     class Meta:
         model = Farmer
         fields = "__all__"
+
+    def create(self, validated_data):
+        """Override the default create."""
+        validated_data["buyer"] = utils.get_current_entity()
+        return super().create(validated_data)
