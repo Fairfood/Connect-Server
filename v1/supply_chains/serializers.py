@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
+from v1.catalogs.serializers.country import CountrySerializer
+from v1.catalogs.serializers.country import ProvinceSerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.forms.serializers import FormSerializer
 from v1.forms.serializers import SubmissionSerializer
@@ -47,6 +49,8 @@ class CompanySerializer(DynamicModelSerializer):
     Serializer for the Company model.
     """
 
+    province = ProvinceSerializer(read_only=True)
+    country = CountrySerializer(read_only=True)
     buyer = EntitySerializer(
         read_only=True, fields=("id", "name", "image", "description")
     )
@@ -69,6 +73,8 @@ class FarmerSerializer(DynamicModelSerializer):
     Serializer for the Farmer model.
     """
 
+    province = ProvinceSerializer(read_only=True)
+    country = CountrySerializer(read_only=True)
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer()
 

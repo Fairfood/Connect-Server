@@ -29,5 +29,14 @@ class CompanyMemberAdmin(BaseAdmin):
     search_fields = ["company"]
 
 
+class FarmerAdmin(BaseAdmin):
+    """
+    Model representing a company entity.
+    """
+
+    list_display = ("      ", "last_name", "id", "buyer")
+    search_fields = ["name"]
+
+
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
