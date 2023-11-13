@@ -91,3 +91,11 @@ class ProductTransaction(BaseTransaction):
         the transaction.
         """
         return self.parents.aggregate(models.Sum("quantity"))["quantity__sum"]
+
+    @property
+    def current_quantity(self):
+        """
+        Returns the balence quantity of products associated with the source of
+        the transaction.
+        """
+        return 0 if self.children.exists() else self.quantity

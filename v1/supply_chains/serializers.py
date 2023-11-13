@@ -100,7 +100,7 @@ class FarmerSerializer(DynamicModelSerializer):
         submission_data = validated_data.pop("submission")
         instance = super().create(validated_data)
         if submission_data:
-            submission = self.submission.create(submission_data)
+            submission = self.fields["submission"].create(submission_data)
         instance.submission = submission
         instance.save()
         return instance

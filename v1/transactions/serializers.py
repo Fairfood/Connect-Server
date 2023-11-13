@@ -34,6 +34,9 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     source_quantity = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
+    current_quantity = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
 
     class Meta:
         """Meta class."""
