@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
 
 from base.authentication import utilities as utils
+from utilities.functions import unix_to_datetime
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.farmer_models import Farmer
 
@@ -11,6 +12,10 @@ class FarmerFilterSet(filters.FilterSet):
 
     This filter set allows filtering of Farmer objects.
     """
+
+    updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="updated_on"
+    )
 
     class Meta:
         model = Farmer
@@ -26,6 +31,12 @@ class FarmerFilterSet(filters.FilterSet):
         parent = super().qs
         entity = utils.get_current_entity()
         return parent.filter(buyer=entity)
+
+    def updated_after_filter(self, queryset, name, value):
+        """Return queryset."""
+        name += "__gt"
+        value = unix_to_datetime(value)
+        return queryset.filter(**{name: value})
 
 
 class EntityCardFilterSet(filters.FilterSet):

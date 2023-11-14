@@ -3,6 +3,7 @@ from django_filters import rest_framework as filters
 
 from .models import product_models
 from base.authentication import utilities as utils
+from utilities.functions import unix_to_datetime
 from v1.catalogs.models import common_models as catalog_models
 
 
@@ -41,8 +42,8 @@ class ProvinceFilterSet(filters.FilterSet):
 class ProductFilterSet(filters.FilterSet):
     """Filterclass for product-list api."""
 
-    updated_after = filters.DateTimeFilter(
-        field_name="updated_at", lookup_expr="gt"
+    updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="updated_on"
     )
 
     class Meta:
@@ -61,12 +62,18 @@ class ProductFilterSet(filters.FilterSet):
         entity = utils.get_current_entity()
         return parent.filter(companies=entity)
 
+    def updated_after_filter(self, queryset, name, value):
+        """Return queryset."""
+        name += "__gte"
+        value = unix_to_datetime(value)
+        return queryset.filter(**{name: value})
+
 
 class PremiumFilterSet(filters.FilterSet):
     """Filterclass for product-list api."""
 
-    updated_after = filters.DateTimeFilter(
-        field_name="updated_at", lookup_expr="gt"
+    updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="updated_on"
     )
 
     class Meta:
@@ -81,3 +88,9 @@ class PremiumFilterSet(filters.FilterSet):
         parent = super().qs
         entity = utils.get_current_entity()
         return parent.filter(owner=entity)
+
+    def updated_after_filter(self, queryset, name, value):
+        """Return queryset."""
+        name += "__gte"
+        value = unix_to_datetime(value)
+        return queryset.filter(**{name: value})

@@ -36,7 +36,7 @@ class PaymentTransaction(BaseTransaction):
     """
 
     payment_type = models.CharField(
-        max_length=3,
+        max_length=20,
         choices=constants.PaymentType.choices,
         default=constants.PaymentType.TRANSACTION_PREMIUM,
         verbose_name=_("Payment Type"),

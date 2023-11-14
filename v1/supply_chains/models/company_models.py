@@ -68,6 +68,15 @@ class Company(AbstractCompanyModel):
         related_name="companies",
         verbose_name=_("Products"),
     )
+    buy_enabled = models.BooleanField(
+        default=True, verbose_name=_("Buy Enabled")
+    )
+    sell_enabled = models.BooleanField(
+        default=False, verbose_name=_("Sell Enabled")
+    )
+    quality_correction = models.BooleanField(
+        default=False, verbose_name=_("Quality Correction")
+    )
 
     class Meta:
         """Meta class defines class level configurations."""

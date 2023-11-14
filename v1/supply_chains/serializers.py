@@ -63,7 +63,7 @@ class CompanySerializer(DynamicModelSerializer):
     province = ProvinceSerializer(read_only=True)
     country = CountrySerializer(read_only=True)
     buyer = EntitySerializer(
-        read_only=True, fields=("id", "name", "image", "description")
+        read_only=True, fields=("id", "name", "image", "description", "card")
     )
     entity_card = EntityCardSerializer(read_only=True)
     forms = FormSerializer(

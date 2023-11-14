@@ -40,6 +40,6 @@ class FarmerViewSet(IdDecodeModelViewSet):
     http_method_names = (
         "get",
         "post",
-        "put",
+        "patch",
     )
     filterset_class = FarmerFilterSet

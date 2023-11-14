@@ -3,6 +3,8 @@ from rest_framework.exceptions import ValidationError
 
 from base.request_handler.response import SuccessResponse
 from base.request_handler.views import IdDecodeModelViewSet
+from v1.transactions.filters import PaymentTransactionFilterSet
+from v1.transactions.filters import ProductTransactionFilterSet
 from v1.transactions.models.payment_models import PaymentTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
 from v1.transactions.serializers import PaymentTransactionsSerializer
@@ -13,7 +15,7 @@ class ProductTransactionViewSet(IdDecodeModelViewSet):
     queryset = ProductTransaction.objects.all()
     serializer_class = ProductTransactionSerializer
     http_method_names = ("get", "post")
-    # filterset_class = ProductTransactionFilterSet
+    filterset_class = ProductTransactionFilterSet
 
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
@@ -42,6 +44,7 @@ class PaymentTransactionViewSet(IdDecodeModelViewSet):
     queryset = PaymentTransaction.objects.all()
     serializer_class = PaymentTransactionsSerializer
     http_method_names = ("get", "post")
+    filterset_class = PaymentTransactionFilterSet
 
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
