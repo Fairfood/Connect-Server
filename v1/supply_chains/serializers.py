@@ -99,7 +99,7 @@ class FarmerSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         validated_data["buyer"] = utils.get_current_entity()
-        submission_data = validated_data.pop("submission")
+        submission_data = validated_data.pop("submission", None)
         instance = super().create(validated_data)
         if submission_data:
             submission = self.fields["submission"].create(submission_data)

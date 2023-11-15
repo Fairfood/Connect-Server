@@ -53,7 +53,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         payments = validated_data.pop("transaction_payments")
         currency = validated_data.pop("currency")
         amount = validated_data.pop("amount")
-        submissions = validated_data.pop("submission")
+        submissions = validated_data.pop("submission", None)
         instance = super().create(validated_data)
         self._create_premiums(
             payments, instance, amount=amount, currency=currency
