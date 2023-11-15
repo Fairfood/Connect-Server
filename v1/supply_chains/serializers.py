@@ -6,6 +6,7 @@ from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.serializers.country import CountrySerializer
 from v1.catalogs.serializers.country import ProvinceSerializer
+from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.forms.serializers import FormSerializer
 from v1.forms.serializers import SubmissionSerializer
@@ -62,6 +63,7 @@ class CompanySerializer(DynamicModelSerializer):
 
     province = ProvinceSerializer(read_only=True)
     country = CountrySerializer(read_only=True)
+    currency = CurrencySerializer(read_only=True)
     buyer = EntitySerializer(
         read_only=True, fields=("id", "name", "image", "description", "card")
     )

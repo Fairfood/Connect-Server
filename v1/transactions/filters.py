@@ -24,6 +24,7 @@ class ProductTransactionFilterSet(filters.FilterSet):
     only_quantity_available = filters.BooleanFilter(
         method="quantity_available_filter"
     )
+    type
 
     class Meta:
         model = transaction_models.ProductTransaction
