@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from . import constants as from_consts
 from base.db.models import AbstractBaseModel
+from v1.catalogs.models.product_models import Product
 
 
 class Form(AbstractBaseModel):
@@ -96,6 +97,7 @@ class Submission(AbstractBaseModel):
 
     Related Names:
     - submissions: A reverse relation to access submissions related to a Form.
+    - product: The associated product for this submission.
 
     """
 
@@ -104,6 +106,14 @@ class Submission(AbstractBaseModel):
         related_name="submissions",
         on_delete=models.CASCADE,
         verbose_name=_("Form"),
+    )
+    product = models.ForeignKey(
+        Product,
+        related_name="submissions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("Product"),
     )
 
     def __str__(self):

@@ -89,7 +89,7 @@ class FarmerSerializer(DynamicModelSerializer):
     province_details = ProvinceSerializer(source="province", read_only=True)
     country_details = CountrySerializer(source="country", read_only=True)
     entity_card = EntityCardSerializer(read_only=True)
-    submission = SubmissionSerializer()
+    submission = SubmissionSerializer(required=False)
 
     class Meta:
         model = Farmer

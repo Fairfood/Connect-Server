@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from base.drf.fields import SerializableRelatedField
@@ -5,6 +6,7 @@ from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import PremiumSerializer
+from v1.forms.serializers import SubmissionSerializer
 from v1.transactions import constants
 from v1.transactions.models.payment_models import PaymentTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
@@ -37,6 +39,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     current_quantity = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
+    submissions = SubmissionSerializer(many=True, required=False)
 
     class Meta:
         """Meta class."""
@@ -44,15 +47,20 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         model = ProductTransaction
         fields = "__all__"
 
+    @transaction.atomic
     def create(self, validated_data):
         """Create method."""
         payments = validated_data.pop("transaction_payments")
         currency = validated_data.pop("currency")
         amount = validated_data.pop("amount")
+        submissions = validated_data.pop("submission")
         instance = super().create(validated_data)
         self._create_premiums(
             payments, instance, amount=amount, currency=currency
         )
+        for submission_data in submissions:
+            submission = self.fields["submission"].create(submission_data)
+            instance.submissions.add(submission)
         return super().create(validated_data)
 
     def _create_payments(self, payments, instance, **kwargs):
