@@ -51,8 +51,8 @@ class ProductTransactionFilterSet(filters.FilterSet):
     def quantity_available_filter(self, queryset, name, value):
         """Return queryset."""
         if value:
-            return queryset.annotate(children=Count("children")).filter(
-                children=0
+            return queryset.annotate(total_children=Count("children")).filter(
+                total_children=0
             )
         return queryset
 
