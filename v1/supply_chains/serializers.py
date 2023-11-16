@@ -32,10 +32,9 @@ class EntityCardSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         card_data = validated_data.pop("card")
-        instance = super().create(validated_data)
         card = self.fields["card"].create(card_data)
-        instance.card = card
-        instance.save()
+        validated_data["card"] = card
+        instance = super().create(validated_data)
         return instance
 
 
