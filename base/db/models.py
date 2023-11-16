@@ -107,7 +107,7 @@ class AbstractNumberedModel(models.Model):
     """Abstract base class to use to automatically add a number field to track
     a number tracked that can be shown in the frontend."""
 
-    number = models.PositiveIntegerField(null=True, blank=True)
+    number = models.CharField(max_length=10, null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -115,7 +115,7 @@ class AbstractNumberedModel(models.Model):
     def save(self, *args, **kwargs):
         super(AbstractNumberedModel, self).save(*args, **kwargs)
         if not self.number:
-            self.number = self.id.id + 1000
+            self.number = str(self.id.id + 1000)
             self.save()
 
 

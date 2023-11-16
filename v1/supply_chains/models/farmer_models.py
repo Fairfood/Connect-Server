@@ -30,6 +30,7 @@ class Farmer(AbstractFarmerModel):
     last name, date of birth, gender, and consent status.
 
     Attributes:
+        identification_no (str): The identification number of the farmer.
         first_name (str): The first name of the farmer.
         last_name (str, optional): The last name of the farmer (optional).
         date_of_birth (date, optional): The date of birth of the farmer
@@ -39,6 +40,9 @@ class Farmer(AbstractFarmerModel):
             predefined choices.
     """
 
+    identification_no = models.CharField(
+        max_length=20, blank=True, null=True, verbose_name="Identification"
+    )
     first_name = models.CharField(max_length=100, verbose_name="First Name")
     last_name = models.CharField(
         max_length=100, null=True, blank=True, verbose_name="Last Name"
