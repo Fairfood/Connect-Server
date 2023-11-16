@@ -28,14 +28,15 @@ class EntityCardSerializer(DynamicModelSerializer):
         model = EntityCard
         fields = "__all__"
 
+    @transaction.atomic
     def create(self, validated_data):
         """Override the default create."""
         card_data = validated_data.pop("card")
         instance = super().create(validated_data)
-        card = self.card.create(card_data)
+        card = self.fields["card"].create(card_data)
         instance.card = card
         instance.save()
-        return super().create(validated_data)
+        return instance
 
 
 class EntitySerializer(DynamicModelSerializer):

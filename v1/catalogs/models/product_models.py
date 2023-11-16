@@ -54,19 +54,12 @@ class ConnectCard(AbstractBaseModel):
         card_id (str): The card id of the connect card.
     """
 
-    display_id = models.CharField(max_length=100, verbose_name=_("Display ID"))
+    display_id = models.CharField(
+        max_length=100, null=True, blank=True, verbose_name=_("Display ID")
+    )
     card_id = models.CharField(
         max_length=100, unique=True, verbose_name=_("Card ID")
     )
-
-    class Meta:
-        """Meta class for the above model."""
-
-        constraints = [
-            models.UniqueConstraint(
-                fields=["display_id", "card_id"], name="unique_card"
-            )
-        ]
 
     def __str__(self):
         """Function to return value in django admin."""
