@@ -118,10 +118,10 @@ class EntityCard(AbstractBaseModel):
         return f"{self.card} - {self.entity.name}"
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if self.is_active:
             self.__class__.objects.deactivate_other_entities(self.card)
             self.set_default(self.entity)
-        super().save(*args, **kwargs)
 
     def set_default(self, entity):
         """Set default entity card for entity"""

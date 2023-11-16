@@ -4,8 +4,6 @@ from rest_framework import serializers
 from base.authentication import utilities as utils
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
-from v1.catalogs.serializers.country import CountrySerializer
-from v1.catalogs.serializers.country import ProvinceSerializer
 from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.forms.serializers import FormSerializer
@@ -28,14 +26,12 @@ class EntityCardSerializer(DynamicModelSerializer):
         model = EntityCard
         fields = "__all__"
 
-    @transaction.atomic
     def create(self, validated_data):
         """Override the default create."""
         card_data = validated_data.pop("card")
         card = self.fields["card"].create(card_data)
         validated_data["card"] = card
-        instance = super().create(validated_data)
-        return instance
+        return super().create(validated_data)
 
 
 class EntitySerializer(DynamicModelSerializer):
@@ -61,8 +57,6 @@ class CompanySerializer(DynamicModelSerializer):
     Serializer for the Company model.
     """
 
-    province = ProvinceSerializer(read_only=True)
-    country = CountrySerializer(read_only=True)
     currency = CurrencySerializer(read_only=True)
     buyer = EntitySerializer(
         read_only=True, fields=("id", "name", "image", "description", "card")
@@ -86,8 +80,6 @@ class FarmerSerializer(DynamicModelSerializer):
     Serializer for the Farmer model.
     """
 
-    province_details = ProvinceSerializer(source="province", read_only=True)
-    country_details = CountrySerializer(source="country", read_only=True)
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer(required=False)
 

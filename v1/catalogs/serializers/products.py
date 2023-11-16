@@ -1,3 +1,5 @@
+from rest_framework.serializers import CharField
+
 from base.drf import serializers
 from v1.catalogs.models import product_models
 
@@ -16,6 +18,8 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
     """
     Serializer for the ConnectCard model.
     """
+
+    card_id = CharField(validators=[])
 
     class Meta:
         model = product_models.ConnectCard
@@ -37,6 +41,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
             ConnectCard: The created or updated ConnectCard object.
         """
         card_id = validated_data.get("card_id")
+
         try:
             instance = product_models.ConnectCard.objects.get(card_id=card_id)
             return super().update(instance, validated_data)

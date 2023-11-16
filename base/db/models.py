@@ -91,22 +91,16 @@ class AbstractAddressModel(models.Model):
     street = models.CharField(max_length=500, null=True, blank=True)
     city = models.CharField(max_length=500, null=True, blank=True)
     sub_province = models.CharField(max_length=500, null=True, blank=True)
-    province = models.ForeignKey(
-        "catalogs.Province", blank=True, null=True, on_delete=models.SET_NULL
-    )
+    province = models.CharField(max_length=500, null=True, blank=True)
     latitude = models.FloatField(default=0.0)
     longitude = models.FloatField(default=0.0)
     zipcode = models.CharField(max_length=50, null=True, blank=True)
+    country = models.CharField(max_length=500, null=True, blank=True)
 
     class Meta:
         """Meta class defines class level configurations."""
 
         abstract = True
-
-    @property
-    def country(self):
-        """Returns the country of the address."""
-        return self.province.country if self.province else None
 
 
 class AbstractNumberedModel(models.Model):
