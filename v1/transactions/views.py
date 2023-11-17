@@ -17,6 +17,11 @@ class ProductTransactionViewSet(IdDecodeModelViewSet):
     http_method_names = ("get", "post")
     filterset_class = ProductTransactionFilterSet
 
+    def create(self, request, *args, **kwargs):
+        """Overriding create method to add submissions."""
+        # TODO: remove this function
+        return SuccessResponse({"message": "Temporary disabled."})
+
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
         """Adding separate API for uploading invoice."""
