@@ -29,9 +29,13 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     """Serializer for ProductTransactionSerializer."""
 
     transaction_payments = PaymentTransactionsSerializer(
-        many=True, fields=("id", "premium", "selected_option", "amount")
+        many=True,
+        fields=("id", "premium", "selected_option", "amount"),
+        required=False,
     )
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False
+    )
     currency = SerializableRelatedField(queryset=Currency.objects.all())
     source_quantity = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
@@ -50,9 +54,9 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         """Create method."""
-        payments = validated_data.pop("transaction_payments")
+        payments = validated_data.pop("transaction_payments", None)
         currency = validated_data.pop("currency")
-        amount = validated_data.pop("amount")
+        amount = validated_data.pop("amount", 0.0)
         submissions = validated_data.pop("submission", None)
         instance = super().create(validated_data)
         self._create_premiums(
