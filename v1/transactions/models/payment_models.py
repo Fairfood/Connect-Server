@@ -101,20 +101,20 @@ class PaymentTransaction(BaseTransaction):
     def _update_payment_status(self):
         """To update payment_status with available relations."""
         if self.transaction and self.premium:
-            self.payment_type = constants.TRANSACTION_PREMIUM
+            self.payment_type = constants.PaymentType.TRANSACTION_PREMIUM
         else:
             if self.transaction:
-                self.payment_type = constants.BASE_TRANSACTION
+                self.payment_type = constants.PaymentType.BASE_TRANSACTION
             elif self.premium:
-                self.payment_type = constants.BASE_PREMIUM
+                self.payment_type = constants.PaymentType.BASE_PREMIUM
             else:
                 raise Exception("Payment type can not determined.")
 
     def _update_verification_method(self):
         """Update verification method card/receipt."""
         if self.card:
-            self.method = constants.CARD_VERIFICATION
+            self.method = constants.VerificationMethodType.CARD
         elif self.invoice:
-            self.method = constants.INVOICE_VERIFICATION
+            self.method = constants.VerificationMethodType.INVOICE
         else:
-            self.method = constants.NO_VERIFICATION
+            self.method = constants.VerificationMethodType.NONE
