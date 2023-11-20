@@ -9,6 +9,7 @@ from ...accounts import constants as acc_constants
 from ...accounts.models import ValidationToken
 from base.authentication import utilities as auth_utils
 from base.db import models as abstarct_models
+from v1.catalogs.models.product_models import Premium
 from v1.forms.models import Form
 
 
@@ -220,6 +221,11 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         null=True,
         blank=True,
         verbose_name=_("Form"),
+    )
+    premiums = models.ManyToManyField(
+        Premium,
+        related_name="company_products",
+        verbose_name=_("Premium"),
     )
 
     def __str__(self):

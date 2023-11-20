@@ -1,7 +1,10 @@
 from rest_framework.serializers import CharField
+from rest_framework.serializers import SerializerMethodField
 
+from base.authentication import session
 from base.drf import serializers
 from v1.catalogs.models import product_models
+from v1.supply_chains.models.company_models import CompanyProduct
 
 
 class ProductSerializer(serializers.DynamicModelSerializer):
@@ -9,9 +12,30 @@ class ProductSerializer(serializers.DynamicModelSerializer):
     Serializer for the Product model.
     """
 
+    premiums = SerializerMethodField()
+
     class Meta:
         model = product_models.Product
         fields = "__all__"
+
+    def get_premiums(self, instance):
+        """
+        Get the premiums associated with the company product.
+
+        Returns:
+            list: A list of premiums associated with the product.
+        """
+        entity = session.get_current_entity()
+        if not entity:
+            return []
+        try:
+            c_product = CompanyProduct.objects.get(
+                company=entity, product=instance
+            )
+        except CompanyProduct.DoesNotExist:
+            return []
+
+        return c_product.premiums.values_list("id", flat=True)
 
 
 class ConnectCardSerializer(serializers.DynamicModelSerializer):

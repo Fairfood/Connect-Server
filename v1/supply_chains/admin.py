@@ -6,6 +6,16 @@ from .models import farmer_models
 from base.db.admin import BaseAdmin
 
 
+class CompanyProductAdmin(BaseAdmin):
+    """Admin class for Company model."""
+
+    list_display = (
+        "product",
+        "company",
+    )
+    search_fields = ["company__name"]
+
+
 class CompanyAdmin(BaseAdmin):
     """
     Model representing a company entity.
@@ -42,3 +52,4 @@ class FarmerAdmin(BaseAdmin):
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
+admin.site.register(company_models.CompanyProduct, CompanyProductAdmin)
