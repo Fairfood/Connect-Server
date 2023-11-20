@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
+from base.authentication import utilities as utils
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.models.common_models import Currency
@@ -30,7 +31,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
 
     transaction_payments = PaymentTransactionsSerializer(
         many=True,
-        fields=("id", "premium", "selected_option", "amount"),
+        fields=("id", "premium", "selected_option", "amount", "payment_type"),
         required=False,
     )
     amount = serializers.DecimalField(
@@ -39,6 +40,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     currency = SerializableRelatedField(
         queryset=Currency.objects.all(), write_only=True
     )
+    type = serializers.SerializerMethodField()
     source_quantity = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
@@ -56,7 +58,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         """Create method."""
-        payments = validated_data.pop("transaction_payments", None)
+        payments = validated_data.pop("transaction_payments", [])
         currency = validated_data.pop("currency")
         amount = validated_data.pop("amount")
         submissions = validated_data.pop("submission", [])
@@ -67,7 +69,14 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         for submission_data in submissions:
             submission = self.fields["submission"].create(submission_data)
             instance.submissions.add(submission)
-        return super().create(validated_data)
+        return instance
+
+    def get_type(self, obj):
+        """Get type."""
+        entity = utils.get_current_entity()
+        return (
+            constants.OUTGOING if obj.source == entity else constants.INCOMMING
+        )
 
     def _create_payments(self, payments, instance, **kwargs):
         """Create payments."""

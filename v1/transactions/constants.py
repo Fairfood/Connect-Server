@@ -2,6 +2,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+INCOMMING = "INCOMMING"
+OUTGOING = "OUTGOING"
+
+
 class PaymentType(models.TextChoices):
     """
     A Class to define text choices for the 'Payment' model's 'type' field.
