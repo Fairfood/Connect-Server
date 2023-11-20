@@ -12,7 +12,7 @@ from v1.supply_chains.models.base_models import Entity
 
 
 class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
-    date = models.DateField(default=timezone.now, verbose_name=_("Date"))
+    date = models.DateTimeField(default=timezone.now, verbose_name=_("Date"))
     source = models.ForeignKey(
         Entity,
         on_delete=models.CASCADE,
