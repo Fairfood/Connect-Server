@@ -33,8 +33,12 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         fields=("id", "premium", "selected_option", "amount"),
         required=False,
     )
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
-    currency = SerializableRelatedField(queryset=Currency.objects.all())
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, write_only=True
+    )
+    currency = SerializableRelatedField(
+        queryset=Currency.objects.all(), write_only=True
+    )
     source_quantity = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
