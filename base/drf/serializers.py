@@ -1,6 +1,7 @@
 """custom used Serializers are declared here."""
 from collections import defaultdict
 
+from django.db import models
 from rest_framework import serializers
 
 from base.drf import fields
@@ -11,6 +12,13 @@ class HashIDModelSerializer(serializers.ModelSerializer):
 
     id = fields.SerializableRelatedField(read_only=True)
     serializer_related_field = fields.SerializableRelatedField
+
+    def build_standard_field(self, field_name, model_field):
+        """Override the default field builder to use our custom field."""
+        self.serializer_field_mapping[
+            models.DateTimeField
+        ] = fields.UnixDateTimeField
+        return super().build_standard_field(field_name, model_field)
 
 
 class CircularSerializer(serializers.Serializer):
