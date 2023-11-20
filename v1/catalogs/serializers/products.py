@@ -1,7 +1,7 @@
 from rest_framework.serializers import CharField
 from rest_framework.serializers import SerializerMethodField
 
-from base.authentication import session
+from base.authentication import utilities as utils
 from base.drf import serializers
 from v1.catalogs.models import product_models
 from v1.supply_chains.models.company_models import CompanyProduct
@@ -25,7 +25,7 @@ class ProductSerializer(serializers.DynamicModelSerializer):
         Returns:
             list: A list of premiums associated with the product.
         """
-        entity = session.get_current_entity()
+        entity = utils.get_current_entity()
         if not entity:
             return []
         try:
