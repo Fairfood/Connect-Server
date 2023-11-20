@@ -104,9 +104,9 @@ class PaymentTransaction(BaseTransaction):
             self.payment_type = constants.PaymentType.TRANSACTION_PREMIUM
         else:
             if self.transaction:
-                self.payment_type = constants.PaymentType.BASE_TRANSACTION
+                self.payment_type = constants.PaymentType.TRANSACTION
             elif self.premium:
-                self.payment_type = constants.PaymentType.BASE_PREMIUM
+                self.payment_type = constants.PaymentType.PREMIUM
             else:
                 raise Exception("Payment type can not determined.")
 
