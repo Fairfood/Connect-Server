@@ -90,7 +90,10 @@ class ProductTransaction(BaseTransaction):
         Returns the total quantity of products associated with the source of
         the transaction.
         """
-        return self.parents.aggregate(models.Sum("quantity"))["quantity__sum"]
+        source_quantity = self.parents.aggregate(models.Sum("quantity"))[
+            "quantity__sum"
+        ]
+        return source_quantity or self.quantity
 
     @property
     def current_quantity(self):

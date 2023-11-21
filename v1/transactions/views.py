@@ -14,7 +14,7 @@ from v1.transactions.serializers import ProductTransactionSerializer
 class ProductTransactionViewSet(IdDecodeModelViewSet):
     queryset = ProductTransaction.objects.all()
     serializer_class = ProductTransactionSerializer
-    http_method_names = ("get", "post")
+    http_method_names = ("get", "post", "patch")
     filterset_class = ProductTransactionFilterSet
 
     @action(detail=True, methods=["patch"])
@@ -36,14 +36,14 @@ class ProductTransactionViewSet(IdDecodeModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return SuccessResponse(
-            {"id": instance.idencode, "invoice": instance.invoice.url}
+            {"id": instance.id, "invoice": instance.invoice.url}
         )
 
 
 class PaymentTransactionViewSet(IdDecodeModelViewSet):
     queryset = PaymentTransaction.objects.all()
     serializer_class = PaymentTransactionsSerializer
-    http_method_names = ("get", "post")
+    http_method_names = ("get", "post", "patch")
     filterset_class = PaymentTransactionFilterSet
 
     @action(detail=True, methods=["patch"])
