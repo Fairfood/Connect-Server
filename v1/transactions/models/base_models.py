@@ -59,4 +59,4 @@ class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
     )
 
     def __str__(self):
-        return f"{self.source} -> {self.destination} {self.amount}"
+        return f"{self.source} -> {self.destination}"
