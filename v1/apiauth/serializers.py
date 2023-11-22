@@ -11,9 +11,9 @@ from rest_framework_simplejwt.serializers import (
 from rest_framework_simplejwt.state import token_backend
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from base import exceptions
 from base.authentication import utilities as auth_utils
 from base.drf import fields
+from base.exceptions import custom_exceptions as exceptions
 from utilities import functions as util_functions
 from v1.accounts import constants as acc_constants
 from v1.accounts.models import CustomUser
