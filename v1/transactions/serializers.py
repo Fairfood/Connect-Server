@@ -84,7 +84,9 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         """Get type."""
         entity = utils.get_current_entity()
         return (
-            constants.OUTGOING if obj.source == entity else constants.INCOMING
+            constants.OUTGOING
+            if obj.source.id == entity.id
+            else constants.INCOMING
         )
 
     def _create_payments(self, payments, instance, **kwargs):
