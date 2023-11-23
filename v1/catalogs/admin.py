@@ -52,7 +52,7 @@ class ProductAdmin(BaseAdmin):
 
 class ConnectCardAdmin(BaseAdmin):
     list_display = (
-        "name",
+        "display_id",
         "id",
     )
     search_fields = ["name"]
