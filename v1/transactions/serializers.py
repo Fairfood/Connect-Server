@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
+from base.drf import fields
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.models.common_models import Currency
@@ -34,18 +35,18 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         fields=("id", "premium", "selected_option", "amount", "payment_type"),
         required=False,
     )
-    amount = serializers.DecimalField(
-        max_digits=10, decimal_places=2, write_only=True
+    amount = fields.RoundingDecimalField(
+        max_digits=10, decimal_places=3, write_only=True
     )
     currency = SerializableRelatedField(
         queryset=Currency.objects.all(), write_only=True
     )
     type = serializers.SerializerMethodField()
-    source_quantity = serializers.DecimalField(
-        max_digits=10, decimal_places=2, read_only=True
+    source_quantity = fields.RoundingDecimalField(
+        max_digits=10, decimal_places=3, read_only=True
     )
-    current_quantity = serializers.DecimalField(
-        max_digits=10, decimal_places=2, read_only=True
+    current_quantity = fields.RoundingDecimalField(
+        max_digits=10, decimal_places=3, read_only=True
     )
     submissions = SubmissionSerializer(many=True, required=False)
 

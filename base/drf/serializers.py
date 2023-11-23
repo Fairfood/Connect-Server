@@ -18,6 +18,9 @@ class HashIDModelSerializer(serializers.ModelSerializer):
         self.serializer_field_mapping[
             models.DateTimeField
         ] = fields.UnixDateTimeField
+        self.serializer_field_mapping[
+            models.DecimalField
+        ] = fields.RoundingDecimalField
         return super().build_standard_field(field_name, model_field)
 
 
