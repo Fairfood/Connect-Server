@@ -41,7 +41,7 @@ class CompanyMemberAdmin(BaseAdmin):
     search_fields = ["company"]
 
 
-class EntityCardrAdmin(BaseAdmin):
+class EntityCardAdmin(BaseAdmin):
     """
     Model representing a company member entity.
     """
@@ -65,4 +65,4 @@ admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
 admin.site.register(company_models.CompanyProduct, CompanyProductAdmin)
-admin.site.register(base_models, EntityCardrAdmin)
+admin.site.register(base_models.EntityCard, EntityCardAdmin)
