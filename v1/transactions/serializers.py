@@ -19,12 +19,20 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
 
     premium_details = PremiumSerializer(source="premium", read_only=True)
     currency_details = CurrencySerializer(source="currency", read_only=True)
+    type = serializers.SerializerMethodField()
 
     class Meta:
         """Meta class."""
 
         model = PaymentTransaction
         fields = "__all__"
+
+    def get_type(self, obj):
+        """Get type."""
+        entity = utils.get_current_entity()
+        return (
+            constants.OUTGOING if obj.source == entity else constants.INCOMING
+        )
 
 
 class ProductTransactionSerializer(DynamicModelSerializer):
