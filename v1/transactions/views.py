@@ -65,5 +65,5 @@ class PaymentTransactionViewSet(IdDecodeModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return SuccessResponse(
-            {"id": instance.idencode, "invoice": instance.invoice.url}
+            {"id": instance.id, "invoice": instance.invoice.url}
         )
