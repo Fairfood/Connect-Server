@@ -1,6 +1,7 @@
 """Models are registered with django admin at here."""
 from django.contrib import admin
 
+from .models import base_models
 from .models import company_models
 from .models import farmer_models
 from base.db.admin import BaseAdmin
@@ -40,6 +41,17 @@ class CompanyMemberAdmin(BaseAdmin):
     search_fields = ["company"]
 
 
+class EntityCardrAdmin(BaseAdmin):
+    """
+    Model representing a company member entity.
+    """
+
+    list_display = (
+        "card",
+        "id",
+    )
+
+
 class FarmerAdmin(BaseAdmin):
     """
     Model representing a company entity.
@@ -53,3 +65,4 @@ admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
 admin.site.register(company_models.CompanyProduct, CompanyProductAdmin)
+admin.site.register(base_models, EntityCardrAdmin)

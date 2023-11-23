@@ -50,6 +50,14 @@ class ProductAdmin(BaseAdmin):
     search_fields = ["name"]
 
 
+class ConnectCardAdmin(BaseAdmin):
+    list_display = (
+        "name",
+        "id",
+    )
+    search_fields = ["name"]
+
+
 class PremiumOptionTabularInline(admin.TabularInline):
     model = product_models.PremiumOption
 
@@ -70,3 +78,4 @@ admin.site.register(common_models.Province, ProvinceAdmin)
 admin.site.register(common_models.Currency, CurrencyAdmin)
 admin.site.register(product_models.Product, ProductAdmin)
 admin.site.register(product_models.Premium, PremiumAdmin)
+admin.site.register(product_models.ConnectCard, ConnectCardAdmin)
