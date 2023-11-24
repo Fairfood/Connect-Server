@@ -40,6 +40,7 @@ class EntitySerializer(DynamicModelSerializer):
     """
 
     name = serializers.CharField(read_only=True)
+    entity_card = EntityCardSerializer(read_only=True)
 
     class Meta:
         model = Entity
@@ -59,7 +60,8 @@ class CompanySerializer(DynamicModelSerializer):
 
     currency = CurrencySerializer(read_only=True)
     buyer = EntitySerializer(
-        read_only=True, fields=("id", "name", "image", "description", "card")
+        read_only=True,
+        fields=("id", "name", "image", "description", "entity_card"),
     )
     entity_card = EntityCardSerializer(read_only=True)
     forms = FormSerializer(

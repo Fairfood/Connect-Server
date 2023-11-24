@@ -7,14 +7,11 @@ from .models import farmer_models
 from base.db.admin import BaseAdmin
 
 
-class CompanyProductAdmin(BaseAdmin):
+class CompanyProductInline(admin.TabularInline):
     """Admin class for Company model."""
 
-    list_display = (
-        "product",
-        "company",
-    )
-    search_fields = ["company__name"]
+    model = company_models.CompanyProduct
+    extra = 0
 
 
 class CompanyAdmin(BaseAdmin):
@@ -27,6 +24,7 @@ class CompanyAdmin(BaseAdmin):
         "id",
     )
     search_fields = ["name"]
+    inlines = [CompanyProductInline]
 
 
 class CompanyMemberAdmin(BaseAdmin):
@@ -64,5 +62,4 @@ class FarmerAdmin(BaseAdmin):
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
-admin.site.register(company_models.CompanyProduct, CompanyProductAdmin)
 admin.site.register(base_models.EntityCard, EntityCardAdmin)

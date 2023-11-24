@@ -1,6 +1,7 @@
-from django.core.exceptions import ValidationError
 from django.db import models
+from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django_extensions.db.fields.json import JSONField
 
 from . import constants as from_consts
 from base.db.models import AbstractBaseModel
@@ -83,6 +84,17 @@ class FormField(AbstractBaseModel):
         verbose_name=_("Field Type"),
     )
     required = models.BooleanField(default=True, verbose_name=_("Required"))
+    default_value = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("Default Value"),
+    )
+    options = JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_("Options"),
+    )
 
     def __str__(self):
         return f"{self.form} - {self.label}"

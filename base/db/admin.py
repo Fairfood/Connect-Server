@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.contrib.postgres import fields
+from django_extensions.db.fields import json
+from django_json_widget.widgets import JSONEditorWidget
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -7,6 +10,11 @@ class BaseAdmin(admin.ModelAdmin):
     search_fields = ["id"]
 
     list_display = ("__str__", "id")
+
+    formfield_overrides = {
+        json.JSONField: {"widget": JSONEditorWidget},
+        fields.JSONField: {"widget": JSONEditorWidget},
+    }
 
     def save_model(self, request, obj, form, change):
         # adding the entry for the first time

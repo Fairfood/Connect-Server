@@ -1,5 +1,7 @@
 """Models of the app entities."""
 from django.db import models
+from django.db import transaction
+from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from . import base_models
@@ -10,6 +12,7 @@ from ...accounts.models import ValidationToken
 from base.authentication import utilities as auth_utils
 from base.db import models as abstarct_models
 from v1.catalogs.models.product_models import Premium
+from v1.forms import constants as form_consts
 from v1.forms.models import Form
 
 
@@ -66,6 +69,7 @@ class Company(AbstractCompanyModel):
     )
     products = models.ManyToManyField(
         "catalogs.Product",
+        through="supply_chains.CompanyProduct",
         related_name="companies",
         verbose_name=_("Products"),
     )
@@ -230,6 +234,29 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
 
     def __str__(self):
         return f"{self.company.name} - {self.product.name}"
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        self._form_check()
+        super().save(*args, **kwargs)
+        self._premium_check()
+
+    def _form_check(self):
+        """Check if the form is valid."""
+        if self.form and self.form.form_type != form_consts.FormType.PRODUCT:
+            raise ValueError(_("Invalid form type. Not a product form."))
+
+    def _premium_check(self):
+        """Check if the premium is valid."""
+        errors = []
+        for premium in self.premiums.all():
+            if premium not in self.company.owned_premiums.all():
+                errors.append(
+                    f"{premium.name} is not a premium of "
+                    f"{self.company.name}."
+                )
+        if errors:
+            raise ValidationError(errors)
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):
