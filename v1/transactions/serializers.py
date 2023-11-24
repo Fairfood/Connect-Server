@@ -7,6 +7,7 @@ from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.serializers.currency import CurrencySerializer
+from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.catalogs.serializers.products import PremiumSerializer
 from v1.forms.serializers import SubmissionSerializer
 from v1.transactions import constants
@@ -59,6 +60,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         max_digits=10, decimal_places=3, read_only=True
     )
     submissions = SubmissionSerializer(many=True, required=False)
+    card_details = ConnectCardSerializer(source="card", read_only=True)
 
     class Meta:
         """Meta class."""
