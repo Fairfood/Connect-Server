@@ -1,5 +1,4 @@
 """Serializers related to user are stored here."""
-from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from base.drf import fields
@@ -19,7 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     default_entity = fields.SerializableRelatedField(read_only=True)
-    phone = PhoneNumberField(required=False, allow_blank=True, allow_null=True)
+    phone = fields.PhoneNumberField(
+        required=False, allow_blank=True, allow_null=True
+    )
     accepted_policy = fields.SerializableRelatedField(
         required=False, queryset=user_models.PrivacyPolicy.objects.all()
     )
