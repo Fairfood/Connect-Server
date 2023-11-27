@@ -68,6 +68,13 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         model = ProductTransaction
         fields = "__all__"
 
+    def validate(self, data):
+        """Validate parents."""
+        entity = utils.get_current_entity()
+        if data["source"] == entity:
+            self._check_parents(data)
+        return data
+
     @transaction.atomic
     def create(self, validated_data):
         """Create method."""
@@ -99,7 +106,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
             PaymentTransaction.objects.create(
                 **payment,
                 transaction=instance,
-                currency=kwargs.get("currency")
+                currency=kwargs.get("currency"),
             )
         PaymentTransaction.objects.create(
             transaction=instance,
@@ -107,3 +114,21 @@ class ProductTransactionSerializer(DynamicModelSerializer):
             amount=kwargs.get("amount"),
             payment_type=constants.PaymentType.TRANSACTION,
         )
+
+    def _check_parents(data):
+        """Check parents."""
+        parents = data.get("parents", None)
+        if not parents:
+            raise serializers.ValidationError(
+                {"parents": "This field is required for sending."}
+            )
+        for parent in parents:
+            if parent.destination != data["source"]:
+                raise serializers.ValidationError(
+                    {
+                        "parents": (
+                            f"parent batch {parent.number} not "
+                            f"belongs to {data['source']}"
+                        )
+                    }
+                )

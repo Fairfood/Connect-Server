@@ -77,6 +77,17 @@ class CompanySerializer(DynamicModelSerializer):
         fields = "__all__"
 
 
+# TODO: Remove this serializer after the migration is complete.
+class CompanyCreateSerializer(DynamicModelSerializer):
+    """
+    Serializer for the Company model.
+    """
+
+    class Meta:
+        model = Company
+        fields = "__all__"
+
+
 class FarmerSerializer(DynamicModelSerializer):
     """
     Serializer for the Farmer model.
