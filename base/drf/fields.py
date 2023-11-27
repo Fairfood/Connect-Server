@@ -220,5 +220,5 @@ class PhoneNumberField(PhoneNumberField):
     def to_representation(self, value):
         if value:
             phone_number = PhoneNumber.from_string(value)
-            return phone_number.as_national
+            return phone_number.as_international
         return None
