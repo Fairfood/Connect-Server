@@ -4,6 +4,7 @@ from rest_framework import serializers
 from base.authentication import utilities as utils
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
+from v1.catalogs.models.common_models import Currency
 from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.forms.serializers import FormSerializer
@@ -31,7 +32,11 @@ class EntityCardSerializer(DynamicModelSerializer):
         card_data = validated_data.pop("card")
         card = self.fields["card"].create(card_data)
         validated_data["card"] = card
-        return super().create(validated_data)
+        try:
+            instance = EntityCard.objects.get(**validated_data)
+            return instance
+        except EntityCard.DoesNotExist:
+            return super().create(validated_data)
 
 
 class EntitySerializer(DynamicModelSerializer):
@@ -83,9 +88,22 @@ class CompanyCreateSerializer(DynamicModelSerializer):
     Serializer for the Company model.
     """
 
+    currency = serializers.CharField(required=False)
+
     class Meta:
         model = Company
         fields = "__all__"
+
+    def create(self, validated_data):
+        """Override the default create."""
+        currency = validated_data.pop("currency", None)
+        if currency:
+            try:
+                currency_obj = Currency.objects.get(pk=currency)
+            except Currency.DoesNotExist:
+                currency_obj = Currency.objects.get(code=currency)
+            validated_data["currency"] = currency_obj
+        return super().create(validated_data)
 
 
 class FarmerSerializer(DynamicModelSerializer):

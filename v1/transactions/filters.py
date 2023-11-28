@@ -24,7 +24,6 @@ class ProductTransactionFilterSet(filters.FilterSet):
     only_quantity_available = filters.BooleanFilter(
         method="quantity_available_filter"
     )
-    type
 
     class Meta:
         model = transaction_models.ProductTransaction
@@ -35,7 +34,11 @@ class ProductTransactionFilterSet(filters.FilterSet):
         """Return queryset."""
         parent = super().qs
         entity = auth_utils.get_current_entity()
-        return parent.filter(Q(source=entity) | Q(destination=entity))
+        user = auth_utils.get_current_user()
+        return parent.filter(
+            Q(source=entity, creator=user)
+            | Q(destination=entity, creator=user)
+        )
 
     def updated_after_filter(self, queryset, name, value):
         """Return queryset."""

@@ -2,6 +2,7 @@
 from django.db import models
 from django.db import transaction
 from django.forms import ValidationError
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import base_models
@@ -238,6 +239,7 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
     @transaction.atomic
     def save(self, *args, **kwargs):
         self._form_check()
+        self._check_premium_removal()
         super().save(*args, **kwargs)
         self._premium_check()
 
@@ -257,6 +259,21 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
                 )
         if errors:
             raise ValidationError(errors)
+
+    def _check_premium_removal(self):
+        """Check if the premium is valid."""
+        if not self.new_instance:
+            old_premiums = self.__class__.objects.get(
+                pk=self.pk
+            ).premiums.all()
+            new_premiums = self.premiums.all()
+            removed_premiums = old_premiums.exclude(pk__in=new_premiums)
+            added_premiums = new_premiums.exclude(pk__in=old_premiums)
+            premuims_changed = (
+                removed_premiums.exists() or added_premiums.exists()
+            )
+            if premuims_changed:
+                self.updated_on = timezone.now()
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):
