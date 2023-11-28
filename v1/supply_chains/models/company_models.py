@@ -273,7 +273,8 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
                 removed_premiums.exists() or added_premiums.exists()
             )
             if premuims_changed:
-                self.updated_on = timezone.now()
+                self.product.updated_on = timezone.now()
+                self.product.save()
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):
