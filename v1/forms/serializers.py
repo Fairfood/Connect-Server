@@ -72,7 +72,7 @@ class SubmissionSerializer(DynamicModelSerializer):
 
     form_details = FormSerializer(read_only=True, fields=("id", "product"))
     values = SubmissionValuesSerializer(
-        many=True, write_only=True, exclude_fields=("submission",)
+        many=True, exclude_fields=("submission",)
     )
 
     class Meta:
