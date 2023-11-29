@@ -71,14 +71,6 @@ class SubmissionSerializer(DynamicModelSerializer):
     """
 
     form_details = FormSerializer(read_only=True, fields=("id", "product"))
-    value_details = SubmissionValuesSerializer(
-        source="values",
-        many=True,
-        read_only=True,
-        exclude_fields=("submission",),
-    )
-
-    # Write only fileds
     values = SubmissionValuesSerializer(
         many=True, write_only=True, exclude_fields=("submission",)
     )

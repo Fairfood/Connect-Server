@@ -24,7 +24,6 @@ class FormFieldInline(admin.TabularInline):
     extra = 0
     fields = [
         "label",
-        "label_id",
         "type",
         "required",
         "key",
