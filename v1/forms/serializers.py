@@ -70,7 +70,9 @@ class SubmissionSerializer(DynamicModelSerializer):
         write-only SubmissionValues models.
     """
 
-    form_details = FormSerializer(read_only=True, fields=("id", "product"))
+    form_details = FormSerializer(
+        source="form", read_only=True, fields=("id", "product")
+    )
     values = SubmissionValuesSerializer(
         many=True, exclude_fields=("submission",)
     )
