@@ -87,7 +87,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         self._create_payments(
             payments, instance, amount=amount, currency=currency
         )
-        submission_objs = self.fields["submission"].create(submissions)
+        submission_objs = self.fields["submissions"].create(submissions)
         instance.submissions.add(*submission_objs)
         return instance
 
