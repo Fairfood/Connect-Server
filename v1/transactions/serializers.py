@@ -3,7 +3,6 @@ from rest_framework import serializers
 
 from base.authentication import utilities as utils
 from base.drf import fields
-from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.serializers.currency import CurrencySerializer
@@ -47,11 +46,9 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         required=False,
     )
     amount = fields.RoundingDecimalField(
-        max_digits=10, decimal_places=3, write_only=True
+        max_digits=25, decimal_places=3, write_only=True
     )
-    currency = SerializableRelatedField(
-        queryset=Currency.objects.all(), write_only=True
-    )
+    currency = serializers.CharField(write_only=True, required=False)
     type = serializers.SerializerMethodField()
     source_quantity = fields.RoundingDecimalField(
         max_digits=10, decimal_places=3, read_only=True
@@ -84,6 +81,12 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         amount = validated_data.pop("amount")
         submissions = validated_data.pop("submissions", [])
         instance = super().create(validated_data)
+
+        try:
+            currency = Currency.objects.get(id=currency)
+        except Currency.DoesNotExist:
+            currency = Currency.objects.get(code=currency)
+
         self._create_payments(
             payments, instance, amount=amount, currency=currency
         )
