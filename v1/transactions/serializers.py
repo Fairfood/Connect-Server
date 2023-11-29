@@ -87,9 +87,8 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         self._create_payments(
             payments, instance, amount=amount, currency=currency
         )
-        for submission_data in submissions:
-            submission = self.fields["submission"].create(submission_data)
-            instance.submissions.add(submission)
+        submission_objs = self.fields["submission"].create(submissions)
+        instance.submissions.add(*submission_objs)
         return instance
 
     def get_type(self, obj):
