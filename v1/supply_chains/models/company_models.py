@@ -7,9 +7,6 @@ from django.utils.translation import gettext_lazy as _
 
 from . import base_models
 from .. import constants as sc_consts
-from ... import notifications
-from ...accounts import constants as acc_constants
-from ...accounts.models import ValidationToken
 from base.authentication import utilities as auth_utils
 from base.db import models as abstarct_models
 from v1.catalogs.models.product_models import Premium
@@ -151,40 +148,40 @@ class CompanyMember(abstarct_models.AbstractBaseModel):
     class Meta:
         unique_together = ("company", "user")
 
-    def send_invite(self):
-        token = None
-        user = self.user
-        if not user.password or not user.has_usable_password():
-            token = ValidationToken.initialize(
-                user, acc_constants.ValidationTokenType.INVITE
-            )
-        notification_manager = notifications.MemberInviteNotificationManager(
-            user=user, action_object=self, token=token
-        )
-        notification_manager.send_notification()
+    # def send_invite(self):
+    #     token = None
+    #     user = self.user
+    #     if not user.password or not user.has_usable_password():
+    #         token = ValidationToken.initialize(
+    #             user, acc_constants.ValidationTokenType.INVITE
+    #         )
+    #     notification_manager = notifications.MemberInviteNotificationManager(
+    #         user=user, action_object=self, token=token
+    #     )
+    #     notification_manager.send_notification()
 
-    def get_notification_pref(self, notif_manager):
-        """Function to return notification preferences for a user."""
-        from v1.notifications.constants import NotificationCondition
+    # def get_notification_pref(self, notif_manager):
+    #     """Function to return notification preferences for a user."""
+    #     from v1.notifications.constants import NotificationCondition
 
-        def get_pref(config: dict) -> bool:
-            if self.type not in config.keys():
-                raise ValueError(_("Config not defined."))
-            if config[self.type] == NotificationCondition.ENABLED:
-                return True
-            elif config[self.type] == NotificationCondition.DISABLED:
-                return False
-            elif config[self.type] == NotificationCondition.IF_USER_ACTIVE:
-                return self.user.status == acc_constants.UserStatus.ACTIVE
-            return False
+    #     def get_pref(config: dict) -> bool:
+    #         if self.type not in config.keys():
+    #             raise ValueError(_("Config not defined."))
+    #         if config[self.type] == NotificationCondition.ENABLED:
+    #             return True
+    #         elif config[self.type] == NotificationCondition.DISABLED:
+    #             return False
+    #         elif config[self.type] == NotificationCondition.IF_USER_ACTIVE:
+    #             return self.user.status == acc_constants.UserStatus.ACTIVE
+    #         return False
 
-        prefs = {
-            "visibility": get_pref(notif_manager.visibility),
-            "push": get_pref(notif_manager.push),
-            "email": get_pref(notif_manager.email),
-            "sms": get_pref(notif_manager.sms),
-        }
-        return prefs
+    #     prefs = {
+    #         "visibility": get_pref(notif_manager.visibility),
+    #         "push": get_pref(notif_manager.push),
+    #         "email": get_pref(notif_manager.email),
+    #         "sms": get_pref(notif_manager.sms),
+    #     }
+    #     return prefs
 
 
 class CompanyProduct(abstarct_models.AbstractBaseModel):
@@ -231,6 +228,7 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         Premium,
         related_name="company_products",
         verbose_name=_("Premium"),
+        blank=True,
     )
 
     def __str__(self):
@@ -262,7 +260,7 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
 
     def _check_premium_removal(self):
         """Check if the premium is valid."""
-        if not self.new_instance:
+        if self.pk:
             old_premiums = self.__class__.objects.get(
                 pk=self.pk
             ).premiums.all()

@@ -2,14 +2,14 @@
 from rest_framework import serializers
 
 from base.drf import fields
+from base.drf.serializers import DynamicModelSerializer
 from v1.accounts import models as user_models
 from v1.accounts.serializers.other_apps import UserEntitySerializer
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(DynamicModelSerializer):
     """Serializer for user."""
 
-    id = fields.SerializableRelatedField(read_only=True)
     managing_entitys = fields.SerializableRelatedField(
         read_only=True,
         serializer=UserEntitySerializer,

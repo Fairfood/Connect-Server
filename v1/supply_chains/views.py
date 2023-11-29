@@ -3,7 +3,12 @@ from .filters import FarmerFilterSet
 from base.request_handler.views import IdDecodeModelViewSet
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.company_models import Company
+from v1.supply_chains.models.company_models import CompanyMember
+from v1.supply_chains.models.company_models import CompanyProduct
 from v1.supply_chains.models.farmer_models import Farmer
+from v1.supply_chains.serializers import CompanyCreateSerializer
+from v1.supply_chains.serializers import CompanyMemerSerializer
+from v1.supply_chains.serializers import CompanyProductSerializer
 from v1.supply_chains.serializers import CompanySerializer
 from v1.supply_chains.serializers import EntityCardSerializer
 from v1.supply_chains.serializers import FarmerSerializer
@@ -27,7 +32,12 @@ class CompanyViewSet(IdDecodeModelViewSet):
 
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    http_method_names = ("get",)
+    http_method_names = ("get", "post")
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CompanyCreateSerializer
+        return super().get_serializer_class()
 
 
 class FarmerViewSet(IdDecodeModelViewSet):
@@ -43,3 +53,23 @@ class FarmerViewSet(IdDecodeModelViewSet):
         "patch",
     )
     filterset_class = FarmerFilterSet
+
+
+class CompanyMemberViewSet(IdDecodeModelViewSet):
+    """
+    A viewset for viewing and editing CompanyMember instances.
+    """
+
+    queryset = CompanyMember.objects.all()
+    serializer_class = CompanyMemerSerializer
+    http_method_names = ("post",)
+
+
+class CompanyProductViewSet(IdDecodeModelViewSet):
+    """
+    A viewset for viewing and editing CompanyProduct instances.
+    """
+
+    queryset = CompanyProduct.objects.all()
+    serializer_class = CompanyProductSerializer
+    http_method_names = ("post",)

@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework.serializers import CharField
 from rest_framework.serializers import SerializerMethodField
 
@@ -88,8 +89,19 @@ class PremiumSerializer(serializers.DynamicModelSerializer):
     Serializer for the Premium model.
     """
 
-    options = PremiumOptionSeriazer(many=True, read_only=True)
+    options = PremiumOptionSeriazer(
+        many=True, required=False, exclude_fields=("premium",)
+    )
 
     class Meta:
         model = product_models.Premium
         fields = "__all__"
+
+    @transaction.atomic
+    def create(self, validated_data):
+        options = validated_data.pop("options", [])
+        instance = super().create(validated_data)
+        for option in options:
+            option["premium"] = instance
+        self.fields["options"].create(options)
+        return instance

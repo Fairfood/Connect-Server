@@ -65,6 +65,7 @@ class FormField(AbstractBaseModel):
     - label (models.CharField): The label for this field.
     - type (models.CharField): The type of the field.
     - required (models.BooleanField): Indicates whether the field is required.
+    - key (models.CharField): The key for this field.
 
     Related Names:
     - fields: A reverse relation to access fields associated with a Form.
@@ -82,6 +83,12 @@ class FormField(AbstractBaseModel):
         max_length=20,
         choices=from_consts.FormFieldType.choices,
         verbose_name=_("Field Type"),
+    )
+    key = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("Key"),
     )
     required = models.BooleanField(default=True, verbose_name=_("Required"))
     default_value = models.CharField(

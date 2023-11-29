@@ -4,15 +4,19 @@ from rest_framework import serializers
 from base.authentication import utilities as utils
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
+from v1.accounts.serializers.user import UserSerializer
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
+from v1.catalogs.serializers.products import ProductSerializer
 from v1.forms.serializers import FormSerializer
 from v1.forms.serializers import SubmissionSerializer
 from v1.supply_chains.models.base_models import Entity
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.company_models import CompanyFieldVisibilty
+from v1.supply_chains.models.company_models import CompanyMember
+from v1.supply_chains.models.company_models import CompanyProduct
 from v1.supply_chains.models.farmer_models import Farmer
 
 
@@ -106,6 +110,45 @@ class CompanyCreateSerializer(DynamicModelSerializer):
         return super().create(validated_data)
 
 
+class CompanyMemerSerializer(DynamicModelSerializer):
+    user = UserSerializer(
+        fields=(
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "dob",
+            "address",
+            "language",
+        )
+    )
+
+    class Meta:
+        model = CompanyMember
+        fields = "__all__"
+
+    def create(self, validated_data):
+        user = self.fields["user"].create(validated_data.pop("user"))
+        validated_data["user"] = user
+        return super().create(validated_data)
+
+
+class CompanyProductSerializer(DynamicModelSerializer):
+
+    product = ProductSerializer(exclude_fields=("premiums",))
+
+    class Meta:
+        model = CompanyProduct
+        fields = "__all__"
+
+    def create(self, validated_data):
+        product = validated_data.pop("product")
+        product = self.fields["product"].create(product)
+        validated_data["product"] = product
+        return super().create(validated_data)
+
+
 class FarmerSerializer(DynamicModelSerializer):
     """
     Serializer for the Farmer model.
@@ -121,7 +164,9 @@ class FarmerSerializer(DynamicModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         """Override the default create."""
-        validated_data["buyer"] = utils.get_current_entity()
+        user = utils.get_current_user()
+        if not user.is_admin:
+            validated_data["buyer"] = utils.get_current_entity()
         submission_data = validated_data.pop("submission", None)
         instance = super().create(validated_data)
         if submission_data:

@@ -17,5 +17,5 @@ class ProductViewSet(IdDecodeModelViewSet):
 class PremiumViewSet(IdDecodeModelViewSet):
     queryset = Premium.objects.all()
     serializer_class = PremiumSerializer
-    http_method_names = ("get",)
+    http_method_names = ("get", "post")
     filterset_class = PremiumFilterSet

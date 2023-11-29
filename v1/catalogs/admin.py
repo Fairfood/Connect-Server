@@ -60,6 +60,7 @@ class ConnectCardAdmin(BaseAdmin):
 
 class PremiumOptionTabularInline(admin.TabularInline):
     model = product_models.PremiumOption
+    extra = 0
 
 
 class PremiumAdmin(BaseAdmin):
