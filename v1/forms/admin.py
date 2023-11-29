@@ -22,7 +22,15 @@ class FormFieldInline(admin.TabularInline):
 
     model = FormField
     extra = 0
-    fields = ["label", "type", "required"]
+    fields = [
+        "label",
+        "label_id",
+        "type",
+        "required",
+        "key",
+        "default_value",
+        "options",
+    ]
     fk_name = "form"
 
 

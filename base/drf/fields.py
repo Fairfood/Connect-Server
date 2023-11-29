@@ -3,6 +3,7 @@ import decimal
 from django.utils.encoding import smart_str
 from django.utils.formats import sanitize_separators
 from hashid_field.field import Hashid
+from phonenumber_field.phonenumber import PhoneNumber
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
@@ -225,5 +226,7 @@ class PhoneNumberField(PhoneNumberField):
 
     def to_representation(self, value):
         if value:
+            if isinstance(value, str):
+                value = PhoneNumber.from_string(value)
             return value.as_international
         return None

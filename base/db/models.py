@@ -54,7 +54,7 @@ class AbstractBaseModel(models.Model):
     def save(self, *args, **kwargs):
         current_user = auth_utils.get_current_user()
         if current_user:
-            if not self.pk:
+            if not self.pk and not self.creator:
                 self.creator = current_user
             self.updater = current_user
         self.new_instance = not self.pk
