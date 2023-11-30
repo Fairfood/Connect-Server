@@ -30,6 +30,7 @@ class EntityCardSerializer(DynamicModelSerializer):
     class Meta:
         model = EntityCard
         fields = "__all__"
+        read_only_fields = ("is_active",)
 
     def create(self, validated_data):
         """Override the default create."""
@@ -38,6 +39,8 @@ class EntityCardSerializer(DynamicModelSerializer):
         validated_data["card"] = card
         try:
             instance = EntityCard.objects.get(**validated_data)
+            instance.is_active = True
+            instance.save()
             return instance
         except EntityCard.DoesNotExist:
             return super().create(validated_data)
