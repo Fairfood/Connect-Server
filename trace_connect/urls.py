@@ -51,6 +51,7 @@ urlpatterns = [
     path("connect/v1/supply-chains/", include("v1.supply_chains.urls")),
     path("connect/v1/catalogs/", include("v1.catalogs.urls")),
     path("connect/v1/transactions/", include("v1.transactions.urls")),
+    path("connect/v1/forms/", include("v1.forms.urls")),
 ]
 
 if settings.DEBUG:

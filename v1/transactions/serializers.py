@@ -20,12 +20,23 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
     premium_details = PremiumSerializer(source="premium", read_only=True)
     currency_details = CurrencySerializer(source="currency", read_only=True)
     type = serializers.SerializerMethodField()
+    currency = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         """Meta class."""
 
         model = PaymentTransaction
         fields = "__all__"
+
+    def create(self, validated_data):
+        curency = validated_data.pop("currency", None)
+        if curency:
+            try:
+                curency = Currency.objects.get(id=curency)
+            except Currency.DoesNotExist:
+                curency = Currency.objects.get(code=curency)
+            validated_data["currency"] = curency
+        return super().create(validated_data)
 
     def get_type(self, obj):
         """Get type."""

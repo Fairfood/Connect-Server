@@ -126,6 +126,14 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         return super(CustomUser, self).save(*args, **kwargs)
 
     @property
+    def is_admin(self):
+        """Check if user is admin."""
+        return self.type in [
+            user_consts.UserType.ADMIN,
+            user_consts.UserType.SUPER_ADMIN,
+        ]
+
+    @property
     def image_url(self):
         """Get file url ."""
         try:

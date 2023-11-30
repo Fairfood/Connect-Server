@@ -828,6 +828,15 @@
       "namePlural": "Serbian dinars"
     },
     {
+      "name": "Sierra Leonean Leone",
+      "symbol": "Le",
+      "symbolNative": "Le",
+      "decimalDigits": 0,
+      "rounding": 0,
+      "code": "SLL",
+      "namePlural": "Sierra Leonean Leone"
+    },
+    {
       "name": "Russian Ruble",
       "symbol": "RUB",
       "symbolNative": "₽.",

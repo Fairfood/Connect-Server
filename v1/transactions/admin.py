@@ -16,3 +16,4 @@ class ProductTransactionAdmin(BaseAdmin):
     """
 
     list_display = ["id", "source", "destination"]
+    readonly_fields = ["parents"]
