@@ -41,7 +41,7 @@ class Form(AbstractBaseModel):
         return f"{self.owner} - {self.form_type}"
 
     @property
-    def product(self):
+    def products(self):
         """
         Get the associated product for this form.
 
@@ -51,9 +51,11 @@ class Form(AbstractBaseModel):
         Returns:
         product: The associated product or None if not available.
         """
-        if hasattr(self, "company_product"):
-            return self.company_product.product
-        return None
+        if hasattr(self, "company_products"):
+            return Product.objects.filter(
+                id__in=self.company_products.values_list("product", flat=True)
+            )
+        return Product.objects.none()
 
 
 class FormField(AbstractBaseModel):

@@ -1,11 +1,14 @@
 from django.db import transaction
+from rest_framework import serializers
 
+from . import constants as from_consts
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.serializers.products import ProductSerializer
 from v1.forms.models import Form
 from v1.forms.models import FormField
 from v1.forms.models import Submission
 from v1.forms.models import SubmissionValues
+from v1.supply_chains.models.company_models import CompanyProduct
 
 
 class FormFieldSerializer(DynamicModelSerializer):
@@ -28,14 +31,38 @@ class FormSerializer(DynamicModelSerializer):
 
     """
 
-    product = ProductSerializer(read_only=True, fields=("id", "name"))
+    products = ProductSerializer(
+        many=True, read_only=True, fields=("id", "name")
+    )
     fields = FormFieldSerializer(
-        many=True, read_only=True, exclude_fields=("form",)
+        many=True, exclude_fields=("form",), required=True
     )
 
     class Meta:
         model = Form
         fields = "__all__"
+
+    def create(self, validated_data):
+        """
+        Custom creation method for creating Form and associated FormFields.
+
+        Args:
+        - validated_data (dict): Validated data for creating the Form instance.
+
+        Returns:
+        Form: The created Form instance.
+        """
+        fields = validated_data.pop("fields")
+        instance = super().create(validated_data)
+        for field in fields:
+            field["form"] = instance
+        self.fields["fields"].create(fields)
+        if instance.form_type == from_consts.FormType.PRODUCT:
+            company_products = CompanyProduct.objects.filter(
+                company=instance.owner
+            )
+            [product.forms.add(instance) for product in company_products]
+        return instance
 
 
 class SubmissionValuesSerializer(DynamicModelSerializer):
@@ -51,10 +78,20 @@ class SubmissionValuesSerializer(DynamicModelSerializer):
     field_details = FormFieldSerializer(
         source="field", read_only=True, exclude_fields=("form",)
     )
+    field = serializers.CharField(write_only=True)
 
     class Meta:
         model = SubmissionValues
         fields = "__all__"
+
+    def create(self, validated_data):
+        field = validated_data.pop("field")
+        try:
+            field = FormField.objects.get(pk=field)
+        except FormField.DoesNotExist:
+            field = FormField.objects.get(key=field)
+        validated_data["field"] = field
+        return super().create(validated_data)
 
 
 class SubmissionSerializer(DynamicModelSerializer):
@@ -96,6 +133,7 @@ class SubmissionSerializer(DynamicModelSerializer):
         """
         values = validated_data.pop("values")
         instance = super().create(validated_data)
-        for val in values:
-            SubmissionValues.objects.create(submission=instance, **val)
+        for value in values:
+            value["submission"] = instance
+        self.fields["values"].create(values)
         return instance

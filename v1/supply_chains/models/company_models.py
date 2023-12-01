@@ -216,13 +216,11 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         related_name="company_products",
         verbose_name=_("Product"),
     )
-    form = models.OneToOneField(
+    forms = models.ManyToManyField(
         Form,
-        on_delete=models.SET_NULL,
-        related_name="company_product",
-        null=True,
+        related_name="company_products",
         blank=True,
-        verbose_name=_("Form"),
+        verbose_name=_("Forms"),
     )
     premiums = models.ManyToManyField(
         Premium,
@@ -236,15 +234,19 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        self._form_check()
         self._check_premium_removal()
         super().save(*args, **kwargs)
+        self._form_check()
         self._premium_check()
 
     def _form_check(self):
         """Check if the form is valid."""
-        if self.form and self.form.form_type != form_consts.FormType.PRODUCT:
-            raise ValueError(_("Invalid form type. Not a product form."))
+        if self.forms.exists():
+            for form in self.forms.all():
+                if form != form_consts.FormType.PRODUCT:
+                    raise ValueError(
+                        _("Invalid form type. Not a product form.")
+                    )
 
     def _premium_check(self):
         """Check if the premium is valid."""

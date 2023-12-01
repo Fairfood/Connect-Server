@@ -62,10 +62,10 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     currency = serializers.CharField(write_only=True, required=False)
     type = serializers.SerializerMethodField()
     source_quantity = fields.RoundingDecimalField(
-        max_digits=10, decimal_places=3, read_only=True
+        max_digits=25, decimal_places=3, read_only=True
     )
     current_quantity = fields.RoundingDecimalField(
-        max_digits=10, decimal_places=3, read_only=True
+        max_digits=25, decimal_places=3, read_only=True
     )
     submissions = SubmissionSerializer(many=True, required=False)
     card_details = ConnectCardSerializer(source="card", read_only=True)
