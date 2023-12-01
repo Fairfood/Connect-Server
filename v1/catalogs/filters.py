@@ -60,7 +60,9 @@ class ProductFilterSet(filters.FilterSet):
         """Return queryset."""
         parent = super().qs
         entity = utils.get_current_entity()
-        return parent.filter(companies=entity)
+        return parent.filter(
+            companies__in=[entity, entity.buyer if entity else None]
+        )
 
     def updated_after_filter(self, queryset, name, value):
         """Return queryset."""
@@ -87,7 +89,9 @@ class PremiumFilterSet(filters.FilterSet):
         """Return queryset."""
         parent = super().qs
         entity = utils.get_current_entity()
-        return parent.filter(owner=entity)
+        return parent.filter(
+            owner__in=[entity, entity.buyer if entity else None]
+        )
 
     def updated_after_filter(self, queryset, name, value):
         """Return queryset."""
