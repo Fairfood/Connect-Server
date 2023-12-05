@@ -6,6 +6,7 @@ from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.accounts.serializers.user import UserSerializer
 from v1.catalogs.models.common_models import Currency
+from v1.catalogs.models.product_models import Product
 from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.catalogs.serializers.products import ProductSerializer
@@ -139,17 +140,46 @@ class CompanyMemerSerializer(DynamicModelSerializer):
 
 class CompanyProductSerializer(DynamicModelSerializer):
 
-    product = ProductSerializer(exclude_fields=("premiums",))
+    product = ProductSerializer(exclude_fields=("premiums",), required=False)
+    product_id = serializers.CharField(required=False)
 
     class Meta:
         model = CompanyProduct
         fields = "__all__"
 
+    def validate(self, data):
+        product = data.get("product", None)
+        product_id = data.get("product_id", None)
+        if not product and not product_id:
+            raise serializers.ValidationError(
+                "Either product or product_id is required."
+            )
+        return data
+
+    @transaction.atomic
     def create(self, validated_data):
-        product = validated_data.pop("product")
-        product = self.fields["product"].create(product)
+        product = validated_data.pop("product", None)
+        product_id = validated_data.pop("product_id", None)
+        if product_id:
+            try:
+                product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Product with id {product_id} does not exist."
+                )
+        else:
+            product = self.fields["product"].create(product)
         validated_data["product"] = product
-        return super().create(validated_data)
+
+        try:
+            data = {
+                "product": validated_data["product"],
+                "company": validated_data["company"],
+            }
+            instance = CompanyProduct.objects.get(**data)
+            return instance
+        except CompanyProduct.DoesNotExist:
+            return super().create(validated_data)
 
 
 class FarmerSerializer(DynamicModelSerializer):

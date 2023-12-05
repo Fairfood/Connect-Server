@@ -60,9 +60,7 @@ class ProductFilterSet(filters.FilterSet):
         """Return queryset."""
         parent = super().qs
         entity = utils.get_current_entity()
-        return parent.filter(
-            companies__in=[entity, entity.buyer if entity else None]
-        )
+        return parent.filter(companies=entity)
 
     def updated_after_filter(self, queryset, name, value):
         """Return queryset."""

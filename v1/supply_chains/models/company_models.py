@@ -228,6 +228,9 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         verbose_name=_("Premium"),
         blank=True,
     )
+    is_active = models.BooleanField(
+        default=True, verbose_name=_("Is Company Product Active")
+    )
 
     def __str__(self):
         return f"{self.company.name} - {self.product.name}"

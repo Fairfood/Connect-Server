@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from base.db.models import AbstractBaseModel
@@ -27,6 +28,9 @@ class Entity(AbstractBaseModel):
     - buyer (ForeignKey): The company that buyying from the entity.
     """
 
+    created_on = models.DateTimeField(
+        default=timezone.now, verbose_name=_("Created On")
+    )
     image = models.ImageField(
         upload_to=get_file_path,
         null=True,

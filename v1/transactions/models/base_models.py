@@ -12,6 +12,9 @@ from v1.supply_chains.models.base_models import Entity
 
 
 class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
+    created_on = models.DateTimeField(
+        default=timezone.now, verbose_name=_("Created On")
+    )
     date = models.DateTimeField(default=timezone.now, verbose_name=_("Date"))
     source = models.ForeignKey(
         Entity,
