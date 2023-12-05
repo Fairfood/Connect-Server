@@ -43,6 +43,9 @@ class Farmer(AbstractFarmerModel):
     identification_no = models.CharField(
         max_length=100, blank=True, null=True, verbose_name="Identification"
     )
+    reference_number = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="Reference Number"
+    )
     first_name = models.CharField(max_length=100, verbose_name="First Name")
     last_name = models.CharField(
         max_length=100, null=True, blank=True, verbose_name="Last Name"
