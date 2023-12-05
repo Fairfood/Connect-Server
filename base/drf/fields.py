@@ -5,6 +5,7 @@ from django.utils.formats import sanitize_separators
 from hashid_field.field import Hashid
 from phonenumber_field.phonenumber import PhoneNumber
 from phonenumber_field.serializerfields import PhoneNumberField
+from phonenumbers import NumberParseException
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
@@ -227,6 +228,9 @@ class PhoneNumberField(PhoneNumberField):
     def to_representation(self, value):
         if value:
             if isinstance(value, str):
-                value = PhoneNumber.from_string(value)
+                try:
+                    value = PhoneNumber.from_string(value)
+                except NumberParseException:
+                    return None
             return value.as_international
         return None
