@@ -71,7 +71,7 @@ class PremiumAdmin(BaseAdmin):
     inlines = [
         PremiumOptionTabularInline,
     ]
-    search_fields = ["name"]
+    search_fields = ["name", "owner"]
 
 
 admin.site.register(common_models.Country, CountryAdmin)
