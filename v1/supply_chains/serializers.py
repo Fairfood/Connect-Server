@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
+from base.drf.fields import PhoneNumberField
 from base.drf.fields import SerializableRelatedField
 from base.drf.serializers import DynamicModelSerializer
 from v1.accounts.serializers.user import UserSerializer
@@ -189,6 +190,7 @@ class FarmerSerializer(DynamicModelSerializer):
 
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer(required=False)
+    phone = PhoneNumberField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Farmer
