@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from .. import constants
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.models.product_models import Premium
-from v1.catalogs.models.product_models import PremiumOption
 from v1.transactions.models.base_models import BaseTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
 
@@ -50,9 +49,8 @@ class PaymentTransaction(BaseTransaction):
         verbose_name=_("Premium"),
     )
     amount = models.FloatField(default=0.0, verbose_name=_("Amount"))
-    selected_option = models.ForeignKey(
-        PremiumOption,
-        on_delete=models.SET_NULL,
+    selected_option = models.CharField(
+        max_length=100,
         null=True,
         blank=True,
         verbose_name=_("Selected Option"),

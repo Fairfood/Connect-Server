@@ -53,7 +53,14 @@ class ProductTransactionSerializer(DynamicModelSerializer):
 
     transaction_payments = PaymentTransactionsSerializer(
         many=True,
-        fields=("id", "premium", "selected_option", "amount", "payment_type"),
+        fields=(
+            "id",
+            "premium",
+            "selected_option",
+            "amount",
+            "payment_type",
+            "premium_details",
+        ),
         required=False,
     )
     amount = fields.RoundingDecimalField(

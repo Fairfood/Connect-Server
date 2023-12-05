@@ -14,10 +14,24 @@ class ProductSerializer(serializers.DynamicModelSerializer):
     """
 
     premiums = SerializerMethodField()
+    is_active = SerializerMethodField()
 
     class Meta:
         model = product_models.Product
         fields = "__all__"
+
+    def _get_company_product(self, instance):
+        """
+        Get the company product associated with the product.
+
+        """
+        entity = utils.get_current_entity()
+        if not entity:
+            return None
+        try:
+            return CompanyProduct.objects.get(company=entity, product=instance)
+        except CompanyProduct.DoesNotExist:
+            return None
 
     def get_premiums(self, instance):
         """
@@ -26,17 +40,22 @@ class ProductSerializer(serializers.DynamicModelSerializer):
         Returns:
             list: A list of premiums associated with the product.
         """
-        entity = utils.get_current_entity()
-        if not entity:
-            return []
-        try:
-            c_product = CompanyProduct.objects.get(
-                company=entity, product=instance
-            )
-        except CompanyProduct.DoesNotExist:
-            return []
+        c_product = self._get_company_product(instance)
+        return (
+            c_product.premiums.values_list("id", flat=True)
+            if c_product
+            else []
+        )
 
-        return c_product.premiums.values_list("id", flat=True)
+    def get_is_active(self, instance):
+        """
+        Get the is_active associated with the company product.
+
+        Returns:
+            list: A list of is_active associated with the product.
+        """
+        c_product = self._get_company_product(instance)
+        return c_product.is_active if c_product else False
 
 
 class ConnectCardSerializer(serializers.DynamicModelSerializer):
