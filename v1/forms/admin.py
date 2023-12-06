@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import Form
 from .models import FormField
+from .models import FormFieldConfig
 from .models import Submission
 from .models import SubmissionValues
 from base.db.admin import BaseAdmin
@@ -33,6 +34,25 @@ class FormFieldInline(admin.TabularInline):
     fk_name = "form"
 
 
+class FormFieldConfigInline(admin.TabularInline):
+    """
+    Inline form for Form Field Conguration within the Form admin page.
+
+    Attributes:
+    - model (model): The model being represented in this inline form.
+    - extra (int): The number of empty forms to display.
+    - fields (list): The fields to display in the inline form.
+    - fk_name (str): The name of the foreign key field that relates to the
+        parent form.
+
+    """
+
+    model = FormFieldConfig
+    extra = 0
+    fields = ["label", "required", "key", "visibility"]
+    fk_name = "form"
+
+
 @admin.register(Form)
 class FormAdmin(BaseAdmin):
     """
@@ -45,7 +65,7 @@ class FormAdmin(BaseAdmin):
     """
 
     list_display = ["id", "owner", "form_type"]
-    inlines = [FormFieldInline]
+    inlines = [FormFieldInline, FormFieldConfigInline]
 
 
 class SubmissionValuesInline(admin.TabularInline):

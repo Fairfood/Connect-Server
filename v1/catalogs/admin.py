@@ -66,6 +66,7 @@ class PremiumOptionTabularInline(admin.TabularInline):
 class PremiumAdmin(BaseAdmin):
     list_display = (
         "name",
+        "owner",
         "id",
     )
     inlines = [

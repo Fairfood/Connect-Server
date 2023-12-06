@@ -6,6 +6,7 @@ from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.serializers.products import ProductSerializer
 from v1.forms.models import Form
 from v1.forms.models import FormField
+from v1.forms.models import FormFieldConfig
 from v1.forms.models import Submission
 from v1.forms.models import SubmissionValues
 from v1.supply_chains.models.company_models import CompanyProduct
@@ -17,6 +18,26 @@ class FormFieldSerializer(DynamicModelSerializer):
     class Meta:
         model = FormField
         fields = "__all__"
+
+
+class FormFieldConfigSerializer(DynamicModelSerializer):
+    """Serializer for the FormFieldConfig model."""
+
+    class Meta:
+        model = FormFieldConfig
+        fields = "__all__"
+
+    def create(self, validated_data):
+        """
+        Custom creation method for creating FormFieldConfig.
+        """
+        form = self.validated_data.get("form")
+        key = validated_data.get("key")
+        try:
+            instance = self.Meta.model.objects.get(form=form, key=key)
+            return super().update(instance, validated_data)
+        except self.Meta.model.DoesNotExist:
+            return super().create(validated_data)
 
 
 class FormSerializer(DynamicModelSerializer):
@@ -37,6 +58,9 @@ class FormSerializer(DynamicModelSerializer):
     fields = FormFieldSerializer(
         many=True, exclude_fields=("form",), required=True
     )
+    field_config = FormFieldConfigSerializer(
+        many=True, exclude_fields=("form",), required=False
+    )
 
     class Meta:
         model = Form
@@ -53,10 +77,14 @@ class FormSerializer(DynamicModelSerializer):
         Form: The created Form instance.
         """
         fields = validated_data.pop("fields")
+        field_config = validated_data.pop("field_config", [])
         instance = super().create(validated_data)
         for field in fields:
             field["form"] = instance
         self.fields["fields"].create(fields)
+        for config in field_config:
+            config["form"] = instance
+        self.fields["field_config"].create(field_config)
         if instance.form_type == from_consts.FormType.PRODUCT:
             company_products = CompanyProduct.objects.filter(
                 company=instance.owner

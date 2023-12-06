@@ -6,6 +6,7 @@ from .models import payment_models
 from .models import transaction_models
 from base.authentication import utilities as auth_utils
 from utilities.functions import unix_to_datetime
+from v1.transactions.constants import PaymentType
 
 
 class ProductTransactionFilterSet(filters.FilterSet):
@@ -80,9 +81,10 @@ class PaymentTransactionFilterSet(filters.FilterSet):
     @property
     def qs(self):
         """Return queryset."""
-        parent = super().qs
+        parents = super().qs
         entity = auth_utils.get_current_entity()
-        return parent.filter(Q(source=entity) | Q(destination=entity))
+        parents = parents.filter(Q(source=entity) | Q(destination=entity))
+        return parents.filter(payment_type=PaymentType.PREMIUM)
 
     def updated_after_filter(self, queryset, name, value):
         """Return queryset."""

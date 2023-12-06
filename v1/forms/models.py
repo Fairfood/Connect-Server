@@ -109,6 +109,43 @@ class FormField(AbstractBaseModel):
         return f"{self.form} - {self.label}"
 
 
+class FormFieldConfig(AbstractBaseModel):
+    """
+    Represents a field within a Form or a Model.
+
+    Attributes:
+    - form (models.ForeignKey): The Form to which this field belongs.
+    - label (models.CharField): The label for this field.
+    - key (models.CharField): The key for this field.
+    - visibility (models.BooleanField): Indicates whether the field is visible.
+    - required (models.BooleanField): Indicates whether the field is required.
+
+    """
+
+    form = models.ForeignKey(
+        Form,
+        related_name="field_config",
+        on_delete=models.CASCADE,
+        verbose_name=_("Form"),
+    )
+    label = models.CharField(max_length=100, verbose_name=_("Label"))
+    key = models.CharField(max_length=100, verbose_name=_("Key"))
+    visibility = models.BooleanField(
+        default=True, verbose_name=_("Visibility")
+    )
+    required = models.BooleanField(default=False, verbose_name=_("Required"))
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["form", "key"], name="unique_form_field_config"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.form} - {self.label}"
+
+
 class Submission(AbstractBaseModel):
     """
     Represents a submission of a Form.
