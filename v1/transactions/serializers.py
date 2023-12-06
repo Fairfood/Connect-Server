@@ -136,6 +136,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
             payment_type=constants.PaymentType.TRANSACTION,
         )
 
+    @staticmethod
     def _check_parents(data):
         """Check parents."""
         parents = data.get("parents", None)
