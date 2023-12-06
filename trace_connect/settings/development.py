@@ -17,7 +17,7 @@ ALLOWED_HOSTS = [
     "v2.dev.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://v2.dev.api.fairfood.org/",)
+CORS_ORIGIN_WHITELIST = ("https://v2.dev.api.fairfood.org",)
 
 DEBUG = True
 
