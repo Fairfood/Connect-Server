@@ -87,7 +87,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         """Validate parents."""
         entity = utils.get_current_entity()
         source = data.get("source", None)
-        if source and source == entity:
+        if source and source.id == entity.id:
             self._check_parents(data)
         return data
 
