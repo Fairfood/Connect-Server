@@ -40,7 +40,7 @@ urlpatterns = [
         name="check_password",
     ),
     path(
-        "trace/sync-status",
+        "trace/sync-status/",
         views.TraceSyncView.as_view(),
         name="trace-sync-status",
     ),

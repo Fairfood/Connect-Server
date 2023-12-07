@@ -54,7 +54,7 @@ urlpatterns = [
     path("connect/v1/forms/", include("v1.forms.urls")),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and settings.ENVIRONMENT == "development":
     urlpatterns += (
         path(
             "connect/v1/",
