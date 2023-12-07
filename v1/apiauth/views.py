@@ -105,4 +105,4 @@ class TraceSyncView(APIView):
             }
         except Exception:
             raise BadRequest("Check your task id.")
-        return SuccessResponse(data=data)
+        return SuccessResponse(data)
