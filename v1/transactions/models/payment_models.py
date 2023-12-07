@@ -83,6 +83,8 @@ class PaymentTransaction(BaseTransaction):
         if self.transaction:
             self.source = self.transaction.destination
             self.destination = self.transaction.source
+            self.date = self.transaction.date
+            self.created_on = self.transaction.created_on
 
             # invoice will get from transaction if not available.
             if not self.invoice:
