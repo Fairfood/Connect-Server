@@ -31,7 +31,7 @@ class FormFieldConfigSerializer(DynamicModelSerializer):
         """
         Custom creation method for creating FormFieldConfig.
         """
-        form = self.validated_data.get("form")
+        form = validated_data.get("form")
         key = validated_data.get("key")
         try:
             instance = self.Meta.model.objects.get(form=form, key=key)
