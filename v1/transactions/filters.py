@@ -71,7 +71,7 @@ class PaymentTransactionFilterSet(filters.FilterSet):
     """
 
     updated_after = filters.NumberFilter(
-        method="updated_after_filter", field_name="updated_on"
+        method="updated_after_filter", field_name="created_on"
     )
 
     class Meta:
