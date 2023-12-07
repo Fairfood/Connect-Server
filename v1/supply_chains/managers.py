@@ -18,4 +18,8 @@ class EntityCardQuerySet(models.QuerySet):
         Returns:
             int: The number of entities that were deactivated.
         """
-        return self.filter(card=card).update(is_active=False)
+        qs = self.filter(card=card)
+        for entity_card in qs:
+            entity_card.is_active = False
+            entity_card.save()
+        return qs

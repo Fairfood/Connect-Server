@@ -1,14 +1,17 @@
 """Models of the app entities."""
 from django.db import models
+from django.db import transaction
+from django.forms import ValidationError
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import base_models
 from .. import constants as sc_consts
-from ... import notifications
-from ...accounts import constants as acc_constants
-from ...accounts.models import ValidationToken
 from base.authentication import utilities as auth_utils
 from base.db import models as abstarct_models
+from v1.catalogs.models.product_models import Premium
+from v1.forms import constants as form_consts
+from v1.forms.models import Form
 
 
 class AbstractCompanyModel(
@@ -39,13 +42,12 @@ class Company(AbstractCompanyModel):
         members (ManyToManyField): The members associated with the company.
         incharge (ForeignKey): The user who is in charge of the company.
         currency (ForeignKey): The default currency used by the company.
+        premiums (ManyToManyField): The premiums associated with the company.
 
     """
 
     name = models.CharField(
         max_length=500,
-        null=True,
-        blank=True,
         verbose_name=_("Company Name"),
     )
     members = models.ManyToManyField(
@@ -62,6 +64,21 @@ class Company(AbstractCompanyModel):
         blank=True,
         related_name="using_companies",
         verbose_name=_("Default Currency"),
+    )
+    products = models.ManyToManyField(
+        "catalogs.Product",
+        through="supply_chains.CompanyProduct",
+        related_name="companies",
+        verbose_name=_("Products"),
+    )
+    buy_enabled = models.BooleanField(
+        default=True, verbose_name=_("Buy Enabled")
+    )
+    sell_enabled = models.BooleanField(
+        default=False, verbose_name=_("Sell Enabled")
+    )
+    quality_correction = models.BooleanField(
+        default=False, verbose_name=_("Quality Correction")
     )
 
     class Meta:
@@ -131,70 +148,136 @@ class CompanyMember(abstarct_models.AbstractBaseModel):
     class Meta:
         unique_together = ("company", "user")
 
-    def send_invite(self):
-        token = None
-        user = self.user
-        if not user.password or not user.has_usable_password():
-            token = ValidationToken.initialize(
-                user, acc_constants.ValidationTokenType.INVITE
-            )
-        notification_manager = notifications.MemberInviteNotificationManager(
-            user=user, action_object=self, token=token
-        )
-        notification_manager.send_notification()
+    # def send_invite(self):
+    #     token = None
+    #     user = self.user
+    #     if not user.password or not user.has_usable_password():
+    #         token = ValidationToken.initialize(
+    #             user, acc_constants.ValidationTokenType.INVITE
+    #         )
+    #     notification_manager = notifications.MemberInviteNotificationManager(
+    #         user=user, action_object=self, token=token
+    #     )
+    #     notification_manager.send_notification()
 
-    def get_notification_pref(self, notif_manager):
-        """Function to return notification preferences for a user."""
-        from v1.notifications.constants import NotificationCondition
+    # def get_notification_pref(self, notif_manager):
+    #     """Function to return notification preferences for a user."""
+    #     from v1.notifications.constants import NotificationCondition
 
-        def get_pref(config: dict) -> bool:
-            if self.type not in config.keys():
-                raise ValueError(_("Config not defined."))
-            if config[self.type] == NotificationCondition.ENABLED:
-                return True
-            elif config[self.type] == NotificationCondition.DISABLED:
-                return False
-            elif config[self.type] == NotificationCondition.IF_USER_ACTIVE:
-                return self.user.status == acc_constants.UserStatus.ACTIVE
-            return False
+    #     def get_pref(config: dict) -> bool:
+    #         if self.type not in config.keys():
+    #             raise ValueError(_("Config not defined."))
+    #         if config[self.type] == NotificationCondition.ENABLED:
+    #             return True
+    #         elif config[self.type] == NotificationCondition.DISABLED:
+    #             return False
+    #         elif config[self.type] == NotificationCondition.IF_USER_ACTIVE:
+    #             return self.user.status == acc_constants.UserStatus.ACTIVE
+    #         return False
 
-        prefs = {
-            "visibility": get_pref(notif_manager.visibility),
-            "push": get_pref(notif_manager.push),
-            "email": get_pref(notif_manager.email),
-            "sms": get_pref(notif_manager.sms),
-        }
-        return prefs
+    #     prefs = {
+    #         "visibility": get_pref(notif_manager.visibility),
+    #         "push": get_pref(notif_manager.push),
+    #         "email": get_pref(notif_manager.email),
+    #         "sms": get_pref(notif_manager.sms),
+    #     }
+    #     return prefs
 
 
-class CompanyAdditionalField(abstarct_models.AbstractBaseModel):
+class CompanyProduct(abstarct_models.AbstractBaseModel):
     """
-    Model to save additional fields of a company.
+    Represents the association between a Company and a Product.
 
-    Attribs:
-        label(str)      : label of the additional field.
-        type(str)       : type of the additional field like text, number...
-        required(bool)  : is the field required or not.
-        company(obj)    : company which the additional field is related.
+    Attributes:
+    - company (models.ForeignKey): The Company associated with the Product.
+    - product (models.ForeignKey): The Product associated with the Company.
+    - form (models.OneToOneField): An optional Form associated with the
+        Company-Product relationship.
+
+    Related Names:
+    - company_products (related_name): A reverse relation to access
+        Company-Product associations for a Company.
+    - company_products (related_name): A reverse relation to access
+        Company-Product associations for a Product.
+    - company_product (related_name): A reverse relation to access the Form
+        associated with this Company-Product relationship.
+
     """
 
-    name = models.CharField(max_length=100, verbose_name=_("Name"))
-    type = models.CharField(
-        max_length=3,
-        choices=sc_consts.CompanyFieldType.choices,
-        default=sc_consts.CompanyFieldType.TEXT,
-        verbose_name=_("Type"),
-    )
-    required = models.BooleanField(default=True, verbose_name=_("Required"))
     company = models.ForeignKey(
-        "supply_chains.Company",
+        Company,
         on_delete=models.CASCADE,
-        related_name="additional_fields",
+        related_name="company_products",
         verbose_name=_("Company"),
+    )
+    product = models.ForeignKey(
+        "catalogs.Product",
+        on_delete=models.CASCADE,
+        related_name="company_products",
+        verbose_name=_("Product"),
+    )
+    forms = models.ManyToManyField(
+        Form,
+        related_name="company_products",
+        blank=True,
+        verbose_name=_("Forms"),
+    )
+    premiums = models.ManyToManyField(
+        Premium,
+        related_name="company_products",
+        verbose_name=_("Premium"),
+        blank=True,
+    )
+    is_active = models.BooleanField(
+        default=True, verbose_name=_("Is Company Product Active")
     )
 
     def __str__(self):
-        return f"{self.name} - {self.company.name}"
+        return f"{self.company.name} - {self.product.name}"
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        self._check_premium_removal()
+        super().save(*args, **kwargs)
+        self._form_check()
+        self._premium_check()
+
+    def _form_check(self):
+        """Check if the form is valid."""
+        if self.forms.exists():
+            for form in self.forms.all():
+                if form != form_consts.FormType.PRODUCT:
+                    raise ValueError(
+                        _("Invalid form type. Not a product form.")
+                    )
+
+    def _premium_check(self):
+        """Check if the premium is valid."""
+        errors = []
+        for premium in self.premiums.all():
+            if premium not in self.company.owned_premiums.all():
+                errors.append(
+                    f"{premium.name} is not a premium of "
+                    f"{self.company.name}."
+                )
+        if errors:
+            raise ValidationError(errors)
+
+    def _check_premium_removal(self):
+        """Check if the premium is valid."""
+        if self.pk:
+            old_premiums = self.__class__.objects.get(
+                pk=self.pk
+            ).premiums.all()
+            new_premiums = self.premiums.all()
+            removed_premiums = old_premiums.exclude(pk__in=new_premiums)
+            added_premiums = new_premiums.exclude(pk__in=old_premiums)
+            premuims_changed = (
+                removed_premiums.exists() or added_premiums.exists()
+            )
+            if premuims_changed:
+                self.product.updated_on = timezone.now()
+                self.product.save()
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):

@@ -1,6 +1,7 @@
 """Serializer customization for Authentication."""
 from django.contrib.auth import get_user_model
 from django.contrib.auth import password_validation
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -10,9 +11,9 @@ from rest_framework_simplejwt.serializers import (
 from rest_framework_simplejwt.state import token_backend
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from base import exceptions
 from base.authentication import utilities as auth_utils
 from base.drf import fields
+from base.exceptions import custom_exceptions as exceptions
 from utilities import functions as util_functions
 from v1.accounts import constants as acc_constants
 from v1.accounts.models import CustomUser
@@ -27,6 +28,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
 
     entity: Company = None
     entity_member: CompanyMember = None
+    exp: int = 0
 
     def validate(self, attrs):
         """Along with the inherited auth token and refresh token, id of user,
@@ -34,6 +36,9 @@ class APILoginSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data["user_id"] = self.user.id
         data["entity_id"] = self.entity.id
+
+        expires_in = self.exp - timezone.now().timestamp()
+        data["expires_in"] = int(expires_in if expires_in > 0 else 0)
         return data
 
     def get_token(self, user):
@@ -44,7 +49,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
             )
         try:
             entity_member = CompanyMember.objects.get(
-                entity=self.entity, user=user, is_active=True
+                company=self.entity, user=user, is_active=True
             )
         except CompanyMember.DoesNotExist:
             raise exceptions.AuthenticationFailed(
@@ -52,6 +57,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
                 "invalid_entity",
             )
         token = super().get_token(user)
+        self.exp = token.access_token.get("exp")
         user.set_active()
         user.disable_force_logout()
         token["session_data"] = {
@@ -86,7 +92,7 @@ class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
 
         try:
             entity_member = CompanyMember.objects.get(
-                entity=entity, user=user, is_active=True
+                company=entity, user=user, is_active=True
             )
         except CompanyMember.DoesNotExist:
             raise exceptions.AuthenticationFailed(
@@ -100,11 +106,16 @@ class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
         user.set_default_entity(entity)
         data["user_id"] = user.id.hashid
         data["entity_id"] = entity.id.hashid
+        # setting expiry
+        expires_in = (
+            refresh.access_token.get("exp") - timezone.now().timestamp()
+        )
+        data["expires_in"] = int(expires_in if expires_in > 0 else 0)
+
         data["member_type"] = entity_member.type
         data["policy_accepted"] = user.policy_accepted
-        data[
-            "current_policy"
-        ] = PrivacyPolicy.current_privacy_policy().id.hashid
+        policy = PrivacyPolicy.current_privacy_policy()
+        data["current_policy"] = policy.id.hashid if policy else None
         return data
 
 

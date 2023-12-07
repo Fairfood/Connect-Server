@@ -248,6 +248,7 @@ LANGUAGES = [
     ("en-uk", "English UK"),
     ("fr", "French"),
     ("nl", "Dutch"),
+    ("id", "Indonesian"),
 ]
 
 MODELTRANSLATION_DEFAULT_LANGUAGE = "en-us"

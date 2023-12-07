@@ -30,7 +30,7 @@ register_converter(converters.IDConverter, "hashid")
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="RightOrigins V3 API",
+        title="Trace Connect API",
         default_version="v1",
     ),
     public=True,
@@ -39,18 +39,25 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("v1/constants/", base_views.Constants.as_view(), name="constants"),
-    path("v1/auth/", include("v1.apiauth.urls")),
-    path("v1/accounts/", include("v1.accounts.urls")),
-    path("v1/notifications/", include("v1.notifications.urls")),
-    path("v1/supply-chains/", include("v1.supply_chains.urls")),
+    path("connect/admin/", admin.site.urls),
+    path(
+        "connect/v1/constants/",
+        base_views.Constants.as_view(),
+        name="constants",
+    ),
+    path("connect/v1/auth/", include("v1.apiauth.urls")),
+    path("connect/v1/accounts/", include("v1.accounts.urls")),
+    path("connect/v1/notifications/", include("v1.notifications.urls")),
+    path("connect/v1/supply-chains/", include("v1.supply_chains.urls")),
+    path("connect/v1/catalogs/", include("v1.catalogs.urls")),
+    path("connect/v1/transactions/", include("v1.transactions.urls")),
+    path("connect/v1/forms/", include("v1.forms.urls")),
 ]
 
 if settings.DEBUG:
     urlpatterns += (
         path(
-            "v1/",
+            "connect/v1/",
             schema_view.with_ui("swagger", cache_timeout=0),
             name="schema-swagger-ui",
         ),

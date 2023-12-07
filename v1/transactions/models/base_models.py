@@ -7,12 +7,15 @@ from base.db.models import AbstractBaseModel
 from base.db.models import AbstractNumberedModel
 from base.db.utilities import get_file_path
 from v1.catalogs.models.product_models import ConnectCard
-from v1.forms.models import Form
+from v1.forms.models import Submission
 from v1.supply_chains.models.base_models import Entity
 
 
 class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
-    date = models.DateField(default=timezone.now, verbose_name=_("Date"))
+    created_on = models.DateTimeField(
+        default=timezone.now, verbose_name=_("Created On")
+    )
+    date = models.DateTimeField(default=timezone.now, verbose_name=_("Date"))
     source = models.ForeignKey(
         Entity,
         on_delete=models.CASCADE,
@@ -21,13 +24,13 @@ class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
     )
     destination = models.ForeignKey(
         Entity,
-        on_delete=models,
+        on_delete=models.CASCADE,
         related_name="incoming_transactions",
         verbose_name=_("Destination"),
     )
     card = models.ForeignKey(
         ConnectCard,
-        models.SET_NULL,
+        on_delete=models.SET_NULL,
         related_name="transactions",
         null=True,
         blank=True,
@@ -54,9 +57,9 @@ class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
         blank=True,
         choices=constants.VerificationMethodType.choices,
     )
-    form = models.ForeignKey(
-        Form, models.SET_NULL, null=True, blank=True, verbose_name=_("Form")
+    submissions = models.ManyToManyField(
+        Submission, blank=True, verbose_name=_("Submissions")
     )
 
     def __str__(self):
-        return f"{self.source} -> {self.destination} {self.amount}"
+        return f"{self.source} -> {self.destination}"

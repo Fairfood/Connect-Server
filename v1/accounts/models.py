@@ -126,6 +126,14 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         return super(CustomUser, self).save(*args, **kwargs)
 
     @property
+    def is_admin(self):
+        """Check if user is admin."""
+        return self.type in [
+            user_consts.UserType.ADMIN,
+            user_consts.UserType.SUPER_ADMIN,
+        ]
+
+    @property
     def image_url(self):
         """Get file url ."""
         try:
@@ -484,6 +492,8 @@ class PrivacyPolicy(AbstractBaseModel):
     @staticmethod
     def current_privacy_policy():
         """Return current privacy policy."""
-        return PrivacyPolicy.objects.exclude(
+        policies = PrivacyPolicy.objects.exclude(
             since__gt=datetime.date.today()
-        ).latest("version")
+        )
+        if policies.exists():
+            return policies.latest("version")

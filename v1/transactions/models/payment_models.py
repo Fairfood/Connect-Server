@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from .. import constants
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.models.product_models import Premium
-from v1.catalogs.models.product_models import PremiumOption
 from v1.transactions.models.base_models import BaseTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
 
@@ -36,9 +35,9 @@ class PaymentTransaction(BaseTransaction):
     """
 
     payment_type = models.CharField(
-        max_length=3,
+        max_length=20,
         choices=constants.PaymentType.choices,
-        default=constants.PaymentType.TRANSACTION,
+        default=constants.PaymentType.TRANSACTION_PREMIUM,
         verbose_name=_("Payment Type"),
     )
     premium = models.ForeignKey(
@@ -50,9 +49,8 @@ class PaymentTransaction(BaseTransaction):
         verbose_name=_("Premium"),
     )
     amount = models.FloatField(default=0.0, verbose_name=_("Amount"))
-    selected_option = models.ForeignKey(
-        PremiumOption,
-        on_delete=models.SET_NULL,
+    selected_option = models.CharField(
+        max_length=100,
         null=True,
         blank=True,
         verbose_name=_("Selected Option"),
@@ -72,33 +70,51 @@ class PaymentTransaction(BaseTransaction):
         blank=True,
     )
 
-    class Meta:
-        abstract = True
-
     def save(self, **kwargs):
         """save() override to pre and post save functions."""
-        # self._update_from_transaction()
+        self._update_from_transaction()
         self._update_payment_status()
         self._update_verification_method()
         super().save(**kwargs)
 
+    def _update_from_transaction(self):
+        """To update payment_from and payment_to from the available
+        transaction."""
+        if self.transaction:
+            self.source = self.transaction.destination
+            self.destination = self.transaction.source
+            self.date = self.transaction.date
+            self.created_on = self.transaction.created_on
+
+            # invoice will get from transaction if not available.
+            if not self.invoice:
+                self.invoice = self.transaction.invoice
+            self.card = self.transaction.card
+            self.invoice_number = self.transaction.invoice_number
+
+            # getting verification lat-long
+            lat = self.transaction.verification_latitude
+            lon = self.transaction.verification_longitude
+            self.verification_latitude = lat
+            self.verification_longitude = lon
+
     def _update_payment_status(self):
         """To update payment_status with available relations."""
         if self.transaction and self.premium:
-            self.payment_type = constants.TRANSACTION_PREMIUM
+            self.payment_type = constants.PaymentType.TRANSACTION_PREMIUM
         else:
             if self.transaction:
-                self.payment_type = constants.BASE_TRANSACTION
+                self.payment_type = constants.PaymentType.TRANSACTION
             elif self.premium:
-                self.payment_type = constants.BASE_PREMIUM
+                self.payment_type = constants.PaymentType.PREMIUM
             else:
                 raise Exception("Payment type can not determined.")
 
     def _update_verification_method(self):
         """Update verification method card/receipt."""
         if self.card:
-            self.method = constants.CARD_VERIFICATION
+            self.method = constants.VerificationMethodType.CARD
         elif self.invoice:
-            self.method = constants.INVOICE_VERIFICATION
+            self.method = constants.VerificationMethodType.INVOICE
         else:
-            self.method = constants.NO_VERIFICATION
+            self.method = constants.VerificationMethodType.NONE

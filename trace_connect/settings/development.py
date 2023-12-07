@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -8,16 +10,17 @@ from .base import DEPLOYMENT
 from .base import env
 from .base import INSTALLED_APPS
 from .base import REST_FRAMEWORK
+from .base import SIMPLE_JWT
 
 
 ENVIRONMENT = "development"
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "ro-api-v3-dev.rightorigins.com",
+    "v2.dev.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://ro-api-v3-dev.rightorigins.com",)
+CORS_ORIGIN_WHITELIST = ("https://v2.dev.api.fairfood.org",)
 
 DEBUG = True
 
@@ -26,6 +29,9 @@ INSTALLED_APPS += [
 ]
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
+
+SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(minutes=5)
+SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(days=7)
 
 # Media file settings for S3
 

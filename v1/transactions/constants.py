@@ -2,6 +2,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+INCOMING = "INCOMING"
+OUTGOING = "OUTGOING"
+
+
 class PaymentType(models.TextChoices):
     """
     A Class to define text choices for the 'Payment' model's 'type' field.
@@ -13,9 +17,9 @@ class PaymentType(models.TextChoices):
         value of 'TRP'.
     """
 
-    TRANSACTION = "TRA", _("Transaction")
-    PREMIUM = "PRE", _("Premium")
-    TRANSACTION_PREMIUM = "TRP", _("Transaction Premium")
+    TRANSACTION = "TRANSACTION", _("Transaction")
+    PREMIUM = "PREMIUM", _("Premium")
+    TRANSACTION_PREMIUM = "TRANSACTION_PREMIUM", _("Transaction Premium")
 
 
 class VerificationMethodType(models.TextChoices):
@@ -29,6 +33,6 @@ class VerificationMethodType(models.TextChoices):
     - NONE: Represents a no verification method with a value of 'NON'.
     """
 
-    CARD = "CAR", _("Card")
-    INVOICE = "INV", _("Invoice")
-    NONE = "NON", _("None")
+    CARD = "CARD", _("Card")
+    INVOICE = "INVOICE", _("Invoice")
+    NONE = "NONE", _("None")

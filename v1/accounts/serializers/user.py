@@ -1,25 +1,26 @@
 """Serializers related to user are stored here."""
-from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from base.drf import fields
+from base.drf.serializers import DynamicModelSerializer
 from v1.accounts import models as user_models
 from v1.accounts.serializers.other_apps import UserEntitySerializer
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(DynamicModelSerializer):
     """Serializer for user."""
 
-    id = fields.SerializableRelatedField(read_only=True)
     managing_entitys = fields.SerializableRelatedField(
         read_only=True,
         serializer=UserEntitySerializer,
-        source="member_entitys",
+        source="member_companies",
         many=True,
     )
 
     default_entity = fields.SerializableRelatedField(read_only=True)
-    phone = PhoneNumberField(required=False, allow_blank=True, allow_null=True)
+    phone = fields.PhoneNumberField(
+        required=False, allow_blank=True, allow_null=True
+    )
     accepted_policy = fields.SerializableRelatedField(
         required=False, queryset=user_models.PrivacyPolicy.objects.all()
     )
@@ -50,7 +51,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_current_policy(self, obj):
         """Return current policy."""
-        return user_models.PrivacyPolicy.current_privacy_policy().id
+        policy = user_models.PrivacyPolicy.current_privacy_policy()
+        return policy.id if policy else None
 
     @staticmethod
     def create_update_user(validated_data, instance=None):

@@ -14,12 +14,6 @@ class CompanyMemberType(models.TextChoices):
     REPORTER = "REPORTER", _("Reporter")
 
 
-class CompanyFieldType(models.TextChoices):
-    TEXT = "TXT", _("Text")
-    NUMBER = "NUM", _("Number")
-    BOOL = "BOL", _("Boolean")
-
-
 class CompanyFieldVisibiltyType(models.TextChoices):
     TRANSACTION = "TRANSACTION", _("Transaction")
     FARMER = "FARMER", _("Farmer")

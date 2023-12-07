@@ -1,10 +1,13 @@
 """Filters used in the catalogs api."""
 from django_filters import rest_framework as filters
 
+from .models import product_models
+from base.authentication import utilities as utils
+from utilities.functions import unix_to_datetime
 from v1.catalogs.models import common_models as catalog_models
 
 
-class CurrencyFilter(filters.FilterSet):
+class CurrencyFilterSet(filters.FilterSet):
     """Filterclass for currency-list api."""
 
     all = filters.BooleanFilter(method="all_filter")
@@ -26,7 +29,7 @@ class CurrencyFilter(filters.FilterSet):
         return query
 
 
-class ProvinceFilter(filters.FilterSet):
+class ProvinceFilterSet(filters.FilterSet):
     """Filterclass for province."""
 
     class Meta:
@@ -36,19 +39,60 @@ class ProvinceFilter(filters.FilterSet):
         ]
 
 
-class RegionFilter(filters.FilterSet):
-    """Filterclass for Region."""
+class ProductFilterSet(filters.FilterSet):
+    """Filterclass for product-list api."""
+
+    updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="updated_on"
+    )
 
     class Meta:
-        model = catalog_models.Region
-        fields = [
-            "province",
-        ]
+        """Meta Info."""
+
+        model = product_models.Product
+        fields = (
+            "name",
+            "description",
+        )
+
+    @property
+    def qs(self):
+        """Return queryset."""
+        parent = super().qs
+        entity = utils.get_current_entity()
+        return parent.filter(companies=entity)
+
+    def updated_after_filter(self, queryset, name, value):
+        """Return queryset."""
+        name += "__gte"
+        value = unix_to_datetime(value)
+        return queryset.filter(**{name: value})
 
 
-class VillageFilter(filters.FilterSet):
-    """Filterclass for province."""
+class PremiumFilterSet(filters.FilterSet):
+    """Filterclass for product-list api."""
+
+    updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="updated_on"
+    )
 
     class Meta:
-        model = catalog_models.Village
-        fields = ["region,"]
+        """Meta Info."""
+
+        model = product_models.Premium
+        fields = ("name",)
+
+    @property
+    def qs(self):
+        """Return queryset."""
+        parent = super().qs
+        entity = utils.get_current_entity()
+        return parent.filter(
+            owner__in=[entity, entity.buyer if entity else None]
+        )
+
+    def updated_after_filter(self, queryset, name, value):
+        """Return queryset."""
+        name += "__gte"
+        value = unix_to_datetime(value)
+        return queryset.filter(**{name: value})

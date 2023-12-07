@@ -39,4 +39,9 @@ urlpatterns = [
         views.CheckPasswordView.as_view(),
         name="check_password",
     ),
+    path(
+        "trace/sync-status",
+        views.TraceSyncView.as_view(),
+        name="trace-sync-status",
+    ),
 ]

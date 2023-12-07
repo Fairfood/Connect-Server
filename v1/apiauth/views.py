@@ -1,10 +1,14 @@
+from celery.result import AsyncResult
 from rest_framework import generics
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.views import (
     TokenRefreshView as SJWTTokenRefreshView,
 )
 
 from . import serializers as auth_serializers
+from base.exceptions.custom_exceptions import BadRequest
+from base.request_handler.response import SuccessResponse
 
 
 # Create your views here.
@@ -82,3 +86,23 @@ class CheckPasswordView(generics.CreateAPIView):
     """
 
     serializer_class = auth_serializers.CheckPasswordSerializer
+
+
+class TraceSyncView(APIView):
+    """Api view for syncing trace data."""
+
+    def post(self, request, *args, **kwargs):
+        """Get method for syncing trace data."""
+        task_id = request.data.get("task_id", None)
+        if not task_id:
+            raise BadRequest("Task id is required.")
+        try:
+            result = AsyncResult(task_id)
+            data = {
+                "task_id": task_id,
+                "status": result.status,
+                "result": result.result,
+            }
+        except Exception:
+            raise BadRequest("Check your task id.")
+        return SuccessResponse(data=data)

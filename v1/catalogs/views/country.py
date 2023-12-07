@@ -23,12 +23,7 @@ class CountryViewSet(IdDecodeModelViewSet):
         "dial_code",
     ]
     serializer_class = country_serializer.CountrySerializer
-    queryset = catalog_models.Country.objects.all().prefetch_related(
-        "currency",
-        "provinces",
-        "provinces__regions",
-        "provinces__regions__villages",
-    )
+    queryset = catalog_models.Country.objects.all()
 
 
 class ProvinceViewSet(IdDecodeModelViewSet):
@@ -41,36 +36,6 @@ class ProvinceViewSet(IdDecodeModelViewSet):
     search_fields = [
         "name",
     ]
-    filterset_class = catalog_filters.ProvinceFilter
-    serializer_class = country_serializer.BaseProvinceSerializer
-    queryset = catalog_models.Province.objects.all().prefetch_related(
-        "regions", "regions__villages"
-    )
-
-
-class RegionViewSet(IdDecodeModelViewSet):
-    """View to list, create and update Region data."""
-
-    http_method_names = [
-        "get",
-    ]
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = [
-        "name",
-    ]
-    filterset_class = catalog_filters.RegionFilter
-    serializer_class = country_serializer.BaseRegionSerializer
-    queryset = catalog_models.Region.objects.all().prefetch_related("villages")
-
-
-class VillageViewSet(IdDecodeModelViewSet):
-    """View to list, create and update Village data."""
-
-    http_method_names = ["get", "post"]
-    filterset_class = catalog_filters.VillageFilter
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = [
-        "name",
-    ]
-    serializer_class = country_serializer.VillageSerializer
-    queryset = catalog_models.Village.objects.all()
+    filterset_class = catalog_filters.ProvinceFilterSet
+    serializer_class = country_serializer.ProvinceSerializer
+    queryset = catalog_models.Province.objects.all()
