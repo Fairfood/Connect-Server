@@ -268,8 +268,8 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         if self.pk:
             old_premiums = self.__class__.objects.get(
                 pk=self.pk
-            ).premiums.all()
-            new_premiums = self.premiums.all()
+            ).premiums.only("id")
+            new_premiums = self.premiums.only("id")
             removed_premiums = old_premiums.exclude(pk__in=new_premiums)
             added_premiums = new_premiums.exclude(pk__in=old_premiums)
             premuims_changed = (
