@@ -58,7 +58,7 @@ class ProductTransactionFilterSet(filters.FilterSet):
         if value or value == "true":
             entity = auth_utils.get_current_entity()
             return queryset.annotate(total_children=Count("children")).filter(
-                total_children=0, destination=entity
+                total_children=0, destination=entity, quantity__gt=0
             )
         return queryset
 
