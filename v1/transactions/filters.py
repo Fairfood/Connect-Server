@@ -34,8 +34,13 @@ class ProductTransactionFilterSet(filters.FilterSet):
     def qs(self):
         """Return queryset."""
         parent = super().qs
-        entity = auth_utils.get_current_entity()
+
+        # Skip filters for admin
         user = auth_utils.get_current_user()
+        if user.is_admin:
+            return parent
+
+        entity = auth_utils.get_current_entity()
         return parent.filter(
             Q(source=entity, creator=user)
             | Q(destination=entity, creator=user)
@@ -82,6 +87,11 @@ class PaymentTransactionFilterSet(filters.FilterSet):
     def qs(self):
         """Return queryset."""
         parents = super().qs
+        # Skip filters for admin
+        user = auth_utils.get_current_user()
+        if user.is_admin:
+            return parents.filter(payment_type=PaymentType.PREMIUM)
+
         entity = auth_utils.get_current_entity()
         parents = parents.filter(Q(source=entity) | Q(destination=entity))
         return parents.filter(payment_type=PaymentType.PREMIUM)

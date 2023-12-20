@@ -29,6 +29,10 @@ class FarmerFilterSet(filters.FilterSet):
     def qs(self):
         """Return queryset."""
         parent = super().qs
+        user = utils.get_current_user()
+        if user.is_admin:
+            return parent
+
         entity = utils.get_current_entity()
         return parent.filter(buyer=entity)
 
