@@ -2,6 +2,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from sentry_sdk import set_tag
 
 from base.authentication.session import set_to_local
+from base.exceptions import custom_exceptions as exceptions
 from utilities.functions import decode
 
 
@@ -21,12 +22,16 @@ class CustomAuthentication(JWTAuthentication):
         if not user_token:
             return None
         user, validated_token = user_token
-        print(">>>>>", validated_token["session_data"])
 
         session_data = {
             k: decode(v) if k.endswith("_id") else v
             for k, v in validated_token["session_data"].items()
         }
+
+        if not user.is_device_active(session_data["device"]):
+            print("Device deactivated login again.")
+            raise exceptions.AccessForbidden("Device deactivated login again.")
+
         for k, v in session_data.items():
             set_to_local(k, v)
             set_tag(f"session.{k}", v)

@@ -229,6 +229,14 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         }
         return prefs
 
+    def is_device_active(self, registration_id):
+        """Check if user has active device."""
+        return (
+            UserDevice.active_devices(self)
+            .filter(registration_id=registration_id)
+            .exists()
+        )
+
 
 class ValidationToken(AbstractBaseModel):
     """Class to store the validation token data.
@@ -431,6 +439,10 @@ class UserDevice(AbstractBaseModel):
     registration_id = models.TextField(
         verbose_name=_("Registration token"), blank=True, default=""
     )
+    active = models.BooleanField(
+        verbose_name=_("Is active"),
+        default=True,
+    )
 
     class Meta:
         """Meta data."""
@@ -438,19 +450,25 @@ class UserDevice(AbstractBaseModel):
         verbose_name = _("User device")
         verbose_name_plural = _("User devices")
 
-    def activate(self, types=user_consts.MOBILE_DEVICE_TYPES):
-        """Function for set device as active and set other devices of same user
-        as inactive."""
-        for device in UserDevice.objects.filter(
-            user=self.user, type__in=types
-        ):
-            if device.active:
-                device.active = False
-                device.updater = self.user
-                device.save()
-        self.active = True
+    def deactivate(self, types=user_consts.MOBILE_DEVICE_TYPES):
+        """To deactivate this device"""
+        self.active = False
         self.save()
-        return True
+
+    @classmethod
+    def active_devices(cls, user):
+        """List users active devices"""
+        return cls.objects.filter(
+            user=user,
+            active=True,
+        )
+
+    @classmethod
+    def deactivate_devices(cls, user):
+        """Deactivate all devices of a user"""
+        devices = cls.active_devices(user)
+        for device in devices:
+            device.deactivate()
 
 
 class PrivacyPolicy(AbstractBaseModel):
