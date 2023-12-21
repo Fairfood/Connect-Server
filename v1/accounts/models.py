@@ -473,7 +473,7 @@ class UserDevice(AbstractBaseModel):
     @classmethod
     def get_device_with_device_id(cls, device_id, user):
         """Get device with device id"""
-        return cls.objects.filter(device_id=device_id, user=user).first()
+        return cls.objects.filter(registration_id=device_id, user=user).first()
 
 
 class PrivacyPolicy(AbstractBaseModel):
