@@ -12,6 +12,11 @@ import os  # noqa
 from datetime import timedelta
 from pathlib import Path
 
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+
 from . import env
 
 
@@ -355,6 +360,7 @@ EMAIL_USE_SSL = False
 # celery setup
 
 CELERY_BROKER_URL = f"{REDIS_URL}:{REDIS_PORT}"
+CELERY_RESULT_BACKEND = f"{REDIS_URL}:{REDIS_PORT}"
 CELERY_TIMEZONE = "UTC"
 CELERY_DEFAULT_QUEUE = "low"
 CELERY_ROUTES = {
@@ -364,3 +370,18 @@ CELERY_ROUTES = {
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+sentry_sdk.init(
+    dsn=env.get("SENTRY_DSN"),
+    integrations=[
+        DjangoIntegration(),
+        CeleryIntegration(),
+        RedisIntegration(),
+    ],
+    traces_sample_rate=1.0,
+    environment=ENVIRONMENT,
+    _experiments={
+        "profiles_sample_rate": 1.0,
+    },
+)
+sentry_sdk.set_tag("deployment", DEPLOYMENT)

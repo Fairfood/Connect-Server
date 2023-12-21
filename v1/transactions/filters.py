@@ -34,8 +34,13 @@ class ProductTransactionFilterSet(filters.FilterSet):
     def qs(self):
         """Return queryset."""
         parent = super().qs
-        entity = auth_utils.get_current_entity()
+
+        # Skip filters for admin
         user = auth_utils.get_current_user()
+        if user.is_admin:
+            return parent
+
+        entity = auth_utils.get_current_entity()
         return parent.filter(
             Q(source=entity, creator=user)
             | Q(destination=entity, creator=user)
@@ -55,10 +60,10 @@ class ProductTransactionFilterSet(filters.FilterSet):
 
     def quantity_available_filter(self, queryset, name, value):
         """Return queryset."""
-        if value:
+        if value or value == "true":
             entity = auth_utils.get_current_entity()
             return queryset.annotate(total_children=Count("children")).filter(
-                total_children=0, destination=entity
+                total_children=0, destination=entity, quantity__gt=0
             )
         return queryset
 
@@ -82,6 +87,11 @@ class PaymentTransactionFilterSet(filters.FilterSet):
     def qs(self):
         """Return queryset."""
         parents = super().qs
+        # Skip filters for admin
+        user = auth_utils.get_current_user()
+        if user.is_admin:
+            return parents.filter(payment_type=PaymentType.PREMIUM)
+
         entity = auth_utils.get_current_entity()
         parents = parents.filter(Q(source=entity) | Q(destination=entity))
         return parents.filter(payment_type=PaymentType.PREMIUM)

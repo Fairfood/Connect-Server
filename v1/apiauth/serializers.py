@@ -18,6 +18,7 @@ from utilities import functions as util_functions
 from v1.accounts import constants as acc_constants
 from v1.accounts.models import CustomUser
 from v1.accounts.models import PrivacyPolicy
+from v1.accounts.models import UserDevice
 from v1.accounts.models import ValidationToken
 from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.company_models import CompanyMember
@@ -29,16 +30,39 @@ class APILoginSerializer(TokenObtainPairSerializer):
     entity: Company = None
     entity_member: CompanyMember = None
     exp: int = 0
+    device_id: str = ""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["device_id"] = serializers.CharField(required=True)
+        self.fields["device_name"] = serializers.CharField(required=True)
+        self.fields["device_loc"] = serializers.CharField(required=True)
+        self.fields["force_logout"] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
         """Along with the inherited auth token and refresh token, id of user,
         and entity are added into the response."""
+        self.device_id = attrs.get("device_id", None)
+        force_logout = attrs.get("force_logout", False)
+        device_name = attrs.get("device_name", False)
+        device_loc = attrs.get("device_loc", False)
+
+        if not self.device_id:
+            raise exceptions.AuthenticationFailed(
+                _("Device ID is required"), "device_id_required"
+            )
+
         data = super().validate(attrs)
         data["user_id"] = self.user.id
         data["entity_id"] = self.entity.id
 
         expires_in = self.exp - timezone.now().timestamp()
         data["expires_in"] = int(expires_in if expires_in > 0 else 0)
+        data["is_granted"] = True
+
+        self.check_multiple_login(data, force_logout)
+        self._get_or_create_device(device_name, device_loc)
+
         return data
 
     def get_token(self, user):
@@ -64,8 +88,35 @@ class APILoginSerializer(TokenObtainPairSerializer):
             "user_id": user.id.hashid,
             "entity_id": self.entity.id.hashid,
             "member_type": entity_member.type,
+            "device": self.device_id,
         }
         return token
+
+    def _get_or_create_device(self, device_name, device_loc):
+        """Get or create device for user."""
+        device, created = self.user.devices.get_or_create(
+            registration_id=self.device_id, user=self.user
+        )
+        if not created:
+            device.active = True
+        device.device_name = device_name
+        device.device_loc = device_loc
+        device.save()
+        return device
+
+    def check_multiple_login(self, data, force_logout):
+        """Check if user is already logged in on another device."""
+        if not self.entity.company.allow_multiple_login:
+            if force_logout:
+                UserDevice.deactivate_devices(self.user)
+
+            active_devices = UserDevice.active_devices(self.user).exclude(
+                registration_id=self.device_id
+            )
+            if active_devices.exists():
+                data["is_granted"] = False
+                data["access"] = ""
+                data["refresh"] = ""
 
 
 class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
