@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from base.db.models import AbstractBaseModel
@@ -27,6 +28,9 @@ class Entity(AbstractBaseModel):
     - buyer (ForeignKey): The company that buyying from the entity.
     """
 
+    created_on = models.DateTimeField(
+        default=timezone.now, verbose_name=_("Created On")
+    )
     image = models.ImageField(
         upload_to=get_file_path,
         null=True,
@@ -57,8 +61,15 @@ class Entity(AbstractBaseModel):
     )
 
     def __str__(self):
-        """Function to return value in django admin."""
         return f"{self.name}"
+
+    @property
+    def name(self):
+        """property name of the entity."""
+        if hasattr(self, "company"):
+            return self.company.name
+        elif hasattr(self, "farmer"):
+            return self.farmer.name
 
 
 class EntityCard(AbstractBaseModel):
@@ -113,10 +124,20 @@ class EntityCard(AbstractBaseModel):
     def save(self, *args, **kwargs):
         if self.is_active:
             self.__class__.objects.deactivate_other_entities(self.card)
-            self.set_default(self.entity)
+
         super().save(*args, **kwargs)
+
+        if self.is_active:
+            self.set_default(self.entity)
+        else:
+            self.remove_default(self.entity)
 
     def set_default(self, entity):
         """Set default entity card for entity"""
         entity.entity_card = self
+        entity.save()
+
+    def remove_default(self, entity):
+        """Remove default entity card for entity"""
+        entity.entity_card = None
         entity.save()

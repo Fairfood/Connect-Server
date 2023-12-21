@@ -40,3 +40,20 @@ def get_current_entity():
     entity = current_entity
     set_to_local("entity", entity)
     return entity
+
+
+def get_current_device():
+    """Returns the currently authenticated device when called while processing
+    an API.
+
+    Otherwise, returns None.
+    """
+    from v1.accounts.models import UserDevice
+
+    device = get_from_local("device", None)
+    user = get_current_user()
+    current_device = UserDevice.get_device_with_device_id(device, user)
+
+    if current_device:
+        return current_device
+    return None

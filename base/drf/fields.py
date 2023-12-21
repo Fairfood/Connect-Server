@@ -3,7 +3,11 @@ import decimal
 from django.utils.encoding import smart_str
 from django.utils.formats import sanitize_separators
 from hashid_field.field import Hashid
+from phonenumber_field.phonenumber import PhoneNumber
+from phonenumber_field.serializerfields import PhoneNumberField
+from phonenumbers import NumberParseException
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 from utilities.functions import unix_to_datetime
 
@@ -208,3 +212,25 @@ class SerializableRelatedField(serializers.PrimaryKeyRelatedField):
             return [self.single_to_representation(obj) for obj in value]
         return self.single_to_representation(value)
         # return super().to_representation(value)
+
+
+class PhoneNumberField(PhoneNumberField):
+    """
+    A custom field to accept phone numbers in a PhoneNumberField.
+    """
+
+    def to_internal_value(self, data):
+        try:
+            return super().to_internal_value(data)
+        except ValidationError:
+            return None
+
+    def to_representation(self, value):
+        if value:
+            if isinstance(value, str):
+                try:
+                    value = PhoneNumber.from_string(value)
+                except NumberParseException:
+                    return None
+            return value.as_international
+        return None

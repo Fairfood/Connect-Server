@@ -126,6 +126,14 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
         return super(CustomUser, self).save(*args, **kwargs)
 
     @property
+    def is_admin(self):
+        """Check if user is admin."""
+        return self.type in [
+            user_consts.UserType.ADMIN,
+            user_consts.UserType.SUPER_ADMIN,
+        ]
+
+    @property
     def image_url(self):
         """Get file url ."""
         try:
@@ -220,6 +228,14 @@ class CustomUser(DjangoAbstractUser, AbstractBaseModel):
             "sms": get_pref(notif_manager.sms),
         }
         return prefs
+
+    def is_device_active(self, registration_id):
+        """Check if user has active device."""
+        return (
+            UserDevice.active_devices(self)
+            .filter(registration_id=registration_id)
+            .exists()
+        )
 
 
 class ValidationToken(AbstractBaseModel):
@@ -423,6 +439,22 @@ class UserDevice(AbstractBaseModel):
     registration_id = models.TextField(
         verbose_name=_("Registration token"), blank=True, default=""
     )
+    active = models.BooleanField(
+        verbose_name=_("Is active"),
+        default=True,
+    )
+    device_name = models.CharField(
+        max_length=255,
+        verbose_name=_("Device Name"),
+        blank=True,
+        null=True,
+    )
+    device_loc = models.CharField(
+        max_length=255,
+        verbose_name=_("Device Location"),
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         """Meta data."""
@@ -430,19 +462,30 @@ class UserDevice(AbstractBaseModel):
         verbose_name = _("User device")
         verbose_name_plural = _("User devices")
 
-    def activate(self, types=user_consts.MOBILE_DEVICE_TYPES):
-        """Function for set device as active and set other devices of same user
-        as inactive."""
-        for device in UserDevice.objects.filter(
-            user=self.user, type__in=types
-        ):
-            if device.active:
-                device.active = False
-                device.updater = self.user
-                device.save()
-        self.active = True
+    def deactivate(self, types=user_consts.MOBILE_DEVICE_TYPES):
+        """To deactivate this device"""
+        self.active = False
         self.save()
-        return True
+
+    @classmethod
+    def active_devices(cls, user):
+        """List users active devices"""
+        return cls.objects.filter(
+            user=user,
+            active=True,
+        )
+
+    @classmethod
+    def deactivate_devices(cls, user):
+        """Deactivate all devices of a user"""
+        devices = cls.active_devices(user)
+        for device in devices:
+            device.deactivate()
+
+    @classmethod
+    def get_device_with_device_id(cls, device_id, user):
+        """Get device with device id"""
+        return cls.objects.filter(registration_id=device_id, user=user).first()
 
 
 class PrivacyPolicy(AbstractBaseModel):
@@ -484,6 +527,8 @@ class PrivacyPolicy(AbstractBaseModel):
     @staticmethod
     def current_privacy_policy():
         """Return current privacy policy."""
-        return PrivacyPolicy.objects.exclude(
+        policies = PrivacyPolicy.objects.exclude(
             since__gt=datetime.date.today()
-        ).latest("version")
+        )
+        if policies.exists():
+            return policies.latest("version")

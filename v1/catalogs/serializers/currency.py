@@ -1,14 +1,10 @@
 """Serializers related to currency related apis."""
-from rest_framework import serializers
-
-from base.drf import fields
+from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.models import common_models as catalog_models
 
 
-class CurrencySerializer(serializers.ModelSerializer):
+class CurrencySerializer(DynamicModelSerializer):
     """Serializer for currency data."""
-
-    id = fields.SerializableRelatedField(read_only=True)
 
     class Meta:
         """Meta Info."""

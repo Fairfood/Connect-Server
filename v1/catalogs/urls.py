@@ -1,8 +1,8 @@
 """URLs of the app catalogs."""
 from rest_framework import routers
 
+from .views import products as product_views
 from v1.catalogs.models import common_models as catalog_models
-from v1.catalogs.views import category as category_views
 from v1.catalogs.views import country as country_views
 from v1.catalogs.views import currency as currency_views
 
@@ -17,21 +17,18 @@ router.register(
     basename=catalog_models.Province,
 )
 router.register(
-    r"region", country_views.RegionViewSet, basename=catalog_models.Region
-)
-router.register(
-    r"villages", country_views.VillageViewSet, basename=catalog_models.Village
-)
-router.register(
     r"currencies",
     currency_views.CurrencyViewSet,
     basename=catalog_models.Currency,
 )
+router.register(r"products", product_views.ProductViewSet, basename="products")
+router.register(r"premiums", product_views.PremiumViewSet, basename="premiums")
 router.register(
-    r"categories",
-    category_views.CategoryViewSet,
-    basename=catalog_models.Category,
+    r"connect-cards",
+    product_views.ConnectCardViewSet,
+    basename="connect-cards",
 )
+
 urlpatterns = router.urls
 
 urlpatterns += [

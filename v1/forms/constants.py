@@ -18,6 +18,7 @@ class FormType(models.TextChoices):
     TRANSACTION = "TRANSACTION", _("Transaction")
     FARMER = "FARMER", _("Farmer")
     PAYMENT = "PAYMENT", _("Payment")
+    PRODUCT = "PRODUCT", _("Product")
 
 
 class FormFieldType(models.TextChoices):
@@ -28,16 +29,24 @@ class FormFieldType(models.TextChoices):
 
     Choices:
     - 'TEXT': Represents a text field.
-    - 'NUMBER': Represents a numeric field.
+    - 'INTEGER': Represents an integer field.
+    - 'FLOAT': Represents a float field.
+    - 'RADIO': Represents a radio field.
+    - 'MULTI_SELECT': Represents a multi select field.
     - 'EMAIL': Represents an email field.
     - 'PHONE': Represents a phone number field.
     - 'DATE': Represents a date field.
     - 'BOOLEAN': Represents a boolean (true/false) field.
+    - 'DROPDOWN': Represents a dropdown field.
     """
 
     TEXT = "TEXT", _("Text")
-    NUMBER = "NUMBER", _("Number")
+    INTEGER = "INTEGER", _("Integer")
+    FLOAT = "FLOAT", _("Float")
+    RADIO = "RADIO", _("Radio")
+    MULTI_SELECT = "MULTI_SELECT", _("Multi Select")
     EMAIL = "EMAIL", _("Email")
     PHONE = "PHONE", _("Phone")
     DATE = "DATE", _("Date")
     BOOLEAN = "BOOLEAN", _("Boolean")
+    DROPDOWN = "DROPDOWN", _("Dropdown")

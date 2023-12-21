@@ -30,6 +30,7 @@ django-modeltranslation==0.18.4
 ua-parser==0.16.1
 django-admin-extra-buttons==1.5.5
 django-phonenumber-field==7.0.0
+django-json-widget==1.1.1
 
 # Other Libraries
 # fcm-django==1.0.11

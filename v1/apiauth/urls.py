@@ -8,6 +8,7 @@ from . import views
 urlpatterns = [
     # Authentication APIS
     path("login/", views.LoginView.as_view(), name="login"),
+    path("logout/", views.LogoutView.as_view(), name="logout"),
     path(
         "token/refresh/",
         views.TokenRefreshView.as_view(),
@@ -38,5 +39,10 @@ urlpatterns = [
         "password/check/",
         views.CheckPasswordView.as_view(),
         name="check_password",
+    ),
+    path(
+        "trace/sync-status/",
+        views.TraceSyncView.as_view(),
+        name="trace-sync-status",
     ),
 ]

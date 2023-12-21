@@ -13,7 +13,7 @@ class UserViewSet(IdDecodeModelViewSet):
     queryset = (
         user_models.CustomUser.objects.all()
         .select_related("default_entity")
-        .prefetch_related("managing_entitys")
+        .prefetch_related("member_companies")
     )
     serializer_class = user_serializers.UserSerializer
     http_method_names = [

@@ -8,12 +8,11 @@ from v1.supply_chains.models import company_models
 class UserEntitySerializer(serializers.ModelSerializer):
     """Serializer for entity data in user details."""
 
-    id = fields.SerializableRelatedField(source="entity.id", read_only=True)
-    name = serializers.CharField(source="entity.name")
-    image = serializers.FileField(source="entity.image")
-    entity_type = serializers.IntegerField(source="entity.type")
-    member_role = serializers.IntegerField(source="type")
-    email = serializers.EmailField(source="entity.email")
+    id = fields.SerializableRelatedField(source="company.id", read_only=True)
+    name = serializers.CharField(source="company.name")
+    image = serializers.FileField(source="company.image")
+    member_role = serializers.CharField(source="type")
+    email = serializers.EmailField(source="company.email")
 
     class Meta:
         """Meta Info."""
