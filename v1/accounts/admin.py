@@ -29,7 +29,8 @@ class ValidationTokenAdmin(admin.ModelAdmin):
 class UserDeviceAdmin(admin.ModelAdmin):
     """Class view to customize user device admin."""
 
-    list_display = ("user", "registration_id", "type")
+    list_display = ("device_name", "user", "registration_id", "type", "active")
+    list_filter = ("active",)
 
     def has_add_permission(self, request, obj=None):
         return False

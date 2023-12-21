@@ -35,6 +35,8 @@ class APILoginSerializer(TokenObtainPairSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["device_id"] = serializers.CharField(required=True)
+        self.fields["device_name"] = serializers.CharField(required=True)
+        self.fields["device_loc"] = serializers.CharField(required=True)
         self.fields["force_logout"] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
@@ -42,6 +44,8 @@ class APILoginSerializer(TokenObtainPairSerializer):
         and entity are added into the response."""
         self.device_id = attrs.get("device_id", None)
         force_logout = attrs.get("force_logout", False)
+        device_name = attrs.get("device_name", False)
+        device_loc = attrs.get("device_loc", False)
 
         if not self.device_id:
             raise exceptions.AuthenticationFailed(
@@ -57,7 +61,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
         data["is_granted"] = True
 
         self.check_multiple_login(data, force_logout)
-        self._get_or_create_device()
+        self._get_or_create_device(device_name, device_loc)
 
         return data
 
@@ -88,14 +92,16 @@ class APILoginSerializer(TokenObtainPairSerializer):
         }
         return token
 
-    def _get_or_create_device(self):
+    def _get_or_create_device(self, device_name, device_loc):
         """Get or create device for user."""
         device, created = self.user.devices.get_or_create(
             registration_id=self.device_id, user=self.user
         )
         if not created:
             device.active = True
-            device.save()
+        device.device_name = device_name
+        device.device_loc = device_loc
+        device.save()
         return device
 
     def check_multiple_login(self, data, force_logout):

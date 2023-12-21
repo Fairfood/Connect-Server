@@ -443,6 +443,18 @@ class UserDevice(AbstractBaseModel):
         verbose_name=_("Is active"),
         default=True,
     )
+    device_name = models.CharField(
+        max_length=255,
+        verbose_name=_("Device Name"),
+        blank=True,
+        null=True,
+    )
+    device_loc = models.CharField(
+        max_length=255,
+        verbose_name=_("Device Location"),
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         """Meta data."""
