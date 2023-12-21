@@ -470,6 +470,11 @@ class UserDevice(AbstractBaseModel):
         for device in devices:
             device.deactivate()
 
+    @classmethod
+    def get_device_with_device_id(cls, device_id, user):
+        """Get device with device id"""
+        return cls.objects.filter(device_id=device_id, user=user).first()
+
 
 class PrivacyPolicy(AbstractBaseModel):
     """Privacy Policy model."""
