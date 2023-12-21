@@ -35,8 +35,8 @@ class APILoginSerializer(TokenObtainPairSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["device_id"] = serializers.CharField(required=True)
-        self.fields["device_name"] = serializers.CharField(required=True)
-        self.fields["device_loc"] = serializers.CharField(required=True)
+        self.fields["device_name"] = serializers.CharField(required=False)
+        self.fields["device_loc"] = serializers.CharField(required=False)
         self.fields["force_logout"] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
