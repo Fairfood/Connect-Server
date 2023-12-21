@@ -35,8 +35,8 @@ class APILoginSerializer(TokenObtainPairSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["device_id"] = serializers.CharField(required=True)
-        self.fields["device_name"] = serializers.CharField(required=True)
-        self.fields["device_loc"] = serializers.CharField(required=True)
+        self.fields["device_name"] = serializers.CharField(required=False)
+        self.fields["device_loc"] = serializers.CharField(required=False)
         self.fields["force_logout"] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
@@ -44,8 +44,8 @@ class APILoginSerializer(TokenObtainPairSerializer):
         and entity are added into the response."""
         self.device_id = attrs.get("device_id", None)
         force_logout = attrs.get("force_logout", False)
-        device_name = attrs.get("device_name", False)
-        device_loc = attrs.get("device_loc", False)
+        device_name = attrs.get("device_name", "")
+        device_loc = attrs.get("device_loc", "")
 
         if not self.device_id:
             raise exceptions.AuthenticationFailed(

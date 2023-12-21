@@ -34,6 +34,7 @@ class CompanyMemberAdmin(BaseAdmin):
 
     list_display = (
         "company",
+        "user",
         "id",
     )
     search_fields = ["company"]
