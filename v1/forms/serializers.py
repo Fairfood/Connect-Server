@@ -28,9 +28,7 @@ class FormFieldConfigSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        """
-        Custom creation method for creating FormFieldConfig.
-        """
+        """Custom creation method for creating FormFieldConfig."""
         form = validated_data.get("form")
         key = validated_data.get("key")
         try:
@@ -41,15 +39,13 @@ class FormFieldConfigSerializer(DynamicModelSerializer):
 
 
 class FormSerializer(DynamicModelSerializer):
-    """
-    Serializer for the Form model.
+    """Serializer for the Form model.
 
     Attributes:
     - product (ProductSerializer): A nested serializer for the associated
         Product model.
     - fields (FormFieldSerializer): A nested serializer for the associated
         FormField models.
-
     """
 
     products = ProductSerializer(
@@ -67,8 +63,7 @@ class FormSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        """
-        Custom creation method for creating Form and associated FormFields.
+        """Custom creation method for creating Form and associated FormFields.
 
         Args:
         - validated_data (dict): Validated data for creating the Form instance.
@@ -94,13 +89,11 @@ class FormSerializer(DynamicModelSerializer):
 
 
 class SubmissionValuesSerializer(DynamicModelSerializer):
-    """
-    Serializer for the SubmissionValues model.
+    """Serializer for the SubmissionValues model.
 
     Attributes:
     - field_details (FormFieldSerializer): A nested serializer for the
         associated FormField model.
-
     """
 
     field_details = FormFieldSerializer(
@@ -113,6 +106,18 @@ class SubmissionValuesSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        """Create method for the serializer.
+
+        This method handles the creation of an instance, specifically for
+        associating a field with the instance.
+
+        Args:
+            validated_data (dict): The validated data for creating the
+            instance.
+
+        Returns:
+            object: The created instance.
+        """
         field = validated_data.pop("field")
         try:
             field = FormField.objects.get(pk=field)
@@ -123,8 +128,7 @@ class SubmissionValuesSerializer(DynamicModelSerializer):
 
 
 class SubmissionSerializer(DynamicModelSerializer):
-    """
-    Serializer for the Submission model.
+    """Serializer for the Submission model.
 
     Attributes:
     - form_details (FormSerializer): A nested serializer for the associated
@@ -148,8 +152,7 @@ class SubmissionSerializer(DynamicModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        """
-        Custom creation method for creating Submission and associated
+        """Custom creation method for creating Submission and associated
         SubmissionValues.
 
         Args:

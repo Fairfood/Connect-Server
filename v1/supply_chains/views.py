@@ -15,9 +15,7 @@ from v1.supply_chains.serializers import FarmerSerializer
 
 
 class EntityCardViewSet(IdDecodeModelViewSet):
-    """
-    A viewset for viewing and editing EntityCard instances.
-    """
+    """A viewset for viewing and editing EntityCard instances."""
 
     queryset = EntityCard.objects.all()
     serializer_class = EntityCardSerializer
@@ -26,8 +24,10 @@ class EntityCardViewSet(IdDecodeModelViewSet):
 
 
 class CompanyViewSet(IdDecodeModelViewSet):
-    """
-    A viewset for viewing and editing Company instances.
+    """A viewset for viewing and editing Company instances.
+
+    This viewset extends the IdDecodeModelViewSet and provides
+    customization for viewing and editing Company instances in the API.
     """
 
     queryset = Company.objects.all()
@@ -39,15 +39,22 @@ class CompanyViewSet(IdDecodeModelViewSet):
     )
 
     def get_serializer_class(self):
+        """Get the serializer class based on the action.
+
+        Returns the CompanyCreateSerializer for create, update,
+        and partial_update actions, and the default CompanySerializer for
+        other actions.
+
+        Returns:
+            Serializer: The appropriate serializer class based on the action.
+        """
         if self.action in ["create", "update", "partial_update"]:
             return CompanyCreateSerializer
         return super().get_serializer_class()
 
 
 class FarmerViewSet(IdDecodeModelViewSet):
-    """
-    A viewset for viewing and editing Farmer instances.
-    """
+    """A viewset for viewing and editing Farmer instances."""
 
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
@@ -60,9 +67,7 @@ class FarmerViewSet(IdDecodeModelViewSet):
 
 
 class CompanyMemberViewSet(IdDecodeModelViewSet):
-    """
-    A viewset for viewing and editing CompanyMember instances.
-    """
+    """A viewset for viewing and editing CompanyMember instances."""
 
     queryset = CompanyMember.objects.all()
     serializer_class = CompanyMemerSerializer
@@ -70,9 +75,7 @@ class CompanyMemberViewSet(IdDecodeModelViewSet):
 
 
 class CompanyProductViewSet(IdDecodeModelViewSet):
-    """
-    A viewset for viewing and editing CompanyProduct instances.
-    """
+    """A viewset for viewing and editing CompanyProduct instances."""
 
     queryset = CompanyProduct.objects.all()
     serializer_class = CompanyProductSerializer

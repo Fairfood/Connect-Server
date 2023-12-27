@@ -54,13 +54,13 @@ repos:
 #      - id: pytype
 #        # entry: pytype  --config=pytype.cfg
 #        args: [ "--config=pytype.cfg", "--exclude=.pytype/" ]
-  # - repo: https://github.com/PyCQA/docformatter
-  #   rev: 'v1.5.0'
-  #   hooks:
-  #     - id: docformatter
-  # - repo: https://github.com/pycqa/pydocstyle
-  #   rev: 6.1.1
-  #   hooks:
-  #     - id: pydocstyle
-  #       args: [ "--count", "--select=D101,D102, D103" ]
-  #       exclude: (tests|fabfile)/
+  - repo: https://github.com/PyCQA/docformatter
+    rev: 'v1.5.0'
+    hooks:
+      - id: docformatter
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        args: [ "--count", "--select=D101,D102, D103" ]
+        exclude: (tests|fabfile)/

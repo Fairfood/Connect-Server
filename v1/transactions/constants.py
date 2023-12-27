@@ -7,8 +7,7 @@ OUTGOING = "OUTGOING"
 
 
 class PaymentType(models.TextChoices):
-    """
-    A Class to define text choices for the 'Payment' model's 'type' field.
+    """A Class to define text choices for the 'Payment' model's 'type' field.
 
     Choices:
     - TRANSACTION: Represents a transaction payment with a value of 'TRA'.
@@ -23,9 +22,8 @@ class PaymentType(models.TextChoices):
 
 
 class VerificationMethodType(models.TextChoices):
-    """
-    A class to define text choices for the 'VerificationMethod' model's 'type'
-    field.
+    """A class to define text choices for the 'VerificationMethod' model's
+    'type' field.
 
     Choices:
     - CARD: Represents a card verification method with a value of 'CAR'.

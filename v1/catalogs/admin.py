@@ -7,6 +7,8 @@ from base.db.admin import BaseAdmin
 
 
 class CountryAdmin(BaseAdmin):
+    """Admin class for Country model."""
+
     list_display = (
         "name",
         "alpha_2",
@@ -23,6 +25,8 @@ class CountryAdmin(BaseAdmin):
 
 
 class ProvinceAdmin(BaseAdmin):
+    """Admin class for Province model."""
+
     list_display = (
         "country",
         "name",
@@ -34,6 +38,8 @@ class ProvinceAdmin(BaseAdmin):
 
 
 class CurrencyAdmin(BaseAdmin):
+    """Admin class for Currency model."""
+
     list_display = (
         "name",
         "code",
@@ -43,6 +49,8 @@ class CurrencyAdmin(BaseAdmin):
 
 
 class ProductAdmin(BaseAdmin):
+    """Product admin class."""
+
     list_display = (
         "name",
         "id",
@@ -51,6 +59,8 @@ class ProductAdmin(BaseAdmin):
 
 
 class ConnectCardAdmin(BaseAdmin):
+    """ConnectCard admin class."""
+
     list_display = (
         "display_id",
         "id",
@@ -59,11 +69,22 @@ class ConnectCardAdmin(BaseAdmin):
 
 
 class PremiumOptionTabularInline(admin.TabularInline):
+    """Tabular inline admin class for PremiumOption model.
+
+    This class is used to display PremiumOption objects in a tabular
+    format within the Django admin.
+    """
+
     model = product_models.PremiumOption
     extra = 0
 
 
 class PremiumAdmin(BaseAdmin):
+    """Admin class for Premium model.
+
+    This class provides the admin class for Premium model.
+    """
+
     list_display = (
         "name",
         "owner",

@@ -3,8 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 
 class FormType(models.TextChoices):
-    """
-    A simple class to define text choices for the 'Form' model's 'type' field.
+    """A simple class to define text choices for the 'Form' model's 'type'
+    field.
 
     These choices represent different types of forms associated with the
     'Form' model.
@@ -22,8 +22,7 @@ class FormType(models.TextChoices):
 
 
 class FormFieldType(models.TextChoices):
-    """
-    A class to define text choices for specifying the field types in a form.
+    """A class to define text choices for specifying the field types in a form.
 
     These choices represent the types of fields that can be used in a form.
 

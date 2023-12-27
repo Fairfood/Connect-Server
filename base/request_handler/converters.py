@@ -11,7 +11,9 @@ class IDConverter:
     regex = f"[{settings.HASHID_ALPHABETS}]{{{settings.HASHID_MIN_LENGTH}}}"
 
     def to_python(self, value):
+        """Convert hash id to integer id."""
         return decode(value)
 
     def to_url(self, value):
+        """Convert integer id to hash id."""
         return encode(value)

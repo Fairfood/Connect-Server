@@ -9,8 +9,7 @@ from v1.catalogs.models.product_models import Product
 
 
 class Form(AbstractBaseModel):
-    """
-    Represents a Form related to a Company in a supply chain.
+    """Represents a Form related to a Company in a supply chain.
 
     Attributes:
     - owner (models.ForeignKey): The Company that owns this Form.
@@ -21,7 +20,6 @@ class Form(AbstractBaseModel):
 
     Note:
     This model extends AbstractBaseModel.
-
     """
 
     owner = models.ForeignKey(
@@ -42,8 +40,7 @@ class Form(AbstractBaseModel):
 
     @property
     def products(self):
-        """
-        Get the associated product for this form.
+        """Get the associated product for this form.
 
         If the Form has an associated `company_product`, it returns the product
         associated with it. Otherwise, it returns None.
@@ -59,8 +56,7 @@ class Form(AbstractBaseModel):
 
 
 class FormField(AbstractBaseModel):
-    """
-    Represents a field within a Form.
+    """Represents a field within a Form.
 
     Attributes:
     - form (models.ForeignKey): The Form to which this field belongs.
@@ -71,7 +67,6 @@ class FormField(AbstractBaseModel):
 
     Related Names:
     - fields: A reverse relation to access fields associated with a Form.
-
     """
 
     form = models.ForeignKey(
@@ -110,8 +105,7 @@ class FormField(AbstractBaseModel):
 
 
 class FormFieldConfig(AbstractBaseModel):
-    """
-    Represents a field within a Form or a Model.
+    """Represents a field within a Form or a Model.
 
     Attributes:
     - form (models.ForeignKey): The Form to which this field belongs.
@@ -119,7 +113,6 @@ class FormFieldConfig(AbstractBaseModel):
     - key (models.CharField): The key for this field.
     - visibility (models.BooleanField): Indicates whether the field is visible.
     - required (models.BooleanField): Indicates whether the field is required.
-
     """
 
     form = models.ForeignKey(
@@ -147,8 +140,7 @@ class FormFieldConfig(AbstractBaseModel):
 
 
 class Submission(AbstractBaseModel):
-    """
-    Represents a submission of a Form.
+    """Represents a submission of a Form.
 
     Attributes:
     - form (models.ForeignKey): The Form associated with this submission.
@@ -156,7 +148,6 @@ class Submission(AbstractBaseModel):
     Related Names:
     - submissions: A reverse relation to access submissions related to a Form.
     - product: The associated product for this submission.
-
     """
 
     form = models.ForeignKey(
@@ -179,8 +170,7 @@ class Submission(AbstractBaseModel):
 
 
 class SubmissionValues(AbstractBaseModel):
-    """
-    Represents the values of fields submitted within a Form.
+    """Represents the values of fields submitted within a Form.
 
     Attributes:
     - submission (models.ForeignKey): The Submission associated with these
@@ -191,7 +181,6 @@ class SubmissionValues(AbstractBaseModel):
     Meta:
     - constraints: Defines a UniqueConstraint to ensure the uniqueness
         of pairs (submission, field).
-
     """
 
     submission = models.ForeignKey(
@@ -216,8 +205,7 @@ class SubmissionValues(AbstractBaseModel):
         ]
 
     def clean(self):
-        """
-        Validates that the field and submission belong to the same Form.
+        """Validates that the field and submission belong to the same Form.
 
         Raises:
         ValidationError: If the field and submission do not belong to the same

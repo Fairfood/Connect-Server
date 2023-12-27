@@ -28,7 +28,14 @@ class BaseNotificationManager:
     email_template: str = "default.html"
 
     def __init__(self, user, action_object, token=None, context=None):
-        """Initialize notification."""
+        """Initialize notification.
+
+        Args:
+            user: User object for whom the notification is created.
+            action_object: The object associated with the notification.
+            token: Validation token for the notification.
+            context: Additional context for the notification.
+        """
         from v1.supply_chains.models import CompanyMember
 
         # curr_language = translation.get_language()
@@ -74,11 +81,13 @@ class BaseNotificationManager:
             self.notification_object = notification
 
     def send_notification(self):
+        """Send the notification."""
         if not self.notification_object:
             return False
         return self.notification_object.send()
 
     def get_action_url(self) -> str:
+        """Get the action URL for the notification."""
         url = settings.FRONT_ROOT_URL / self.get_url_path()
         params = self.get_url_params()
         params["notification_id"] = self.notification_object.id
@@ -91,38 +100,55 @@ class BaseNotificationManager:
         return url
 
     def get_title(self) -> str:
+        """Get the title for the notification."""
         return (
             f"Notification for {self.user.username} for {self.action_object}."
         )
 
     def get_body(self) -> str:
+        """Get the body for the notification."""
         return (
             f"Notification for {self.user.username} for {self.action_object}."
         )
 
     def get_url_path(self):
+        """Get the URL path for the notification."""
         return self.url_path
 
     def get_url_params(self) -> dict:
+        """Get additional URL parameters for the notification."""
         return {}
 
     def get_send_to(self) -> str:
+        """Get the recipient for the notification."""
         return self.user.email
 
     def get_actor_entity(self):
+        """Get the actor entity associated with the notification."""
         raise NotImplementedError()
 
     def get_target_entity(self):
+        """Get the target entity associated with the notification."""
         raise NotImplementedError()
 
     def get_redirect_id(self):
+        """Get the redirect ID for the notification."""
         return None
 
     def get_redirect_type(self):
+        """Get the redirect type for the notification."""
         return ""
 
 
 def validate_notifications():
+    """Validate notification preferences for all notification types.
+
+    This function iterates through all subclasses of
+    BaseNotificationManager and checks the validity of their
+    notification preferences. It ensures that preferences are defined
+    appropriately and that the notification_uid is unique.
+    """
+
     from v1.supply_chains.constants import CompanyMemberType
 
     def check_pref(pref: dict) -> bool:

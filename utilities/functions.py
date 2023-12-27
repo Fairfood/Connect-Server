@@ -255,6 +255,11 @@ def decode_list(id_list):
 
 
 def week_start_end():
+    """Get the start and end dates for the current week.
+
+    Returns:
+        Tuple: A tuple containing the start date and end date for the week.
+    """
     today = date.today()
     start_date = today - timedelta(today.weekday())
     end_date = start_date + timedelta(6)
@@ -262,6 +267,11 @@ def week_start_end():
 
 
 def month_start_end():
+    """Get the start and end dates for the current month.
+
+    Returns:
+        Tuple: A tuple containing the start date and end date for the month.
+    """
     today = date.today()
     start_date = date(today.year, today.month, 1)
     _, num_days = calendar.monthrange(today.year, today.month)
@@ -270,6 +280,14 @@ def month_start_end():
 
 
 def start_of_day(day):
+    """Get the start time of a given day.
+
+    Args:
+        day: The day for which to retrieve the start time.
+
+    Returns:
+        datetime: The start time of the given day.
+    """
     return datetime(
         day.year,
         day.month,
@@ -282,6 +300,14 @@ def start_of_day(day):
 
 
 def end_of_day(day):
+    """Get the end time of a given day.
+
+    Args:
+        day: The day for which to retrieve the end time.
+
+    Returns:
+        datetime: The end time of the given day.
+    """
     return datetime(
         day.year,
         day.month,
@@ -294,6 +320,14 @@ def end_of_day(day):
 
 
 def get_start_end_time(day):
+    """Get the start and end times for a given day.
+
+    Args:
+        day: The day for which to retrieve start and end times.
+
+    Returns:
+        Tuple: A tuple containing the start time and end time for the day.
+    """
     start_time = start_of_day(day)
     end_time = end_of_day(day)
     return start_time, end_time

@@ -13,18 +13,15 @@ class AbstractFarmerModel(
     abstarct_models.AbstractContactModel,
     base_models.Entity,
 ):
-    """
-    An abstract base model for a company, providing fields for basic company
-    information such as address, contact details, and a unique identifier.
-    """
+    """An abstract base model for a company, providing fields for basic company
+    information such as address, contact details, and a unique identifier."""
 
     class Meta:
         abstract = True
 
 
 class Farmer(AbstractFarmerModel):
-    """
-    Represents a farmer entity.
+    """Represents a farmer entity.
 
     This model stores information about a farmer, including their first name,
     last name, date of birth, gender, and consent status.

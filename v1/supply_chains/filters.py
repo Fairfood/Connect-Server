@@ -7,8 +7,7 @@ from v1.supply_chains.models.farmer_models import Farmer
 
 
 class FarmerFilterSet(filters.FilterSet):
-    """
-    A filter set for the Farmer model.
+    """A filter set for the Farmer model.
 
     This filter set allows filtering of Farmer objects.
     """
@@ -44,8 +43,7 @@ class FarmerFilterSet(filters.FilterSet):
 
 
 class EntityCardFilterSet(filters.FilterSet):
-    """
-    A filter set for the EntityCard model.
+    """A filter set for the EntityCard model.
 
     This filter set allows filtering of EntityCard objects.
     """

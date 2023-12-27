@@ -19,6 +19,12 @@ passed with each models when registering to translate
 
 
 class PrivacyPolicyTranslateFields(TranslationOptions):
+    """Translation options for the PrivacyPolicy model fields.
+
+    This class defines which fields of the PrivacyPolicy model should be
+    translated.
+    """
+
     fields = ("content",)
 
 

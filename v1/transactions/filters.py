@@ -10,8 +10,7 @@ from v1.transactions.constants import PaymentType
 
 
 class ProductTransactionFilterSet(filters.FilterSet):
-    """
-    A filter set for the Farmer model.
+    """A filter set for the Farmer model.
 
     This filter set allows filtering of Product Transaction objects.
     """
@@ -69,8 +68,7 @@ class ProductTransactionFilterSet(filters.FilterSet):
 
 
 class PaymentTransactionFilterSet(filters.FilterSet):
-    """
-    A filter set for the Farmer model.
+    """A filter set for the Farmer model.
 
     This filter set allows filtering of Payment Transaction objects.
     """
