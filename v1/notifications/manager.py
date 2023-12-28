@@ -36,7 +36,7 @@ class BaseNotificationManager:
             token: Validation token for the notification.
             context: Additional context for the notification.
         """
-        from v1.supply_chains.models import CompanyMember
+        from v1.supply_chains.models.company_models import CompanyMember
 
         # curr_language = translation.get_language()
         context = context or {}
@@ -44,7 +44,7 @@ class BaseNotificationManager:
         self.action_object = action_object
         target_entity = self.get_target_entity()
         member = CompanyMember.objects.filter(
-            entity=target_entity, user=user
+            company=target_entity, user=user
         ).first()
         notif_prefs = (
             member.get_notification_pref(self)
@@ -82,22 +82,26 @@ class BaseNotificationManager:
 
     def send_notification(self):
         """Send the notification."""
-        if not self.notification_object:
-            return False
-        return self.notification_object.send()
+        # if not self.notification_object:
+        #     return False
+        # return self.notification_object.send()
+        pass
 
     def get_action_url(self) -> str:
         """Get the action URL for the notification."""
-        url = settings.FRONT_ROOT_URL / self.get_url_path()
-        params = self.get_url_params()
-        params["notification_id"] = self.notification_object.id
-        params["user"] = self.user.id
-        params["language"] = self.user.language
-        if self.notification_object.validation_token:
-            params["token"] = self.notification_object.validation_token.key
-            params["salt"] = self.notification_object.validation_token.id
-        url.add_params(**params)
-        return url
+        try:
+            url = settings.FRONT_ROOT_URL + self.get_url_path()
+            params = self.get_url_params()
+            params["notification_id"] = self.notification_object.id
+            params["user"] = self.user.id
+            params["language"] = self.user.language
+            if self.notification_object.validation_token:
+                params["token"] = self.notification_object.validation_token.key
+                params["salt"] = self.notification_object.validation_token.id
+            url.add_params(**params)
+            return url
+        except TypeError:
+            return ""
 
     def get_title(self) -> str:
         """Get the title for the notification."""

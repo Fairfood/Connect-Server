@@ -6,37 +6,6 @@ from .models import product_models
 from base.db.admin import BaseAdmin
 
 
-class CountryAdmin(BaseAdmin):
-    """Admin class for Country model."""
-
-    list_display = (
-        "name",
-        "alpha_2",
-        "dial_code",
-        "latitude",
-        "longitude",
-        "id",
-    )
-    search_fields = [
-        "name",
-        "code",
-        "dial_code",
-    ]
-
-
-class ProvinceAdmin(BaseAdmin):
-    """Admin class for Province model."""
-
-    list_display = (
-        "country",
-        "name",
-        "latitude",
-        "longitude",
-        "id",
-    )
-    search_fields = ["name"]
-
-
 class CurrencyAdmin(BaseAdmin):
     """Admin class for Currency model."""
 
@@ -96,8 +65,6 @@ class PremiumAdmin(BaseAdmin):
     search_fields = ["name", "owner"]
 
 
-admin.site.register(common_models.Country, CountryAdmin)
-admin.site.register(common_models.Province, ProvinceAdmin)
 admin.site.register(common_models.Currency, CurrencyAdmin)
 admin.site.register(product_models.Product, ProductAdmin)
 admin.site.register(product_models.Premium, PremiumAdmin)

@@ -29,16 +29,6 @@ class CurrencyFilterSet(filters.FilterSet):
         return query
 
 
-class ProvinceFilterSet(filters.FilterSet):
-    """Filterclass for province."""
-
-    class Meta:
-        model = catalog_models.Province
-        fields = [
-            "country",
-        ]
-
-
 class ProductFilterSet(filters.FilterSet):
     """Filterclass for product-list api."""
 

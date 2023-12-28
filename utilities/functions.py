@@ -102,8 +102,7 @@ def validate_phone(number):
         phone = str(number.national_number)
         code = "+" + str(number.country_code)
         return code + phone
-    except Exception as e:
-        print(e)
+    except Exception:
         return None
 
 
@@ -213,26 +212,32 @@ def get_ip_from_request(request):
 
 def get_location_from_ip(ip):
     """Function to get the location data from the IP address."""
-    location_data = requests.get(settings.IP_API_URL.format(ip=ip)).json()
-    location_info = [
-        location_data.get(i)
-        for i in ["city", "region", "country_name"]
-        if location_data.get(i, None)
-    ]
-    return ", ".join(location_info)
+    try:
+        location_data = requests.get(settings.IP_API_URL.format(ip=ip)).json()
+        location_info = [
+            location_data.get(i)
+            for i in ["city", "region", "country_name"]
+            if location_data.get(i, None)
+        ]
+        return ", ".join(location_info)
+    except AttributeError:
+        return "Unknown"
 
 
 def device_name_from_request(request):
     """Function to get the device details from the request."""
-    user_agent_string = request.headers["User-Agent"]
-    user_agent = user_agent_parser.Parse(user_agent_string)
-    brand = user_agent["device"].get("brand", "Unknown")
-    model = user_agent["device"].get("model", "Device")
-    device = " ".join(i for i in [brand, model] if i)
-    family = user_agent["user_agent"]["family"]
-    os = user_agent["os"]["family"]
-    browser_device = " on ".join(i for i in [family, device] if i)
-    device_string = " running ".join(i for i in [browser_device, os] if i)
+    try:
+        user_agent_string = request.headers["User-Agent"]
+        user_agent = user_agent_parser.Parse(user_agent_string)
+        brand = user_agent["device"].get("brand", "Unknown")
+        model = user_agent["device"].get("model", "Device")
+        device = " ".join(i for i in [brand, model] if i)
+        family = user_agent["user_agent"]["family"]
+        os = user_agent["os"]["family"]
+        browser_device = " on ".join(i for i in [family, device] if i)
+        device_string = " running ".join(i for i in [browser_device, os] if i)
+    except KeyError:
+        device_string = "Unknown"
     return device_string
 
 
