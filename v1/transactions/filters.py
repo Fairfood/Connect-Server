@@ -15,7 +15,11 @@ class ProductTransactionFilterSet(filters.FilterSet):
     This filter set allows filtering of Product Transaction objects.
     """
 
+    # TODO: Change this filter after informing the frontend.
     updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="created_on"
+    )
+    created_after = filters.NumberFilter(
         method="updated_after_filter", field_name="created_on"
     )
     updated_before = filters.NumberFilter(

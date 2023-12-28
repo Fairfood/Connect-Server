@@ -81,9 +81,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         ),
         required=False,
     )
-    amount = fields.RoundingDecimalField(
-        max_digits=25, decimal_places=3, write_only=True
-    )
+    amount = fields.RoundingDecimalField(max_digits=25, decimal_places=3)
     currency = serializers.CharField(write_only=True, required=False)
     type = serializers.SerializerMethodField()
     source_quantity = fields.RoundingDecimalField(
@@ -94,6 +92,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     )
     submissions = SubmissionSerializer(many=True, required=False)
     card_details = ConnectCardSerializer(source="card", read_only=True)
+    currency_details = CurrencySerializer(source="currency", read_only=True)
 
     class Meta:
         """Meta class."""

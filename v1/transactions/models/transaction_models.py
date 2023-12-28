@@ -82,6 +82,20 @@ class ProductTransaction(BaseTransaction):
             payment_type=constants.PaymentType.TRANSACTION
         ).first()
 
+    @property
+    def amount(self):
+        """
+        Returns the total amount of the transaction.
+        """
+        return self.base_payment().amount
+
+    @property
+    def currency(self):
+        """
+        Returns the currency of the transaction.
+        """
+        return self.base_payment().currency
+
     def source_poducts(self):
         """Returns a queryset of products associated with the source of the
         transaction."""
