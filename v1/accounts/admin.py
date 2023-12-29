@@ -32,6 +32,7 @@ class UserDeviceAdmin(admin.ModelAdmin):
     list_display = (
         "device_name",
         "user_email",
+        "entity",
         "updated_on",
         "registration_id",
         "type",
@@ -44,6 +45,13 @@ class UserDeviceAdmin(admin.ModelAdmin):
     def user_email(self, obj):
         """Get user email."""
         return obj.user.email
+
+    def entity(self, obj):
+        """Get entity."""
+        member = obj.user.member_companies.first()
+        if member:
+            return member.company
+        return None
 
     def has_add_permission(self, request, obj=None):
         return False
