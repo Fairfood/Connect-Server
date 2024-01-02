@@ -14,7 +14,10 @@ class FarmerFilterSet(filters.FilterSet):
     """
 
     updated_after = filters.NumberFilter(
-        method="updated_after_filter", field_name="updated_on"
+        method="after_date_time_filter", field_name="updated_on"
+    )
+    created_after = filters.NumberFilter(
+        method="after_date_time_filter", field_name="created_on"
     )
 
     class Meta:
@@ -36,7 +39,7 @@ class FarmerFilterSet(filters.FilterSet):
         entity = utils.get_current_entity()
         return parent.filter(buyer=entity)
 
-    def updated_after_filter(self, queryset, name, value):
+    def after_date_time_filter(self, queryset, name, value):
         """Return queryset."""
         name += "__gt"
         value = unix_to_datetime(value)
@@ -53,6 +56,9 @@ class EntityCardFilterSet(filters.FilterSet):
     card_id = filters.CharFilter(
         field_name="card__card_id", lookup_expr="icontains"
     )
+    created_after = filters.NumberFilter(
+        method="after_date_time_filter", field_name="updated_on"
+    )
 
     class Meta:
         model = EntityCard
@@ -62,5 +68,14 @@ class EntityCardFilterSet(filters.FilterSet):
     def qs(self):
         """Return queryset."""
         parent = super().qs
+        user = utils.get_current_user()
+        if user.is_admin:
+            return parent
         entity = utils.get_current_entity()
         return parent.filter(entity=entity)
+
+    def after_date_time_filter(self, queryset, name, value):
+        """Return queryset."""
+        name += "__gt"
+        value = unix_to_datetime(value)
+        return queryset.filter(**{name: value})
