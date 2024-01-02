@@ -15,5 +15,16 @@ class ProductTransactionAdmin(BaseAdmin):
 
     """
 
-    list_display = ["id", "source", "destination"]
+    list_display = [
+        "id",
+        "source",
+        "destination",
+        "date",
+        "quantity",
+        "creator_email",
+    ]
     readonly_fields = ["parents"]
+
+    def creator_email(self, obj):
+        """Get creator."""
+        return obj.creator.email

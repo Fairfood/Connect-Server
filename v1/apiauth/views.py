@@ -1,4 +1,5 @@
 from celery.result import AsyncResult
+from django.contrib.auth import logout
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -7,6 +8,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from . import serializers as auth_serializers
+from base.authentication import utilities as utils
 from base.exceptions.custom_exceptions import BadRequest
 from base.request_handler.response import SuccessResponse
 
@@ -21,6 +23,21 @@ class LoginView(TokenObtainPairView):
     """
 
     serializer_class = auth_serializers.APILoginSerializer
+
+
+class LogoutView(APIView):
+    """API to logout User.
+
+    Takes in Email and password to logout user with a session.
+    """
+
+    def post(self, request, *args, **kwargs):
+        """Get method for logging in user."""
+        device = utils.get_current_device()
+        if device:
+            device.deactivate()
+        logout(request)
+        return SuccessResponse("Logged out successfully.")
 
 
 class TokenRefreshView(SJWTTokenRefreshView):

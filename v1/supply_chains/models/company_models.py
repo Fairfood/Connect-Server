@@ -80,6 +80,9 @@ class Company(AbstractCompanyModel):
     quality_correction = models.BooleanField(
         default=False, verbose_name=_("Quality Correction")
     )
+    allow_multiple_login = models.BooleanField(
+        default=True, verbose_name=_("Allow Multiple Login")
+    )
 
     class Meta:
         """Meta class defines class level configurations."""

@@ -11,6 +11,12 @@ from .base import REST_FRAMEWORK
 ENVIRONMENT = "production"
 DEBUG = False
 
+ALLOWED_HOSTS = [
+    "v2.api.fairfood.org",
+]
+
+CORS_ORIGIN_WHITELIST = ("https://v2.api.fairfood.org",)
+
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "5/min"
 
 HEDERA_NETWORK = 3  # For Mainnet

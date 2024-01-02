@@ -32,10 +32,14 @@ class CompanyViewSet(IdDecodeModelViewSet):
 
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    http_method_names = ("get", "post")
+    http_method_names = (
+        "get",
+        "post",
+        "patch",
+    )
 
     def get_serializer_class(self):
-        if self.action == "create":
+        if self.action in ["create", "update", "partial_update"]:
             return CompanyCreateSerializer
         return super().get_serializer_class()
 

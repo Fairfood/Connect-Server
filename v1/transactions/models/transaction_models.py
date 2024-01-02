@@ -68,6 +68,10 @@ class ProductTransaction(BaseTransaction):
     def __str__(self):
         return f"{self.number}: {self.source} -> {self.destination}"
 
+    def save(self, *args, **kwargs):
+        self._update_verification_method()
+        super().save(*args, **kwargs)
+
     def base_payment(self):
         """
         Base payment without any premium
@@ -102,3 +106,12 @@ class ProductTransaction(BaseTransaction):
         the transaction.
         """
         return 0 if self.children.exists() else self.quantity
+
+    def _update_verification_method(self):
+        """Update verification method card/receipt."""
+        if self.card:
+            self.method = constants.VerificationMethodType.CARD
+        elif self.invoice:
+            self.method = constants.VerificationMethodType.INVOICE
+        else:
+            self.method = constants.VerificationMethodType.NONE
