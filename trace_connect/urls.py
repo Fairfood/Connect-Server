@@ -52,6 +52,10 @@ urlpatterns = [
     path("connect/v1/catalogs/", include("v1.catalogs.urls")),
     path("connect/v1/transactions/", include("v1.transactions.urls")),
     path("connect/v1/forms/", include("v1.forms.urls")),
+    path(
+        "connect/o/",
+        include("oauth2_provider.urls", namespace="oauth2_provider"),
+    ),
 ]
 
 if settings.DEBUG and settings.ENVIRONMENT == "development":

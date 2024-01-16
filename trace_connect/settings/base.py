@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "oauth2_provider",
     "corsheaders",
     # External Core Libraries
     "rest_framework",
@@ -68,6 +69,7 @@ INSTALLED_APPS = [
     "admin_extra_buttons",
     # Internal Apps (V1)
     "v1.accounts",
+    "v1.oauth",
     "v1.apiauth",
     "v1.notifications",
     "v1.catalogs",
@@ -79,6 +81,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "oauth2_provider.middleware.OAuth2TokenMiddleware",
     # CORS header middlewares
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -91,7 +94,8 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "base.authentication.custom_authentication.CustomAuthentication",
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        # "base.authentication.custom_authentication.CustomAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
@@ -114,10 +118,25 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
 }
 
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",  # To keep the Browsable API
+    "oauth2_provider.backends.OAuth2Backend",
+)
+
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth.ClientServer"
+OAUTH2_PROVIDER_ACCESS_TOKEN_MODEL = "oauth.ClientAccessToken"
+OAUTH2_PROVIDER_ID_TOKEN_MODEL = "oauth2_provider.IDToken"
+OAUTH2_PROVIDER_REFRESH_TOKEN_MODEL = "oauth2_provider.RefreshToken"
+
+OAUTH2_PROVIDER = {
+    "ACCESS_TOKEN_ADMIN_CLASS": "v1.oauth.admin.ClientAccessTokenAdmin",
+}
+
 
 REST_USE_JWT = True
 JWT_AUTH_COOKIE = "rightorigins-v3-auth"
 JWT_AUTH_REFRESH_COOKIE = "rightorigins-v3-refresh-token"
+
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
