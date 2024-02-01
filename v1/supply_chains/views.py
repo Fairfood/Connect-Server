@@ -1,6 +1,6 @@
 from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
-from base.request_handler.views import IdDecodeModelViewSet
+from base.request_handler.views import IDDEcodeScopeViewset
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.company_models import CompanyMember
@@ -14,16 +14,17 @@ from v1.supply_chains.serializers import EntityCardSerializer
 from v1.supply_chains.serializers import FarmerSerializer
 
 
-class EntityCardViewSet(IdDecodeModelViewSet):
+class EntityCardViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing EntityCard instances."""
 
     queryset = EntityCard.objects.all()
     serializer_class = EntityCardSerializer
     http_method_names = ("get", "post")
+    resource_types = ["company", "farmer"]
     filterset_class = EntityCardFilterSet
 
 
-class CompanyViewSet(IdDecodeModelViewSet):
+class CompanyViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing Company instances.
 
     This viewset extends the IdDecodeModelViewSet and provides
@@ -37,6 +38,7 @@ class CompanyViewSet(IdDecodeModelViewSet):
         "post",
         "patch",
     )
+    resource_types = ["company"]
 
     def get_serializer_class(self):
         """Get the serializer class based on the action.
@@ -53,7 +55,7 @@ class CompanyViewSet(IdDecodeModelViewSet):
         return super().get_serializer_class()
 
 
-class FarmerViewSet(IdDecodeModelViewSet):
+class FarmerViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing Farmer instances."""
 
     queryset = Farmer.objects.all()
@@ -63,20 +65,23 @@ class FarmerViewSet(IdDecodeModelViewSet):
         "post",
         "patch",
     )
+    resource_types = ["farmer"]
     filterset_class = FarmerFilterSet
 
 
-class CompanyMemberViewSet(IdDecodeModelViewSet):
+class CompanyMemberViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing CompanyMember instances."""
 
     queryset = CompanyMember.objects.all()
     serializer_class = CompanyMemerSerializer
+    resource_types = ["company"]
     http_method_names = ("post",)
 
 
-class CompanyProductViewSet(IdDecodeModelViewSet):
+class CompanyProductViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing CompanyProduct instances."""
 
     queryset = CompanyProduct.objects.all()
     serializer_class = CompanyProductSerializer
+    resource_types = ["company"]
     http_method_names = ("post",)

@@ -1,11 +1,11 @@
 # from django.shortcuts import render
 # Create your views here.
 from .models import Form
-from base.request_handler.views import IdDecodeModelViewSet
+from base.request_handler.views import IDDEcodeScopeViewset
 from v1.forms.serializers import FormSerializer
 
 
-class FormViewSet(IdDecodeModelViewSet):
+class FormViewSet(IDDEcodeScopeViewset):
     """ViewSet for the Form model.
 
     Attributes:
@@ -18,4 +18,5 @@ class FormViewSet(IdDecodeModelViewSet):
 
     queryset = Form.objects.all()
     serializer_class = FormSerializer
+    resource_types = ["catalog"]
     http_method_names = ["get", "post"]
