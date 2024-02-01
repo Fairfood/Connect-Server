@@ -1,11 +1,20 @@
 from django.contrib import admin
+from oauth2_provider.admin import AccessTokenAdmin
+from oauth2_provider.admin import ApplicationAdmin
+
+from v1.oauth.models import ClientServerCompany
 
 # Register your models here.
 
 
-class ClientAccessTokenAdmin(admin.ModelAdmin):
+class ClientServerCompanyInline(admin.TabularInline):
+    model = ClientServerCompany
+    extra = 0
+
+
+class ClientServerAdmin(ApplicationAdmin):
+    inlines = (ClientServerCompanyInline,)
+
+
+class ClientAccessTokenAdmin(AccessTokenAdmin):
     list_display = ("token", "user", "company", "application", "expires")
-    list_select_related = ("application", "user")
-    raw_id_fields = ("user", "source_refresh_token")
-    search_fields = ("token",)
-    list_filter = ("application",)

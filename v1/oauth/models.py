@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from oauth2_provider.models import AbstractAccessToken
 from oauth2_provider.models import AbstractApplication
@@ -20,14 +20,19 @@ class ClientServer(AbstractApplication):
     """
 
     user = models.ForeignKey(
-        UserModel,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        verbose_name=_("User"),
+        settings.AUTH_USER_MODEL,
+        related_name="%(app_label)s_%(class)s",
+        on_delete=models.PROTECT,
     )
     companies = models.ManyToManyField(
-        "supply_chains.Company", verbose_name=_("Companies")
+        "supply_chains.Company",
+        through="oauth.ClientServerCompany",
+        through_fields=("client_server", "company"),
+        verbose_name=_("Companies"),
+    )
+    scope = models.TextField(
+        blank=True,
+        help_text=_("Scope required by this application, space separated"),
     )
     allowed_hosts = models.TextField(
         blank=True,
@@ -58,16 +63,46 @@ class ClientAccessToken(AbstractAccessToken):
     def is_valid(self, scopes=None):
         return super().is_valid(scopes) and self.company_allowed()
 
+    def allow_scopes(self, scopes):
+        if not scopes:
+            return False
+        if (
+            len(scopes) == 1
+            and scopes[0] == settings.OAUTH2_PROVIDER_AUTH_SCOPE
+        ):
+            return True
+        return super().allow_scopes(scopes)
+
     def company_allowed(self):
         return self.company in self.application.companies.all()
 
 
-@receiver(models.signals.post_save, sender=ClientServer)
-def create_client_user(sender, instance, created, **kwargs):
-    if created:
-        for company in instance.companies.all():
-            obj, _ = CompanyMember.objects.get_or_create(
-                company=company, user=instance.user
-            )
-            obj.type = CompanyMemberType.ADMIN
-            obj.save()
+class ClientServerCompany(models.Model):
+    """
+    Client Server Company Model
+    """
+
+    client_server = models.ForeignKey(
+        ClientServer,
+        on_delete=models.CASCADE,
+        verbose_name=_("Client Server"),
+    )
+    company = models.ForeignKey(
+        "supply_chains.Company",
+        on_delete=models.CASCADE,
+        verbose_name=_("Company"),
+    )
+
+    class Meta:
+        unique_together = ("client_server", "company")
+
+    def save(self, *args, **kwargs):
+        self.create_client_user()
+        super().save(*args, **kwargs)
+
+    def create_client_user(self):
+        obj, _ = CompanyMember.objects.get_or_create(
+            company=self.company, user=self.client_server.user
+        )
+        obj.type = CompanyMemberType.ADMIN
+        obj.save()

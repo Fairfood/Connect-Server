@@ -1,4 +1,4 @@
-from base.request_handler.views import IdDecodeModelViewSet
+from base.request_handler.views import IDDEcodeScopeViewset
 from v1.catalogs.filters import PremiumFilterSet
 from v1.catalogs.filters import ProductFilterSet
 from v1.catalogs.models.product_models import ConnectCard
@@ -9,22 +9,25 @@ from v1.catalogs.serializers.products import PremiumSerializer
 from v1.catalogs.serializers.products import ProductSerializer
 
 
-class ProductViewSet(IdDecodeModelViewSet):
+class ProductViewSet(IDDEcodeScopeViewset):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     http_method_names = ("get",)
+    resource_types = ["catalog"]
     filterset_class = ProductFilterSet
 
 
-class PremiumViewSet(IdDecodeModelViewSet):
+class PremiumViewSet(IDDEcodeScopeViewset):
     queryset = Premium.objects.all()
     serializer_class = PremiumSerializer
     http_method_names = ("get", "post")
+    resource_types = ["catalog"]
     filterset_class = PremiumFilterSet
 
 
-class ConnectCardViewSet(IdDecodeModelViewSet):
+class ConnectCardViewSet(IDDEcodeScopeViewset):
     queryset = ConnectCard.objects.all()
     serializer_class = ConnectCardSerializer
+    resource_types = ["catalog"]
     http_method_names = ("get", "post")
     # filterset_class = ConnectCardFilterSet

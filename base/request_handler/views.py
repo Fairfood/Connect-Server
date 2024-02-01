@@ -1,6 +1,7 @@
 """Customizations for API views."""
 import re
 from collections import defaultdict as dd
+from typing import Any
 
 from django.db import models
 from rest_framework import viewsets
@@ -18,11 +19,46 @@ class IDEncodeLookupMixin:
         return super(IDEncodeLookupMixin, self).get_object()
 
 
-class IdDecodeModelViewSet(viewsets.ModelViewSet):
+class IDDecodeViewSetMixin:
     """Viewset to decode id to normal id."""
 
     lookup_url_kwarg = "hashid"
     lookup_field = "id"
+
+
+class OAuthScopeViewSetMixin:
+    resource_types = []
+
+    def get_required_alternate_scopes(self):
+        required_scopes = {}
+        method_scopes_mapping = {
+            "GET": "read",
+            "POST": "create",
+            "PUT": "update",
+            "PATCH": "update",
+            "DELETE": "delete",
+        }
+
+        for method in self.http_method_names:
+            upper_method = method.upper()
+            if upper_method in method_scopes_mapping:
+                required_scopes[upper_method] = [
+                    [
+                        f"{method_scopes_mapping[upper_method]}:"
+                        f"{resource_type}"
+                        for resource_type in self.resource_types
+                    ]
+                ]
+
+        return required_scopes
+
+
+class IDDEcodeScopeViewset(
+    IDDecodeViewSetMixin, OAuthScopeViewSetMixin, viewsets.ModelViewSet
+):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.required_alternate_scopes = self.get_required_alternate_scopes()
 
 
 class Constants(APIView):
