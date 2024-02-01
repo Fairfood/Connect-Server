@@ -10,6 +10,12 @@ from v1.catalogs.serializers.products import ProductSerializer
 
 
 class ProductViewSet(IdDecodeModelViewSet):
+    """A viewset for viewing Product instances.
+
+    This viewset extends the IdDecodeModelViewSet and provides
+    customization for viewing Product instances in the API.
+    """
+
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     http_method_names = ("get",)
@@ -17,6 +23,12 @@ class ProductViewSet(IdDecodeModelViewSet):
 
 
 class PremiumViewSet(IdDecodeModelViewSet):
+    """A viewset for viewing and creating Premium instances.
+
+    This viewset extends the IdDecodeModelViewSet and provides
+    customization for viewing and creating Premium instances in the API.
+    """
+
     queryset = Premium.objects.all()
     serializer_class = PremiumSerializer
     http_method_names = ("get", "post")
@@ -24,6 +36,13 @@ class PremiumViewSet(IdDecodeModelViewSet):
 
 
 class ConnectCardViewSet(IdDecodeModelViewSet):
+    """A viewset for viewing and creating ConnectCard instances.
+
+    This viewset extends the IdDecodeModelViewSet and provides
+    customization for viewing and creating ConnectCard instances in the
+    API.
+    """
+
     queryset = ConnectCard.objects.all()
     serializer_class = ConnectCardSerializer
     http_method_names = ("get", "post")

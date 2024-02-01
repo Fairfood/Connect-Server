@@ -9,8 +9,7 @@ from v1.supply_chains import managers
 
 
 class Entity(AbstractBaseModel):
-    """
-    Abstract base model for entities in the supply chain system.
+    """Abstract base model for entities in the supply chain system.
 
     Fields:
     - image (ImageField): An image representing the entity.
@@ -73,8 +72,8 @@ class Entity(AbstractBaseModel):
 
 
 class EntityCard(AbstractBaseModel):
-    """
-    A model representing the relationship between a ConnectCard and an Entity.
+    """A model representing the relationship between a ConnectCard and an
+    Entity.
 
     Attributes:
         card (ConnectCard): The ConnectCard associated with this EntityCard.
@@ -122,6 +121,8 @@ class EntityCard(AbstractBaseModel):
         return f"{self.card} - {self.entity.name}"
 
     def save(self, *args, **kwargs):
+        """Overrides the save method to perform additional actions before and
+        after saving."""
         if self.is_active:
             self.__class__.objects.deactivate_other_entities(self.card)
 
@@ -133,11 +134,19 @@ class EntityCard(AbstractBaseModel):
             self.remove_default(self.entity)
 
     def set_default(self, entity):
-        """Set default entity card for entity"""
+        """Sets the given entity card as the default.
+
+        Args:
+            entity: The entity to be set as default.
+        """
         entity.entity_card = self
         entity.save()
 
     def remove_default(self, entity):
-        """Remove default entity card for entity"""
+        """Removes the given entity from being the default.
+
+        Args:
+            entity: The entity to be removed from default.
+        """
         entity.entity_card = None
         entity.save()

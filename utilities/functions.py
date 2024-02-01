@@ -102,8 +102,7 @@ def validate_phone(number):
         phone = str(number.national_number)
         code = "+" + str(number.country_code)
         return code + phone
-    except Exception as e:
-        print(e)
+    except Exception:
         return None
 
 
@@ -213,26 +212,32 @@ def get_ip_from_request(request):
 
 def get_location_from_ip(ip):
     """Function to get the location data from the IP address."""
-    location_data = requests.get(settings.IP_API_URL.format(ip=ip)).json()
-    location_info = [
-        location_data.get(i)
-        for i in ["city", "region", "country_name"]
-        if location_data.get(i, None)
-    ]
-    return ", ".join(location_info)
+    try:
+        location_data = requests.get(settings.IP_API_URL.format(ip=ip)).json()
+        location_info = [
+            location_data.get(i)
+            for i in ["city", "region", "country_name"]
+            if location_data.get(i, None)
+        ]
+        return ", ".join(location_info)
+    except AttributeError:
+        return "Unknown"
 
 
 def device_name_from_request(request):
     """Function to get the device details from the request."""
-    user_agent_string = request.headers["User-Agent"]
-    user_agent = user_agent_parser.Parse(user_agent_string)
-    brand = user_agent["device"].get("brand", "Unknown")
-    model = user_agent["device"].get("model", "Device")
-    device = " ".join(i for i in [brand, model] if i)
-    family = user_agent["user_agent"]["family"]
-    os = user_agent["os"]["family"]
-    browser_device = " on ".join(i for i in [family, device] if i)
-    device_string = " running ".join(i for i in [browser_device, os] if i)
+    try:
+        user_agent_string = request.headers["User-Agent"]
+        user_agent = user_agent_parser.Parse(user_agent_string)
+        brand = user_agent["device"].get("brand", "Unknown")
+        model = user_agent["device"].get("model", "Device")
+        device = " ".join(i for i in [brand, model] if i)
+        family = user_agent["user_agent"]["family"]
+        os = user_agent["os"]["family"]
+        browser_device = " on ".join(i for i in [family, device] if i)
+        device_string = " running ".join(i for i in [browser_device, os] if i)
+    except KeyError:
+        device_string = "Unknown"
     return device_string
 
 
@@ -255,6 +260,11 @@ def decode_list(id_list):
 
 
 def week_start_end():
+    """Get the start and end dates for the current week.
+
+    Returns:
+        Tuple: A tuple containing the start date and end date for the week.
+    """
     today = date.today()
     start_date = today - timedelta(today.weekday())
     end_date = start_date + timedelta(6)
@@ -262,6 +272,11 @@ def week_start_end():
 
 
 def month_start_end():
+    """Get the start and end dates for the current month.
+
+    Returns:
+        Tuple: A tuple containing the start date and end date for the month.
+    """
     today = date.today()
     start_date = date(today.year, today.month, 1)
     _, num_days = calendar.monthrange(today.year, today.month)
@@ -270,6 +285,14 @@ def month_start_end():
 
 
 def start_of_day(day):
+    """Get the start time of a given day.
+
+    Args:
+        day: The day for which to retrieve the start time.
+
+    Returns:
+        datetime: The start time of the given day.
+    """
     return datetime(
         day.year,
         day.month,
@@ -282,6 +305,14 @@ def start_of_day(day):
 
 
 def end_of_day(day):
+    """Get the end time of a given day.
+
+    Args:
+        day: The day for which to retrieve the end time.
+
+    Returns:
+        datetime: The end time of the given day.
+    """
     return datetime(
         day.year,
         day.month,
@@ -294,6 +325,14 @@ def end_of_day(day):
 
 
 def get_start_end_time(day):
+    """Get the start and end times for a given day.
+
+    Args:
+        day: The day for which to retrieve start and end times.
+
+    Returns:
+        Tuple: A tuple containing the start time and end time for the day.
+    """
     start_time = start_of_day(day)
     end_time = end_of_day(day)
     return start_time, end_time

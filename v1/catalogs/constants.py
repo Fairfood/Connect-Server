@@ -3,8 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class PremiumCategory(models.TextChoices):
-    """
-    A class to define text choices for the 'Premium' model's 'category'
+    """A class to define text choices for the 'Premium' model's 'category'
     field.
 
     Choices:
@@ -18,8 +17,7 @@ class PremiumCategory(models.TextChoices):
 
 
 class PremiumType(models.TextChoices):
-    """
-    A class to define text choices for the 'Premium' model's 'type' field.
+    """A class to define text choices for the 'Premium' model's 'type' field.
 
     Choices:
     - PER_TRANSACTION: Represents a per transaction premium with a value of
@@ -37,8 +35,8 @@ class PremiumType(models.TextChoices):
 
 
 class PremiumActivity(models.TextChoices):
-    """
-    A class to define text choices for the 'Premium' model's 'activity' field.
+    """A class to define text choices for the 'Premium' model's 'activity'
+    field.
 
     Choices:
     - BUY: Represents a buy activity with a value of 'BUY'.
@@ -50,9 +48,8 @@ class PremiumActivity(models.TextChoices):
 
 
 class PremiumCalculationType(models.TextChoices):
-    """
-    A class to define text choices for the 'Premium' model's 'calculation_type'
-    field.
+    """A class to define text choices for the 'Premium' model's
+    'calculation_type' field.
 
     Choices:
     - NORMAL: Represents a normal calculation type with a value of 'NOR'.

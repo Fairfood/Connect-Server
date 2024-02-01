@@ -7,8 +7,7 @@ from base.db.utilities import get_file_path
 
 
 class Product(AbstractBaseModel):
-    """
-    Model representing a product entity.
+    """Model representing a product entity.
 
     This model is used to represent a product entity within the system. It
     contains fields for the product's name, description, and default currency.
@@ -17,7 +16,6 @@ class Product(AbstractBaseModel):
         name (str): The name of the product.
         description (str): The description of the product.
         image (ImageField): The image of the product.
-
     """
 
     name = models.CharField(
@@ -43,8 +41,7 @@ class Product(AbstractBaseModel):
 
 
 class ConnectCard(AbstractBaseModel):
-    """
-    Model representing a connect card entity.
+    """Model representing a connect card entity.
 
     This model is used to represent a connect card entity within the system. It
     contains fields for the connect card's display id and card id.
@@ -67,8 +64,7 @@ class ConnectCard(AbstractBaseModel):
 
 
 class Premium(AbstractBaseModel):
-    """
-    Represents a premium category or type associated with a supply chain.
+    """Represents a premium category or type associated with a supply chain.
 
     Attributes:
         category (str): The category of the premium, chosen from available
@@ -136,8 +132,7 @@ class Premium(AbstractBaseModel):
 
 
 class PremiumOption(AbstractBaseModel):
-    """
-    Represents a premium slab for a project's premium.
+    """Represents a premium slab for a project's premium.
 
     Attributes:
         premium (ForeignKey): The project premium associated with the slab.

@@ -12,6 +12,12 @@ from v1.transactions.serializers import ProductTransactionSerializer
 
 
 class ProductTransactionViewSet(IdDecodeModelViewSet):
+    """ViewSet for managing payment transactions.
+
+    This ViewSet provides CRUD operations for payment transactions and
+    includes a custom action 'invoice' for uploading invoice files.
+    """
+
     queryset = ProductTransaction.objects.all()
     serializer_class = ProductTransactionSerializer
     http_method_names = ("get", "post", "patch")
@@ -19,7 +25,11 @@ class ProductTransactionViewSet(IdDecodeModelViewSet):
 
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
-        """Adding separate API for uploading invoice."""
+        """Custom action to upload invoice for a payment transaction.
+
+        This action allows users to attach an invoice file to a payment
+        transaction.
+        """
 
         # getting file from request.
         invoice = request.data.get("invoice")
@@ -41,6 +51,12 @@ class ProductTransactionViewSet(IdDecodeModelViewSet):
 
 
 class PaymentTransactionViewSet(IdDecodeModelViewSet):
+    """ViewSet for managing payment transactions.
+
+    This ViewSet provides CRUD operations for payment transactions and
+    includes a custom action 'invoice' for uploading invoice files.
+    """
+
     queryset = PaymentTransaction.objects.all()
     serializer_class = PaymentTransactionsSerializer
     http_method_names = ("get", "post", "patch")
@@ -48,7 +64,11 @@ class PaymentTransactionViewSet(IdDecodeModelViewSet):
 
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
-        """Adding separate API for uploading invoice."""
+        """Custom action to upload invoice for a payment transaction.
+
+        This action allows users to attach an invoice file to a payment
+        transaction.
+        """
 
         # getting file from request.
         invoice = request.data.get("invoice")

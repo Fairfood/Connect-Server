@@ -19,18 +19,15 @@ class AbstractCompanyModel(
     abstarct_models.AbstractContactModel,
     base_models.Entity,
 ):
-    """
-    An abstract base model for a company, providing fields for basic company
-    information such as address, contact details, and a unique identifier.
-    """
+    """An abstract base model for a company, providing fields for basic company
+    information such as address, contact details, and a unique identifier."""
 
     class Meta:
         abstract = True
 
 
 class Company(AbstractCompanyModel):
-    """
-    Model representing a company entity.
+    """Model representing a company entity.
 
     This model is used to represent a company entity within the system. It
     contains fields for the company's name, registration number, members,
@@ -43,7 +40,6 @@ class Company(AbstractCompanyModel):
         incharge (ForeignKey): The user who is in charge of the company.
         currency (ForeignKey): The default currency used by the company.
         premiums (ManyToManyField): The premiums associated with the company.
-
     """
 
     name = models.CharField(
@@ -94,6 +90,22 @@ class Company(AbstractCompanyModel):
         return f"{self.name}"
 
     def can_be_edited_by(self, company=None):
+        """Check if the entity can be edited by a specified company.
+
+        This method determines whether the entity can be edited by the
+        specified company based on various conditions, such as the entity's
+        status and the company that initiated the invitation.
+
+        Args:
+            company (optional): The company for which the edit permission is
+                                checked. If not provided, the current company
+                                is used.
+
+        Returns:
+            bool: True if the entity can be edited by the specified company,
+                  False otherwise.
+        """
+
         company = company or auth_utils.get_current_company()
         checks = (
             not company,
@@ -188,8 +200,7 @@ class CompanyMember(abstarct_models.AbstractBaseModel):
 
 
 class CompanyProduct(abstarct_models.AbstractBaseModel):
-    """
-    Represents the association between a Company and a Product.
+    """Represents the association between a Company and a Product.
 
     Attributes:
     - company (models.ForeignKey): The Company associated with the Product.
@@ -204,7 +215,6 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         Company-Product associations for a Product.
     - company_product (related_name): A reverse relation to access the Form
         associated with this Company-Product relationship.
-
     """
 
     company = models.ForeignKey(
@@ -240,6 +250,13 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
+        """Save method for the model.
+
+        This method performs atomic transactions and includes checks
+        related to premium removal, form validation, and premium check
+        before calling the parent class's save method.
+        """
+
         self._check_premium_removal()
         super().save(*args, **kwargs)
         self._form_check()
@@ -284,8 +301,7 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
 
 
 class CompanyFieldVisibilty(abstarct_models.AbstractBaseModel):
-    """
-    Model to save field visibilities of a company created Farmers and
+    """Model to save field visibilities of a company created Farmers and
     Transactions.
 
     Attribs:

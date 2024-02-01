@@ -29,7 +29,6 @@ class CustomAuthentication(JWTAuthentication):
         }
 
         if not user.is_device_active(session_data["device"]):
-            print("Device deactivated login again.")
             raise exceptions.AccessForbidden("Device deactivated login again.")
 
         for k, v in session_data.items():

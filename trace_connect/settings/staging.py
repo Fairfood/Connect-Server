@@ -1,12 +1,6 @@
 from datetime import timedelta
 
-import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
-
 from .base import *  # noqa
-from .base import DEPLOYMENT
 from .base import env
 from .base import REST_FRAMEWORK
 from .base import SIMPLE_JWT
@@ -39,19 +33,3 @@ DEFAULT_FILE_STORAGE = "s3_folder_storage.s3.DefaultStorage"
 DEFAULT_S3_PATH = "media"
 MEDIA_ROOT = "/%s/" % DEFAULT_S3_PATH
 MEDIA_URL = "//%s.s3.amazonaws.com/media/" % AWS_STORAGE_BUCKET_NAME
-
-# SENTRY SETUP AWS_STORAGE_BUCKET_NAME:
-sentry_sdk.init(
-    dsn=env.get("SENTRY_DSN"),
-    integrations=[
-        DjangoIntegration(),
-        CeleryIntegration(),
-        RedisIntegration(),
-    ],
-    traces_sample_rate=1.0,
-    environment=ENVIRONMENT,
-    _experiments={
-        "profiles_sample_rate": 1.0,
-    },
-)
-sentry_sdk.set_tag("deployment", DEPLOYMENT)

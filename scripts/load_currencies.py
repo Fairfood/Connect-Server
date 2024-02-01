@@ -7,8 +7,7 @@ from v1.catalogs.models.common_models import Currency
 
 
 def load_currencies():
-    """
-    Load currency data from a JSON file into the Currency model.
+    """Load currency data from a JSON file into the Currency model.
 
     Reads currency data from a JSON file located in the 'fixtures' directory
     and updates or creates Currency objects in the database based on the
@@ -53,4 +52,9 @@ def load_currencies():
 
 
 def run():
+    """Entry point function to execute tasks.(compactable with runscript)
+
+    This function serves as an entry point for running tasks or
+    operations. Currently, it calls the 'load_currencies' function.
+    """
     load_currencies()

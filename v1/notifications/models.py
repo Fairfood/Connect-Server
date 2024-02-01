@@ -13,8 +13,7 @@ from utilities import sms
 
 
 class Notification(AbstractBaseModel):
-    """
-    A class for managing user notifications.
+    """A class for managing user notifications.
 
     Attributes:
         user (UserModel): The user associated with the notification.
@@ -54,7 +53,6 @@ class Notification(AbstractBaseModel):
         read: Marks the notification as read.
         notification_manager: Returns the notification manager based on the
             notification type.
-
     """
 
     user = models.ForeignKey(
@@ -151,12 +149,11 @@ class Notification(AbstractBaseModel):
         return "%s - %s | %s" % (self.user.name, self.title, self.id)
 
     def send_email(self):
-        """
-        Sends an email notification.
+        """Sends an email notification.
 
         This method sends an email notification to the user. It uses the
-        email template specified by the notification manager and includes
-        relevant context.
+        email template specified by the notification manager and
+        includes relevant context.
         """
         notification_manager = self.notification_manager()
         if not self.action_email:
@@ -183,17 +180,14 @@ class Notification(AbstractBaseModel):
         return True
 
     def send_push(self):
-        """
-         Sends a push notification.
+        """Sends a push notification.
 
         This method is responsible for sending push notifications.
-
         """
         raise NotImplementedError("Push notifications are not implemented.")
 
     def send_sms(self):
-        """
-        Sends an SMS notification.
+        """Sends an SMS notification.
 
         This method sends an SMS notification to the user if the
         'action_sms' flag is set to True and the user's phone number is
@@ -210,12 +204,11 @@ class Notification(AbstractBaseModel):
         return True
 
     def send(self):
-        """
-        Sends the notification via all available channels.
+        """Sends the notification via all available channels.
 
-        This method orchestrates the sending of a notification via email,
-        push notification, and SMS. It returns True if at least one of these
-        channels successfully sends the notification.
+        This method orchestrates the sending of a notification via
+        email, push notification, and SMS. It returns True if at least
+        one of these channels successfully sends the notification.
         """
         self.send_email()
         self.send_push()
@@ -223,38 +216,34 @@ class Notification(AbstractBaseModel):
         return True
 
     def read(self):
-        """
-        Marks the notification as read.
+        """Marks the notification as read.
 
-        This method sets the 'is_read' attribute to True, indicating that
-        the user has read the notification.
+        This method sets the 'is_read' attribute to True, indicating
+        that the user has read the notification.
         """
         self.is_read = True
         self.save()
 
     def notification_manager(self):
-        """
-        Returns the notification manager based on the
-        notification type.
+        """Returns the notification manager based on the notification type.
 
-        This method returns the appropriate notification manager based on
-        the 'type' attribute of the notification. The notification manager
-        is used to customize the notification's behavior."""
+        This method returns the appropriate notification manager based
+        on the 'type' attribute of the notification. The notification
+        manager is used to customize the notification's behavior.
+        """
         from .manager import NOTIFICATION_TYPES
 
         return NOTIFICATION_TYPES[self.type]
 
 
 class SMSAlerts(AbstractBaseModel):
-    """
-    Model to track all the SMSs sent and log the response.
+    """Model to track all the SMSs sent and log the response.
 
     Attributes:
         phone (str): The phone number to which the SMS is sent.
         message (text): The message content of the SMS.
         response (json): The response received from the SMS API.
         response_text (text): The response received in case of an error.
-
     """
 
     phone = models.CharField(max_length=20)
