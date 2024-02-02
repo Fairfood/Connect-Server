@@ -1,92 +1,287 @@
-# trace_connect
+# Trace Connect Backend
 
+This application, built with Django(with django-rest-framework), simplifies the collection process for remote farmland transactions. Designed for collectors, it serves two main functions: enrolling farmers and recording on-site transactions. Collectors use NFC/QR code-based cards provided to farmers during enrollment, streamlining product delivery and facilitating farmer-verified payments. The app ensures a straightforward and efficient experience for both collectors and farmers in the agricultural ecosystem.
 
+## Table of Contents
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://git.cied.in/amruthesh/trace_connect.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://git.cied.in/amruthesh/trace_connect/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Database Setup](#database-setup)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+- [Authentication and Authorization](#authentication-and-authorization)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact Information](#contact-information)
+- [Acknowledgments](#acknowledgments)
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/your-username/your-project.git
+    ```
+
+2. Navigate to the project directory:
+
+    ```bash
+    cd your-project
+    ```
+
+3. Create a virtual environment:
+
+    ```bash
+    python -m venv venv
+    ```
+
+4. Activate the virtual environment:
+
+    - On Windows:
+
+        ```bash
+        venv\Scripts\activate
+        ```
+
+    - On Unix or MacOS:
+
+        ```bash
+        source venv/bin/activate
+        ```
+
+5. Install dependencies:
+
+    ```bash
+    pip install -r requirements/local.ext
+    ```
+
+## Configuration
+
+1. Create a `.env` file in the project root and configure environment variables:
+
+    ```env
+    [app]
+    ENVIRONMENT=local
+    DEPLOYMENT=local
+    ROOT_URL=http://localhost:8000
+    FRONTEND_ROOT_URL=http://localhost:3000
+
+    [dajngo]
+    SECRET_KEY=**************************
+    HASHID_SALT=**************************
+
+    [database]
+    DB_NAME=**************************
+    DB_USER=**************************
+    DB_PASSWORD=**************************
+    DB_HOST=**************************
+    DB_PORT=**************************
+
+    REDIS_URL=redis://localhost
+    REDIS_PORT=6379
+
+    [email]
+    EMAIL_HOST=smtp.gmail.com
+    EMAIL_HOST_USER=**************************
+    EMAIL_HOST_PASSWORD=**************************
+
+    [lib]
+    AWS_ACCESS_KEY_ID=**************************
+    AWS_SECRET_ACCESS_KEY=**************************
+    AWS_STORAGE_BUCKET_NAME=**************************
+    ```
+
+2. Apply migrations:
+
+    ```bash
+    python manage.py migrate
+    ```
+
+## Database Setup
+
+1. Create super user with email as username and password.
+
+    ```bash
+    # for creating superuser
+    python manage.py createsuperuser
+    ```
+
+2. Load currency details
+
+    ```bash
+    # for loading currency details
+    python manage.py runsript load_currencies
+    ```
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+For running server locally
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+    ```bash
+    python manage.py runserver
+
+ Access the Django admin interface by navigating to [http://localhost:8000/connect/admin/](http://localhost:8000/connect/admin/) and log in with the superuser credentials created earlier.
+
+## API Endpoints
+
+- Open your browser and go to [http://localhost:8000/connect/v1](http://localhost:8000/connect/v1) to view the available API endpoints.
+- Use tools like [curl](https://curl.se/) or [Postman](https://www.postman.com/) to make HTTP requests to the API endpoints.
+
+## Authentication and Authorization
+
+### Authentication
+
+This Django DRF project uses token-based authentication. Follow these steps to obtain an authentication token:
+
+1. **Create a User Account:**
+
+    Make a POST request to the `/api/auth/register/` endpoint with the required user registration data.
+
+    Example using `curl`:
+
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -d '{"username": "your_username", "password": "your_password"}' http://localhost:8000/api/auth/register/
+    ```
+
+2. **Obtain an Authentication Token:**
+
+    Make a POST request to the `/api/auth/token/` endpoint with the registered user credentials to obtain an authentication token.
+
+    Example using `curl`:
+
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -d '{"username": "your_username", "password": "your_password"}' http://localhost:8000/api/auth/token/
+    ```
+
+    Save the received token for subsequent requests.
+
+### Authorization
+
+This project implements role-based access control:
+
+- **Admin Users:**
+  - Admin users have full access to all resources and endpoints.
+
+- **Authenticated Users:**
+  - Authenticated users (users with a valid token) have limited access based on their roles.
+
+- **Anonymous Users:**
+  - Anonymous users have limited or no access to certain resources.
+
+### Using the Authentication Token
+
+Include the obtained token in the `Authorization` header of your requests:
+
+```bash
+curl -H "Authorization: Token your_token_here" http://localhost:8000/api/some-protected-endpoint/
+```
+
+## Testing
+
+To run tests for the Django DRF project, use the following command:
+
+```bash
+python manage.py test
+```
+
+Running Specific Tests
+```bash
+python manage.py test <app_name>.tests.test_module
+```
+### Coverage
+
+Then run the tests with coverage:
+```bash
+coverage run manage.py test
+```
+And generate a coverage report:
+```bash
+coverage report -m
+```
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+We welcome contributions from the community! If you would like to contribute to this Django DRF project, please follow the guidelines below:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Issues
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+- Before submitting a new issue, please check the [issue tracker](https://github.com/your-username/your-project/issues) to see if the issue has already been reported or discussed.
+- When creating a new issue, provide a clear and detailed description, including steps to reproduce if applicable.
+- If you're reporting a bug, include information about your environment (Django and DRF versions, database, operating system, etc.).
+
+### Pull Requests
+
+1. Fork the repository:
+
+    ```bash
+    git clone https://github.com/your-username/your-project.git
+    cd your-project
+    git fork
+    ```
+
+2. Create a new branch:
+
+    ```bash
+    git checkout -b feature-branch
+    ```
+
+3. Make your changes and commit:
+
+    ```bash
+    git add .
+    git commit -m "Your descriptive commit message"
+    ```
+
+4. Push to the branch:
+
+    ```bash
+    git push origin feature-branch
+    ```
+
+5. Submit a pull request:
+
+    - Go to the [Pull Requests](https://github.com/your-username/your-project/pulls) tab in the repository.
+    - Click on "New Pull Request" and select the branch you just pushed.
+
+6. Follow the pull request template and provide necessary details.
+
+### Coding Standards
+
+- Follow the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code.
+- Write meaningful commit messages and keep the commit history clean.
+
+### Testing
+
+- Ensure that your changes do not break existing tests.
+- If you're adding a new feature, include relevant tests.
+- Run the test suite locally before submitting a pull request.
+
+### Code of Conduct
+
+Please note that this project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Report any unacceptable behavior to [maintainer email].
+
+### Review Process
+
+- The project maintainers will review your pull request and may provide feedback or request changes.
+- Once the changes are approved, the pull request will be merged.
+
+Thank you for contributing to our Django DRF project! If you have any questions or need further assistance, feel free to reach out to [maintainer email].
+
+[contributing-image]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+[contributing-url]: https://github.com/your-username/your-project/blob/main/CONTRIBUTING.md
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Contact Information
+
+If you have any questions, suggestions, or feedback, feel free to reach out:
+
+- **Maintainer:** [Your Name]
+- **Email:** [your.email@example.com]
+
+You can also open an issue on the [issue tracker](https://github.com/your-username/your-project/issues) for bug reports, feature requests, or general discussions related to the project.
+
+Follow us on Twitter: [@your_project_handle](https://twitter.com/your_project_handle)
+
+We appreciate your interest and contributions to our Django DRF project!

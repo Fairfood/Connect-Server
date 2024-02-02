@@ -7,8 +7,7 @@ from v1.transactions.models.base_models import BaseTransaction
 
 
 class ProductTransaction(BaseTransaction):
-    """
-    Represents batch transactions between farmer/company and a destination
+    """Represents batch transactions between farmer/company and a destination
     destination company.
 
     Attributes:
@@ -69,13 +68,16 @@ class ProductTransaction(BaseTransaction):
         return f"{self.number}: {self.source} -> {self.destination}"
 
     def save(self, *args, **kwargs):
+        """Save method for the model.
+
+        This method updates the verification method before calling the
+        parent class's save method.
+        """
         self._update_verification_method()
         super().save(*args, **kwargs)
 
     def base_payment(self):
-        """
-        Base payment without any premium
-        """
+        """Base payment without any premium."""
         return self.transaction_payments.filter(
             payment_type=constants.PaymentType.TRANSACTION
         ).first()
@@ -95,19 +97,15 @@ class ProductTransaction(BaseTransaction):
         return self.base_payment().currency
 
     def source_poducts(self):
-        """
-        Returns a queryset of products associated with the source of the
-        transaction.
-        """
+        """Returns a queryset of products associated with the source of the
+        transaction."""
         product_ids = self.parents.values_list("product", flat=True)
         return Product.objects.filter(id__in=product_ids)
 
     @property
     def source_quantity(self):
-        """
-        Returns the total quantity of products associated with the source of
-        the transaction.
-        """
+        """Returns the total quantity of products associated with the source of
+        the transaction."""
         source_quantity = self.parents.aggregate(models.Sum("quantity"))[
             "quantity__sum"
         ]
@@ -115,10 +113,8 @@ class ProductTransaction(BaseTransaction):
 
     @property
     def current_quantity(self):
-        """
-        Returns the balence quantity of products associated with the source of
-        the transaction.
-        """
+        """Returns the balence quantity of products associated with the source
+        of the transaction."""
         return 0 if self.children.exists() else self.quantity
 
     def _update_verification_method(self):

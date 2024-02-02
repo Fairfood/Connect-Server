@@ -20,10 +20,17 @@ from v1.notifications.models import Notification
 
 
 class NotificationSummaryView(views.APIView):
+    """API view to retrieve notification summary.
+
+    This view provides an API endpoint to retrieve a summary of
+    notifications for a user, including counts of notifications and
+    unread notifications per entity.
+    """
 
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
+        """Get the summary of notifications."""
         notif_summary = (
             Notification.objects.filter(
                 user_id=session.get_from_local("user_id"), visibility=True
@@ -68,18 +75,31 @@ class NotificationsListView(generics.ListAPIView):
     search_fields = ["title", "body"]
 
     def get_queryset(self):
+        """Get the queryset of notifications.
+
+        This method returns a queryset of notifications filtered by user
+        ID and visibility. It uses the user ID retrieved from the
+        session and includes related entities (actor, target, and
+        creator) through select_related for optimization.
+        """
+
         return Notification.objects.filter(
             user_id=session.get_from_local("user_id"), visibility=True
         ).select_related("actor_entity", "target_entity", "creator")
 
 
 class NotificationReadView(views.APIView):
-    """API to mark notifications as read."""
+    """API view for marking notifications as read.
+
+    This view provides an API endpoint to mark notifications as read.
+    Only supports the HTTP PATCH method.
+    """
 
     http_method_names = ["patch"]
 
     @swagger_auto_schema(request_body=serializers.ReadNotificationSerializer)
     def patch(self, request, *args, **kwargs):
+        """Mark notifications as read."""
         notification_serializer = serializers.ReadNotificationSerializer(
             data=request.data
         )

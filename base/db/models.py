@@ -52,6 +52,7 @@ class AbstractBaseModel(models.Model):
         ordering = ("-created_on",)
 
     def save(self, *args, **kwargs):
+        """Override save method to add creator and updater."""
         current_user = auth_utils.get_current_user()
         if current_user:
             if not self.pk and not self.creator:
@@ -62,10 +63,17 @@ class AbstractBaseModel(models.Model):
 
     @classmethod
     def field_names(cls) -> list:
+        """Return list of field names."""
         return [field.name for field in cls._meta.get_fields()]
 
     @classmethod
     def clean_dict(cls, data: dict, extra_keys: set = None) -> dict:
+        """Clean dict to remove extra keys.
+
+        Args:
+            data(dict): Data to be cleaned
+            extra_keys(set): Extra keys to be removed
+        """
         # Patch for multipart request with file
         # 1. AttributeError: 'NoneType' object has no attribute 'seek'
         #    Occurs on deepcopy
@@ -113,6 +121,7 @@ class AbstractNumberedModel(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
+        """Override save method to add number."""
         super(AbstractNumberedModel, self).save(*args, **kwargs)
         if not self.number:
             self.number = str(self.id.id + 1000)

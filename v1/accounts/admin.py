@@ -27,7 +27,11 @@ class ValidationTokenAdmin(admin.ModelAdmin):
 
 
 class UserDeviceAdmin(admin.ModelAdmin):
-    """Class view to customize user device admin."""
+    """Class view to customize user device admin.
+
+    This admin class provides customization for the UserDevice model in
+    the Django admin interface.
+    """
 
     list_display = (
         "device_name",
@@ -54,6 +58,16 @@ class UserDeviceAdmin(admin.ModelAdmin):
         return None
 
     def has_add_permission(self, request, obj=None):
+        """Determine whether the user has permission to add new UserDevice
+        instances.
+
+        Args:
+            request: The request object.
+            obj: The object being viewed or edited.
+
+        Returns:
+            bool: True if the user has add permission, False otherwise.
+        """
         return False
 
 

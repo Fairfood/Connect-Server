@@ -15,9 +15,7 @@ class CompanyProductInline(admin.TabularInline):
 
 
 class CompanyAdmin(BaseAdmin):
-    """
-    Model representing a company entity.
-    """
+    """Model representing a company entity."""
 
     list_display = (
         "name",
@@ -28,9 +26,7 @@ class CompanyAdmin(BaseAdmin):
 
 
 class CompanyMemberAdmin(BaseAdmin):
-    """
-    Model representing a company member entity.
-    """
+    """Model representing a company member entity."""
 
     list_display = (
         "company",
@@ -41,9 +37,7 @@ class CompanyMemberAdmin(BaseAdmin):
 
 
 class EntityCardAdmin(BaseAdmin):
-    """
-    Model representing a company member entity.
-    """
+    """Model representing a company member entity."""
 
     list_display = (
         "card",
@@ -52,9 +46,7 @@ class EntityCardAdmin(BaseAdmin):
 
 
 class FarmerAdmin(BaseAdmin):
-    """
-    Model representing a company entity.
-    """
+    """Model representing a company entity."""
 
     list_display = ("first_name", "last_name", "id", "buyer")
     search_fields = ["name"]

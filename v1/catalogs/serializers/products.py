@@ -9,9 +9,7 @@ from v1.supply_chains.models.company_models import CompanyProduct
 
 
 class ProductSerializer(serializers.DynamicModelSerializer):
-    """
-    Serializer for the Product model.
-    """
+    """Serializer for the Product model."""
 
     premiums = SerializerMethodField()
     is_active = SerializerMethodField()
@@ -21,10 +19,7 @@ class ProductSerializer(serializers.DynamicModelSerializer):
         fields = "__all__"
 
     def _get_company_product(self, instance):
-        """
-        Get the company product associated with the product.
-
-        """
+        """Get the company product associated with the product."""
         entity = utils.get_current_entity()
         if not entity:
             return None
@@ -34,8 +29,7 @@ class ProductSerializer(serializers.DynamicModelSerializer):
             return None
 
     def get_premiums(self, instance):
-        """
-        Get the premiums associated with the company product.
+        """Get the premiums associated with the company product.
 
         Returns:
             list: A list of premiums associated with the product.
@@ -48,8 +42,7 @@ class ProductSerializer(serializers.DynamicModelSerializer):
         )
 
     def get_is_active(self, instance):
-        """
-        Get the is_active associated with the company product.
+        """Get the is_active associated with the company product.
 
         Returns:
             list: A list of is_active associated with the product.
@@ -59,9 +52,7 @@ class ProductSerializer(serializers.DynamicModelSerializer):
 
 
 class ConnectCardSerializer(serializers.DynamicModelSerializer):
-    """
-    Serializer for the ConnectCard model.
-    """
+    """Serializer for the ConnectCard model."""
 
     card_id = CharField(validators=[])
 
@@ -70,8 +61,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        """
-        Create a new ConnectCard object or update an existing one.
+        """Create a new ConnectCard object or update an existing one.
 
         This method is overridden to either create a new ConnectCard object or,
         if a card with the provided `card_id` already exists, update the
@@ -94,9 +84,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
 
 
 class PremiumOptionSeriazer(serializers.DynamicModelSerializer):
-    """
-    Serializer for the PremiumOption model.
-    """
+    """Serializer for the PremiumOption model."""
 
     class Meta:
         model = product_models.PremiumOption
@@ -104,8 +92,11 @@ class PremiumOptionSeriazer(serializers.DynamicModelSerializer):
 
 
 class PremiumSerializer(serializers.DynamicModelSerializer):
-    """
-    Serializer for the Premium model.
+    """Serializer for the Premium model.
+
+    This serializer includes details about premium options and allows
+    creating instances of the Premium model along with associated
+    premium options.
     """
 
     options = PremiumOptionSeriazer(
@@ -118,6 +109,18 @@ class PremiumSerializer(serializers.DynamicModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        """Create method for PremiumSerializer.
+
+        Handles the creation of Premium instances, including the creation of
+        associated premium options.
+
+        Args:
+            validated_data (dict): The validated data for creating the Premium
+            instance.
+
+        Returns:
+            Premium: The created Premium instance.
+        """
         options = validated_data.pop("options", [])
         instance = super().create(validated_data)
         for option in options:

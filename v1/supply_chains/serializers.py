@@ -23,9 +23,7 @@ from v1.supply_chains.models.farmer_models import Farmer
 
 
 class EntityCardSerializer(DynamicModelSerializer):
-    """
-    Serializer for the EntityCard model.
-    """
+    """Serializer for the EntityCard model."""
 
     card = ConnectCardSerializer()
 
@@ -49,9 +47,7 @@ class EntityCardSerializer(DynamicModelSerializer):
 
 
 class EntitySerializer(DynamicModelSerializer):
-    """
-    Serializer for the Entity model.
-    """
+    """Serializer for the Entity model."""
 
     name = serializers.CharField(read_only=True)
     entity_card = EntityCardSerializer(read_only=True)
@@ -62,15 +58,19 @@ class EntitySerializer(DynamicModelSerializer):
 
 
 class CompanyFieldVisibiltySerilizer(DynamicModelSerializer):
+    """Serializer for CompanyFieldVisibilty.
+
+    This serializer includes all fields for the CompanyFieldVisibilty
+    model.
+    """
+
     class Meta:
         model = CompanyFieldVisibilty
         fields = "__all__"
 
 
 class CompanySerializer(DynamicModelSerializer):
-    """
-    Serializer for the Company model.
-    """
+    """Serializer for the Company model."""
 
     currency = CurrencySerializer(read_only=True)
     buyer = EntitySerializer(
@@ -93,9 +93,7 @@ class CompanySerializer(DynamicModelSerializer):
 
 # TODO: Remove this serializer after the migration is complete.
 class CompanyCreateSerializer(DynamicModelSerializer):
-    """
-    Serializer for the Company model.
-    """
+    """Serializer for the Company model."""
 
     currency = serializers.CharField(required=False)
 
@@ -116,6 +114,12 @@ class CompanyCreateSerializer(DynamicModelSerializer):
 
 
 class CompanyMemerSerializer(DynamicModelSerializer):
+    """Serializer for CompanyMember.
+
+    This serializer includes details about the user associated with the
+    company member, using a nested UserSerializer.
+    """
+
     user = UserSerializer(
         fields=(
             "id",
@@ -134,12 +138,23 @@ class CompanyMemerSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        """Create method for CompanyMemerSerializer.
+
+        Handles the creation of CompanyMember instances, including the
+        creation of the associated user.
+        """
         user = self.fields["user"].create(validated_data.pop("user"))
         validated_data["user"] = user
         return super().create(validated_data)
 
 
 class CompanyProductSerializer(DynamicModelSerializer):
+    """Serializer for CompanyProduct.
+
+    This serializer includes product details and allows specifying
+    either the product instance or its ID during validation and
+    creation.
+    """
 
     product = ProductSerializer(exclude_fields=("premiums",), required=False)
     product_id = serializers.CharField(required=False)
@@ -149,6 +164,10 @@ class CompanyProductSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
+        """Validate method for CompanyProductSerializer.
+
+        Validates that either the product or product_id is provided.
+        """
         product = data.get("product", None)
         product_id = data.get("product_id", None)
         if not product and not product_id:
@@ -159,6 +178,11 @@ class CompanyProductSerializer(DynamicModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        """Create method for CompanyProductSerializer.
+
+        Handles the creation of CompanyProduct instances, either by
+        using an existing product with an ID or creating a new product.
+        """
         product = validated_data.pop("product", None)
         product_id = validated_data.pop("product_id", None)
         if product_id:
@@ -184,9 +208,7 @@ class CompanyProductSerializer(DynamicModelSerializer):
 
 
 class FarmerSerializer(DynamicModelSerializer):
-    """
-    Serializer for the Farmer model.
-    """
+    """Serializer for the Farmer model."""
 
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer(required=False)

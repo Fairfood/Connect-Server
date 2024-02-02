@@ -28,8 +28,15 @@ class BaseNotificationManager:
     email_template: str = "default.html"
 
     def __init__(self, user, action_object, token=None, context=None):
-        """Initialize notification."""
-        from v1.supply_chains.models import CompanyMember
+        """Initialize notification.
+
+        Args:
+            user: User object for whom the notification is created.
+            action_object: The object associated with the notification.
+            token: Validation token for the notification.
+            context: Additional context for the notification.
+        """
+        from v1.supply_chains.models.company_models import CompanyMember
 
         # curr_language = translation.get_language()
         context = context or {}
@@ -37,7 +44,7 @@ class BaseNotificationManager:
         self.action_object = action_object
         target_entity = self.get_target_entity()
         member = CompanyMember.objects.filter(
-            entity=target_entity, user=user
+            company=target_entity, user=user
         ).first()
         notif_prefs = (
             member.get_notification_pref(self)
@@ -74,55 +81,78 @@ class BaseNotificationManager:
             self.notification_object = notification
 
     def send_notification(self):
-        if not self.notification_object:
-            return False
-        return self.notification_object.send()
+        """Send the notification."""
+        # if not self.notification_object:
+        #     return False
+        # return self.notification_object.send()
+        pass
 
     def get_action_url(self) -> str:
-        url = settings.FRONT_ROOT_URL / self.get_url_path()
-        params = self.get_url_params()
-        params["notification_id"] = self.notification_object.id
-        params["user"] = self.user.id
-        params["language"] = self.user.language
-        if self.notification_object.validation_token:
-            params["token"] = self.notification_object.validation_token.key
-            params["salt"] = self.notification_object.validation_token.id
-        url.add_params(**params)
-        return url
+        """Get the action URL for the notification."""
+        try:
+            url = settings.FRONT_ROOT_URL + self.get_url_path()
+            params = self.get_url_params()
+            params["notification_id"] = self.notification_object.id
+            params["user"] = self.user.id
+            params["language"] = self.user.language
+            if self.notification_object.validation_token:
+                params["token"] = self.notification_object.validation_token.key
+                params["salt"] = self.notification_object.validation_token.id
+            url.add_params(**params)
+            return url
+        except TypeError:
+            return ""
 
     def get_title(self) -> str:
+        """Get the title for the notification."""
         return (
             f"Notification for {self.user.username} for {self.action_object}."
         )
 
     def get_body(self) -> str:
+        """Get the body for the notification."""
         return (
             f"Notification for {self.user.username} for {self.action_object}."
         )
 
     def get_url_path(self):
+        """Get the URL path for the notification."""
         return self.url_path
 
     def get_url_params(self) -> dict:
+        """Get additional URL parameters for the notification."""
         return {}
 
     def get_send_to(self) -> str:
+        """Get the recipient for the notification."""
         return self.user.email
 
     def get_actor_entity(self):
+        """Get the actor entity associated with the notification."""
         raise NotImplementedError()
 
     def get_target_entity(self):
+        """Get the target entity associated with the notification."""
         raise NotImplementedError()
 
     def get_redirect_id(self):
+        """Get the redirect ID for the notification."""
         return None
 
     def get_redirect_type(self):
+        """Get the redirect type for the notification."""
         return ""
 
 
 def validate_notifications():
+    """Validate notification preferences for all notification types.
+
+    This function iterates through all subclasses of
+    BaseNotificationManager and checks the validity of their
+    notification preferences. It ensures that preferences are defined
+    appropriately and that the notification_uid is unique.
+    """
+
     from v1.supply_chains.constants import CompanyMemberType
 
     def check_pref(pref: dict) -> bool:

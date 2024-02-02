@@ -2,7 +2,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from base.request_handler.response import SuccessResponse
-from base.request_handler.views import IdDecodeModelViewSet
+from base.request_handler.views import IDDEcodeScopeViewset
 from v1.transactions.filters import PaymentTransactionFilterSet
 from v1.transactions.filters import ProductTransactionFilterSet
 from v1.transactions.models.payment_models import PaymentTransaction
@@ -11,15 +11,26 @@ from v1.transactions.serializers import PaymentTransactionsSerializer
 from v1.transactions.serializers import ProductTransactionSerializer
 
 
-class ProductTransactionViewSet(IdDecodeModelViewSet):
+class ProductTransactionViewSet(IDDEcodeScopeViewset):
+    """ViewSet for managing payment transactions.
+
+    This ViewSet provides CRUD operations for payment transactions and
+    includes a custom action 'invoice' for uploading invoice files.
+    """
+
     queryset = ProductTransaction.objects.all()
     serializer_class = ProductTransactionSerializer
     http_method_names = ("get", "post", "patch")
+    resource_types = ["transaction"]
     filterset_class = ProductTransactionFilterSet
 
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
-        """Adding separate API for uploading invoice."""
+        """Custom action to upload invoice for a payment transaction.
+
+        This action allows users to attach an invoice file to a payment
+        transaction.
+        """
 
         # getting file from request.
         invoice = request.data.get("invoice")
@@ -40,15 +51,26 @@ class ProductTransactionViewSet(IdDecodeModelViewSet):
         )
 
 
-class PaymentTransactionViewSet(IdDecodeModelViewSet):
+class PaymentTransactionViewSet(IDDEcodeScopeViewset):
+    """ViewSet for managing payment transactions.
+
+    This ViewSet provides CRUD operations for payment transactions and
+    includes a custom action 'invoice' for uploading invoice files.
+    """
+
     queryset = PaymentTransaction.objects.all()
     serializer_class = PaymentTransactionsSerializer
     http_method_names = ("get", "post", "patch")
+    resource_types = ["payment"]
     filterset_class = PaymentTransactionFilterSet
 
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
-        """Adding separate API for uploading invoice."""
+        """Custom action to upload invoice for a payment transaction.
+
+        This action allows users to attach an invoice file to a payment
+        transaction.
+        """
 
         # getting file from request.
         invoice = request.data.get("invoice")

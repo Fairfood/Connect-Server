@@ -89,6 +89,10 @@ class UserSerializer(DynamicModelSerializer):
 
 
 class BasicUserSerializer(serializers.ModelSerializer):
+    """Serializer for basic user information.
+
+    This serializer is used to represent basic information about a user.
+    """
 
     id = fields.SerializableRelatedField(read_only=True)
 
