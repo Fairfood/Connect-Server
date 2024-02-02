@@ -167,8 +167,8 @@ JWT_AUTH_REFRESH_COOKIE = "rightorigins-v3-refresh-token"
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=100),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
