@@ -49,7 +49,7 @@ class FarmerAdmin(BaseAdmin):
     """Model representing a company entity."""
 
     list_display = ("first_name", "last_name", "id", "buyer")
-    search_fields = ["name"]
+    search_fields = ["first_name", "last_name"]
 
 
 admin.site.register(company_models.Company, CompanyAdmin)

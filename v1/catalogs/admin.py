@@ -34,7 +34,7 @@ class ConnectCardAdmin(BaseAdmin):
         "display_id",
         "id",
     )
-    search_fields = ["name"]
+    search_fields = ["display_id", "display_id"]
 
 
 class PremiumOptionTabularInline(admin.TabularInline):

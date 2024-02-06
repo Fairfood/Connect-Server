@@ -20,7 +20,7 @@ class ProductTransactionFilterSet(filters.FilterSet):
         method="updated_after_filter", field_name="created_on"
     )
     created_after = filters.NumberFilter(
-        method="updated_after_filter", field_name="created_on"
+        method="updated_after_filter", field_name="date"
     )
     updated_before = filters.NumberFilter(
         method="updated_before_filter", field_name="created_on"
