@@ -25,6 +25,7 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
     currency_details = CurrencySerializer(source="currency", read_only=True)
     type = serializers.SerializerMethodField()
     currency = serializers.CharField(write_only=True, required=False)
+    submissions = SubmissionSerializer(many=True, required=False)
 
     class Meta:
         """Meta class."""
@@ -39,13 +40,17 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
         resolving the currency object based on the provided input.
         """
         curency = validated_data.pop("currency", None)
+        submissions = validated_data.pop("submissions", [])
         if curency:
             try:
                 curency = Currency.objects.get(id=curency)
             except Currency.DoesNotExist:
                 curency = Currency.objects.get(code=curency)
             validated_data["currency"] = curency
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        submission_objs = self.fields["submissions"].create(submissions)
+        instance.submissions.add(*submission_objs)
+        return instance
 
     def get_type(self, obj):
         """Get method for the "type" field.
