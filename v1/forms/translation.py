@@ -5,6 +5,13 @@ from . import models
 
 
 class FormFieldTranslateFields(TranslationOptions):
+    """Translation options for the 'FormField' model.
+
+    This class defines the translation options for specific fields of
+    the 'FormField' model, allowing the translation of the 'label'
+    field.
+    """
+
     fields = ("label",)
 
 

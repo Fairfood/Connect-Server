@@ -9,8 +9,7 @@ from v1.transactions.models.transaction_models import ProductTransaction
 
 
 class PaymentTransaction(BaseTransaction):
-    """
-    An abstract model representing various payment types in the system.
+    """An abstract model representing various payment types in the system.
 
     Attributes:
     - payment_type (str): The type of payment, e.g., 'Transaction', 'Premium'.

@@ -215,17 +215,36 @@ class SerializableRelatedField(serializers.PrimaryKeyRelatedField):
 
 
 class PhoneNumberField(PhoneNumberField):
-    """
-    A custom field to accept phone numbers in a PhoneNumberField.
+    """A custom field to accept phone numbers in a PhoneNumberField.
+
+    This field extends the PhoneNumberField and provides additional
+    functionality for handling phone numbers.
     """
 
     def to_internal_value(self, data):
+        """Convert the external representation of data to the internal value.
+
+        Args:
+            data: The external representation of the data.
+
+        Returns:
+            object: The internal representation of the data.
+        """
         try:
             return super().to_internal_value(data)
         except ValidationError:
             return None
 
     def to_representation(self, value):
+        """Convert the internal value of the field to its external
+        representation.
+
+        Args:
+            value: The internal representation of the data.
+
+        Returns:
+            str: The external representation of the data.
+        """
         if value:
             if isinstance(value, str):
                 try:

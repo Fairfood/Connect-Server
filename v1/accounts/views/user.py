@@ -1,13 +1,13 @@
 from rest_framework import generics
 
-from base.request_handler.views import IdDecodeModelViewSet
+from base.request_handler.views import IDDEcodeScopeViewset
 from v1.accounts import models as user_models
 from v1.accounts.serializers import user as user_serializers
 
 # from v1.apiauth import permissions as auth_permissions
 
 
-class UserViewSet(IdDecodeModelViewSet):
+class UserViewSet(IDDEcodeScopeViewset):
     """A simple ViewSet for viewing and editing accounts."""
 
     queryset = (
@@ -15,6 +15,7 @@ class UserViewSet(IdDecodeModelViewSet):
         .select_related("default_entity")
         .prefetch_related("member_companies")
     )
+    resource_types = ["user"]
     serializer_class = user_serializers.UserSerializer
     http_method_names = [
         "get",

@@ -15,12 +15,17 @@ from v1.transactions.models.transaction_models import ProductTransaction
 
 
 class PaymentTransactionsSerializer(DynamicModelSerializer):
-    """Serializer for PaymentTransactionsSerializer."""
+    """Serializer for PaymentTransactions.
+
+    This serializer includes additional details for premium and
+    currency, along with specific handling for the "type" field.
+    """
 
     premium_details = PremiumSerializer(source="premium", read_only=True)
     currency_details = CurrencySerializer(source="currency", read_only=True)
     type = serializers.SerializerMethodField()
     currency = serializers.CharField(write_only=True, required=False)
+    submissions = SubmissionSerializer(many=True, required=False)
 
     class Meta:
         """Meta class."""
@@ -29,17 +34,30 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        """Create method for PaymentTransactionsSerializer.
+
+        Handles the creation of PaymentTransaction instances, including
+        resolving the currency object based on the provided input.
+        """
         curency = validated_data.pop("currency", None)
+        submissions = validated_data.pop("submissions", [])
         if curency:
             try:
                 curency = Currency.objects.get(id=curency)
             except Currency.DoesNotExist:
                 curency = Currency.objects.get(code=curency)
             validated_data["currency"] = curency
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        submission_objs = self.fields["submissions"].create(submissions)
+        instance.submissions.add(*submission_objs)
+        return instance
 
     def get_type(self, obj):
-        """Get type."""
+        """Get method for the "type" field.
+
+        Determines whether the transaction is outgoing or incoming based
+        on the current entity.
+        """
         entity = utils.get_current_entity()
         return (
             constants.OUTGOING
@@ -49,7 +67,12 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
 
 
 class ProductTransactionSerializer(DynamicModelSerializer):
-    """Serializer for ProductTransactionSerializer."""
+    """Serializer for ProductTransactionSerializer.
+
+    This serializer includes additional details for transaction
+    payments, amounts, currencies, types, quantities, submissions, and
+    card details.
+    """
 
     transaction_payments = PaymentTransactionsSerializer(
         many=True,
@@ -63,9 +86,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         ),
         required=False,
     )
-    amount = fields.RoundingDecimalField(
-        max_digits=25, decimal_places=3, write_only=True
-    )
+    amount = fields.RoundingDecimalField(max_digits=25, decimal_places=3)
     currency = serializers.CharField(write_only=True, required=False)
     type = serializers.SerializerMethodField()
     source_quantity = fields.RoundingDecimalField(
@@ -76,6 +97,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
     )
     submissions = SubmissionSerializer(many=True, required=False)
     card_details = ConnectCardSerializer(source="card", read_only=True)
+    currency_details = CurrencySerializer(source="currency", read_only=True)
 
     class Meta:
         """Meta class."""
@@ -84,7 +106,11 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        """Validate parents."""
+        """Validate method for ProductTransactionSerializer.
+
+        Validates the source and checks parents if the source belongs to
+        the entity.
+        """
         entity = utils.get_current_entity()
         source = data.get("source", None)
         if source and source.id == entity.id:
@@ -93,7 +119,11 @@ class ProductTransactionSerializer(DynamicModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        """Create method."""
+        """Create method for ProductTransactionSerializer.
+
+        Handles the creation of ProductTransaction instances, along with
+        associated payments, submissions, and currency resolution.
+        """
         payments = validated_data.pop("transaction_payments", [])
         currency = validated_data.pop("currency")
         amount = validated_data.pop("amount")
@@ -113,7 +143,11 @@ class ProductTransactionSerializer(DynamicModelSerializer):
         return instance
 
     def get_type(self, obj):
-        """Get type."""
+        """Get method for the "type" field.
+
+        Determines whether the transaction is outgoing or incoming based
+        on the current entity.
+        """
         entity = utils.get_current_entity()
         return (
             constants.OUTGOING

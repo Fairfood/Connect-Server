@@ -6,14 +6,23 @@ from v1.transactions.models.transaction_models import ProductTransaction
 
 @admin.register(ProductTransaction)
 class ProductTransactionAdmin(BaseAdmin):
-    """
-    Admin class for managing ProductTransaction instances.
+    """Admin class for managing ProductTransaction instances.
 
     Attributes:
     - list_display (list): The fields to display in the admin list view.
     - inlines (list): Specifies the inlines to be used with this admin class.
-
     """
 
-    list_display = ["id", "source", "destination"]
+    list_display = [
+        "id",
+        "source",
+        "destination",
+        "date",
+        "quantity",
+        "creator_email",
+    ]
     readonly_fields = ["parents"]
+
+    def creator_email(self, obj):
+        """Get creator."""
+        return obj.creator.email

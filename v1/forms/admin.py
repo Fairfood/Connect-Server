@@ -9,8 +9,7 @@ from base.db.admin import BaseAdmin
 
 
 class FormFieldInline(admin.TabularInline):
-    """
-    Inline form for FormField within the Form admin page.
+    """Inline form for FormField within the Form admin page.
 
     Attributes:
     - model (model): The model being represented in this inline form.
@@ -18,7 +17,6 @@ class FormFieldInline(admin.TabularInline):
     - fields (list): The fields to display in the inline form.
     - fk_name (str): The name of the foreign key field that relates to the
         parent form.
-
     """
 
     model = FormField
@@ -35,8 +33,7 @@ class FormFieldInline(admin.TabularInline):
 
 
 class FormFieldConfigInline(admin.TabularInline):
-    """
-    Inline form for Form Field Conguration within the Form admin page.
+    """Inline form for Form Field Conguration within the Form admin page.
 
     Attributes:
     - model (model): The model being represented in this inline form.
@@ -44,7 +41,6 @@ class FormFieldConfigInline(admin.TabularInline):
     - fields (list): The fields to display in the inline form.
     - fk_name (str): The name of the foreign key field that relates to the
         parent form.
-
     """
 
     model = FormFieldConfig
@@ -55,13 +51,11 @@ class FormFieldConfigInline(admin.TabularInline):
 
 @admin.register(Form)
 class FormAdmin(BaseAdmin):
-    """
-    Admin class for managing Form instances.
+    """Admin class for managing Form instances.
 
     Attributes:
     - list_display (list): The fields to display in the admin list view.
     - inlines (list): Specifies the inlines to be used with this admin class.
-
     """
 
     list_display = ["id", "owner", "form_type"]
@@ -69,8 +63,7 @@ class FormAdmin(BaseAdmin):
 
 
 class SubmissionValuesInline(admin.TabularInline):
-    """
-    Inline form for SubmissionValues within the Submission admin page.
+    """Inline form for SubmissionValues within the Submission admin page.
 
     Attributes:
     - model (model): The model being represented in this inline form.
@@ -78,7 +71,6 @@ class SubmissionValuesInline(admin.TabularInline):
     - fields (list): The fields to display in the inline form.
     - fk_name (str): The name of the foreign key field that relates to the
         parent form.
-
     """
 
     model = SubmissionValues
@@ -89,13 +81,11 @@ class SubmissionValuesInline(admin.TabularInline):
 
 @admin.register(Submission)
 class SubmissionAdmin(BaseAdmin):
-    """
-    Admin class for managing Submission instances.
+    """Admin class for managing Submission instances.
 
     Attributes:
     - list_display (list): The fields to display in the admin list view.
     - inlines (list): Specifies the inlines to be used with this admin class.
-
     """
 
     list_display = ["id", "form"]

@@ -19,6 +19,12 @@ passed with each models when registering to translate
 
 
 class NotificationTranslateFields(TranslationOptions):
+    """Translation options for the Notification model fields.
+
+    This class defines which fields of the Notification model should be
+    translated.
+    """
+
     fields = (
         "title",
         "body",

@@ -6,34 +6,9 @@ from .models import product_models
 from base.db.admin import BaseAdmin
 
 
-class CountryAdmin(BaseAdmin):
-    list_display = (
-        "name",
-        "alpha_2",
-        "dial_code",
-        "latitude",
-        "longitude",
-        "id",
-    )
-    search_fields = [
-        "name",
-        "code",
-        "dial_code",
-    ]
-
-
-class ProvinceAdmin(BaseAdmin):
-    list_display = (
-        "country",
-        "name",
-        "latitude",
-        "longitude",
-        "id",
-    )
-    search_fields = ["name"]
-
-
 class CurrencyAdmin(BaseAdmin):
+    """Admin class for Currency model."""
+
     list_display = (
         "name",
         "code",
@@ -43,6 +18,8 @@ class CurrencyAdmin(BaseAdmin):
 
 
 class ProductAdmin(BaseAdmin):
+    """Product admin class."""
+
     list_display = (
         "name",
         "id",
@@ -51,19 +28,32 @@ class ProductAdmin(BaseAdmin):
 
 
 class ConnectCardAdmin(BaseAdmin):
+    """ConnectCard admin class."""
+
     list_display = (
         "display_id",
         "id",
     )
-    search_fields = ["name"]
+    search_fields = ["display_id", "display_id"]
 
 
 class PremiumOptionTabularInline(admin.TabularInline):
+    """Tabular inline admin class for PremiumOption model.
+
+    This class is used to display PremiumOption objects in a tabular
+    format within the Django admin.
+    """
+
     model = product_models.PremiumOption
     extra = 0
 
 
 class PremiumAdmin(BaseAdmin):
+    """Admin class for Premium model.
+
+    This class provides the admin class for Premium model.
+    """
+
     list_display = (
         "name",
         "owner",
@@ -75,8 +65,6 @@ class PremiumAdmin(BaseAdmin):
     search_fields = ["name", "owner"]
 
 
-admin.site.register(common_models.Country, CountryAdmin)
-admin.site.register(common_models.Province, ProvinceAdmin)
 admin.site.register(common_models.Currency, CurrencyAdmin)
 admin.site.register(product_models.Product, ProductAdmin)
 admin.site.register(product_models.Premium, PremiumAdmin)

@@ -10,14 +10,17 @@ from v1.transactions.constants import PaymentType
 
 
 class ProductTransactionFilterSet(filters.FilterSet):
-    """
-    A filter set for the Farmer model.
+    """A filter set for the Farmer model.
 
     This filter set allows filtering of Product Transaction objects.
     """
 
+    # TODO: Change this filter after informing the frontend.
     updated_after = filters.NumberFilter(
         method="updated_after_filter", field_name="created_on"
+    )
+    created_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="date"
     )
     updated_before = filters.NumberFilter(
         method="updated_before_filter", field_name="created_on"
@@ -69,8 +72,7 @@ class ProductTransactionFilterSet(filters.FilterSet):
 
 
 class PaymentTransactionFilterSet(filters.FilterSet):
-    """
-    A filter set for the Farmer model.
+    """A filter set for the Farmer model.
 
     This filter set allows filtering of Payment Transaction objects.
     """

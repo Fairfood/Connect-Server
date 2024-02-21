@@ -463,13 +463,13 @@ class UserDevice(AbstractBaseModel):
         verbose_name_plural = _("User devices")
 
     def deactivate(self, types=user_consts.MOBILE_DEVICE_TYPES):
-        """To deactivate this device"""
+        """To deactivate this device."""
         self.active = False
         self.save()
 
     @classmethod
     def active_devices(cls, user):
-        """List users active devices"""
+        """List users active devices."""
         return cls.objects.filter(
             user=user,
             active=True,
@@ -477,14 +477,14 @@ class UserDevice(AbstractBaseModel):
 
     @classmethod
     def deactivate_devices(cls, user):
-        """Deactivate all devices of a user"""
+        """Deactivate all devices of a user."""
         devices = cls.active_devices(user)
         for device in devices:
             device.deactivate()
 
     @classmethod
     def get_device_with_device_id(cls, device_id, user):
-        """Get device with device id"""
+        """Get device with device id."""
         return cls.objects.filter(registration_id=device_id, user=user).first()
 
 

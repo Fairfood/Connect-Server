@@ -66,6 +66,7 @@ class APILoginSerializer(TokenObtainPairSerializer):
         return data
 
     def get_token(self, user):
+        """Get token for the user."""
         self.entity = user.get_default_entity()
         if not self.entity:
             raise exceptions.AuthenticationFailed(
@@ -125,6 +126,7 @@ class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
     entity = fields.SerializableRelatedField(queryset=Company.objects.all())
 
     def validate(self, attrs):
+        """Validate the serializer data."""
         super(TokenRefreshSerializer, self).validate(attrs)
         entity = attrs["entity"]
         token_payload = token_backend.decode(attrs["refresh"])
@@ -176,7 +178,7 @@ class APIPasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def create(self, validated_data):
-
+        """Create overrided to return the validated data."""
         try:
             ip, location, device = util_functions.client_details(
                 (self.context["request"])
@@ -192,6 +194,7 @@ class APIPasswordResetSerializer(serializers.Serializer):
         return validated_data
 
     def to_representation(self, instance):
+        """Represent the serializer data."""
         return {}
 
 
@@ -209,6 +212,7 @@ class ValidationSerializer(serializers.Serializer):
     )
 
     def validate_validation_token(self, value):
+        """Validate the validation token."""
         token_validation = {
             "valid": True,
             "value": value,
@@ -231,6 +235,7 @@ class ValidationSerializer(serializers.Serializer):
         return token_validation
 
     def validate_email(self, value):
+        """Validate the email."""
         email_validation = {
             "valid": True,
             "value": value,
@@ -242,6 +247,7 @@ class ValidationSerializer(serializers.Serializer):
         return email_validation
 
     def validate_password(self, value):
+        """Validate the password."""
         password_validate = {
             "valid": True,
             "value": value,
@@ -255,6 +261,7 @@ class ValidationSerializer(serializers.Serializer):
         return password_validate
 
     def validate(self, attrs):
+        """Validate the serializer data."""
         user = attrs.get("user", None)
         attrs["user"] = user.id.id
         entity = attrs.pop("entity", None)
@@ -293,9 +300,11 @@ class ValidationSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
+        """Create overrided to return the validated data."""
         return validated_data
 
     def to_representation(self, instance):
+        """Represent the serializer data."""
         return instance
 
 
@@ -308,6 +317,7 @@ class PasswordResetConfirmSerializer(ValidationSerializer):
     old_password = serializers.CharField(max_length=128, required=False)
 
     def validate(self, attrs):
+        """Validate the serializer data."""
         attrs = super(PasswordResetConfirmSerializer, self).validate(attrs)
         try:
             attrs["token"] = ValidationToken.objects.get(
@@ -342,6 +352,8 @@ class PasswordResetConfirmSerializer(ValidationSerializer):
         return attrs
 
     def create(self, validated_data):
+        """Create and return a new `User` instance, given the validated
+        data."""
         super(PasswordResetConfirmSerializer, self).create(validated_data)
         user = validated_data["user"]
         user.set_password(validated_data["new_password1"])
@@ -355,6 +367,7 @@ class PasswordResetConfirmSerializer(ValidationSerializer):
         return validated_data
 
     def to_representation(self, instance):
+        """Represent the serializer data."""
         return {}
 
 

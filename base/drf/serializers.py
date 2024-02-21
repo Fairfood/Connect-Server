@@ -107,8 +107,7 @@ class CircularSerializer(serializers.Serializer):
 
 
 class DynamicModelSerializer(HashIDModelSerializer):
-    """
-    A flexible ModelSerializer that allows dynamic control over displayed
+    """A flexible ModelSerializer that allows dynamic control over displayed
     fields, including nested fields.
 
     Usage:

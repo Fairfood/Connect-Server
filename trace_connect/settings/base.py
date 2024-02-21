@@ -8,14 +8,8 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-import os  # noqa
 from datetime import timedelta
 from pathlib import Path
-
-import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
 
 from . import env
 
@@ -57,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "oauth2_provider",
     "corsheaders",
     # External Core Libraries
     "rest_framework",
@@ -74,6 +69,7 @@ INSTALLED_APPS = [
     "admin_extra_buttons",
     # Internal Apps (V1)
     "v1.accounts",
+    "v1.oauth",
     "v1.apiauth",
     "v1.notifications",
     "v1.catalogs",
@@ -97,11 +93,9 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "base.authentication.custom_authentication.CustomAuthentication",
+        "base.authentication.custom_authentication.CombinedAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("base.permissions.CombinedPermission",),
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {"anon": "5/min"},
     "EXCEPTION_HANDLER": (
@@ -120,14 +114,61 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
 }
 
+# AUTHENTICATION_BACKENDS = (
+#     "django.contrib.auth.backends.ModelBackend",  # To keep the Browsable API
+#     "oauth2_provider.backends.OAuth2Backend",
+# )
+
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth.ClientServer"
+OAUTH2_PROVIDER_ACCESS_TOKEN_MODEL = "oauth.ClientAccessToken"
+OAUTH2_PROVIDER_ID_TOKEN_MODEL = "oauth.ClientIDToken"
+OAUTH2_PROVIDER_REFRESH_TOKEN_MODEL = "oauth.ClientRefreshToken"
+OAUTH2_PROVIDER_AUTH_SCOPE = "auth:user"
+
+OAUTH2_PROVIDER = {
+    "APPLICATION_ADMIN_CLASS": "v1.oauth.admin.ClientServerAdmin",
+    "ACCESS_TOKEN_ADMIN_CLASS": "v1.oauth.admin.ClientAccessTokenAdmin",
+    "OAUTH2_VALIDATOR_CLASS": (
+        "v1.oauth.validators.OAuth2ClientAccessValidator"
+    ),
+    "SCOPES": {
+        "read:farmer": "Read Farmer",
+        "create:farmer": "Create Farmer",
+        "update:farmer": "Update Farmer",
+        "delete:farmer": "Delete Farmer",
+        "read:company": "Read Company",
+        "create:company": "Create Company",
+        "update:company": "Update Company",
+        "delete:company": "Delete Company",
+        "read:catalog": "Read Catalog",
+        "create:catalog": "Create Catalog",
+        "update:catalog": "Update Catalog",
+        "delete:catalog": "Delete Catalog",
+        "read:user": "Read User",
+        "create:user": "Create User",
+        "update:user": "Update User",
+        "delete:user": "Delete User",
+        "auth:user": "Auth User",
+        "read:transactions": "Read Transactions",
+        "create:transaction": "Create Transactions",
+        "update:transaction": "Update Transactions",
+        "delete:transaction": "Delete Transactions",
+        "read:payment": "Read Payment",
+        "create:payment": "Create Payment",
+        "update:payment": "Update Payment",
+        "delete:payment": "Delete Payment",
+    },
+}
+
 
 REST_USE_JWT = True
 JWT_AUTH_COOKIE = "rightorigins-v3-auth"
 JWT_AUTH_REFRESH_COOKIE = "rightorigins-v3-refresh-token"
 
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=100),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
@@ -371,17 +412,17 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
-sentry_sdk.init(
-    dsn=env.get("SENTRY_DSN"),
-    integrations=[
-        DjangoIntegration(),
-        CeleryIntegration(),
-        RedisIntegration(),
-    ],
-    traces_sample_rate=1.0,
-    environment=ENVIRONMENT,
-    _experiments={
-        "profiles_sample_rate": 1.0,
-    },
-)
-sentry_sdk.set_tag("deployment", DEPLOYMENT)
+# sentry_sdk.init(
+#     dsn=env.get("SENTRY_DSN"),
+#     integrations=[
+#         DjangoIntegration(),
+#         CeleryIntegration(),
+#         RedisIntegration(),
+#     ],
+#     traces_sample_rate=1.0,
+#     environment=ENVIRONMENT,
+#     _experiments={
+#         "profiles_sample_rate": 1.0,
+#     },
+# )
+# sentry_sdk.set_tag("deployment", DEPLOYMENT)

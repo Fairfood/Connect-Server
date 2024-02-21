@@ -12,6 +12,22 @@ from v1.supply_chains.models.base_models import Entity
 
 
 class BaseTransaction(AbstractBaseModel, AbstractNumberedModel):
+    """Base model for generic transactions, not specifically tied to finances.
+
+    Attributes:
+        created_on (datetime): Timestamp of transaction creation.
+        date (datetime): Date and time of the transaction.
+        source (Entity): Entity initiating the transaction.
+        destination (Entity): Entity receiving the transaction.
+        card (ConnectCard): Associated connect card (optional).
+        invoice (FileField): Invoice file (optional).
+        invoice_number (str): Invoice number (optional).
+        verification_latitude (float): Latitude of verification location.
+        verification_longitude (float): Longitude of verification location.
+        method (str): Verification method used (optional).
+        submissions (ManyToManyField): Related submissions.
+    """
+
     created_on = models.DateTimeField(
         default=timezone.now, verbose_name=_("Created On")
     )

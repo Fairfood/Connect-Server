@@ -15,7 +15,6 @@ router.register("farmers", FarmerViewSet, basename="farmers")
 router.register(
     "company-members", CompanyMemberViewSet, basename="company-members"
 )
-router.register("farmers", FarmerViewSet, basename="farmers")
 router.register(
     "company-products", CompanyProductViewSet, basename="company-products"
 )

@@ -27,12 +27,47 @@ class ValidationTokenAdmin(admin.ModelAdmin):
 
 
 class UserDeviceAdmin(admin.ModelAdmin):
-    """Class view to customize user device admin."""
+    """Class view to customize user device admin.
 
-    list_display = ("device_name", "user", "registration_id", "type", "active")
+    This admin class provides customization for the UserDevice model in
+    the Django admin interface.
+    """
+
+    list_display = (
+        "device_name",
+        "user_email",
+        "entity",
+        "updated_on",
+        "registration_id",
+        "type",
+        "active",
+    )
     list_filter = ("active",)
 
+    ordering = ("-updated_on",)
+
+    def user_email(self, obj):
+        """Get user email."""
+        return obj.user.email
+
+    def entity(self, obj):
+        """Get entity."""
+        member = obj.user.member_companies.first()
+        if member:
+            return member.company
+        return None
+
     def has_add_permission(self, request, obj=None):
+        """Determine whether the user has permission to add new UserDevice
+        instances.
+
+        Args:
+            request: The request object.
+            obj: The object being viewed or edited.
+
+        Returns:
+            bool: True if the user has add permission, False otherwise.
+        """
         return False
 
 
