@@ -126,15 +126,15 @@ def reference_batch_map():
 
 def merge_pallets():
     """Merge pallets."""
-    buyer = get_packhouse()
-    set_to_local("user_id", buyer.members.first().id)
-    set_to_local("entity_id", buyer.pk)
-    company_product = buyer.company_products.last()
+    company = get_packhouse()
+    set_to_local("user_id", company.members.first().id)
+    set_to_local("entity_id", company.pk)
+    company_product = company.company_products.last()
     if not company_product:
         raise ValueError("No company product")
     transactions = ProductTransactionModel.objects.annotate(
         total_children=Count("children")
-    ).filter(pk__in=buyer.incoming_transactions.only("id"), total_children=0)
+    ).filter(pk__in=company.incoming_transactions.only("id"), total_children=0)
     references = (
         ProductTransactionModel.objects.filter(pk__in=transactions)
         .values_list("reference", flat=True)
@@ -149,16 +149,17 @@ def merge_pallets():
                 "parents": parents.values_list("id", flat=True),
                 "date": int(parents.last().date.timestamp()),
                 "reference": reference,
-                "source": buyer.pk,
-                "destination": buyer.pk,
+                "source": company.pk,
+                "destination": company.buyer.pk,
                 "amount": 0.0,
                 "quantity": parents.aggregate(Sum("quantity"))[
                     "quantity__sum"
                 ],
                 "product": company_product.product.id.hashid,
-                "currency": buyer.currency.pk.hashid
-                if buyer.currency
-                else "EUR",
+                "currency": (
+                    company.currency.pk.hashid if company.currency else "EUR"
+                ),
+                "send_seperately": True,
             }
         )
     serializer = ProductTransactionSerializer(data=data, many=True)
@@ -168,7 +169,7 @@ def merge_pallets():
 
 def merge_batches():
     """Merge batches."""
-    company = get_packhouse()
+    company = get_srcc()
     set_to_local("user_id", company.members.first().id)
     set_to_local("entity_id", company.pk)
     company_product = company.company_products.last()
@@ -176,7 +177,7 @@ def merge_batches():
         raise ValueError("No company product")
     transactions = ProductTransactionModel.objects.annotate(
         total_children=Count("children")
-    ).filter(total_children=0, destination=company, source=company)
+    ).filter(total_children=0, destination=company)
     grouped_df = reference_batch_map()
     data = []
     for batch, references in grouped_df:
@@ -189,78 +190,15 @@ def merge_batches():
                 "date": int(parents.last().date.timestamp()),
                 "reference": batch,
                 "source": company.pk,
-                "destination": company.pk,
+                "destination": company.buyer.pk,
                 "amount": 0.0,
                 "quantity": parents.aggregate(Sum("quantity"))[
                     "quantity__sum"
                 ],
                 "product": company_product.product.id.hashid,
-                "currency": company.currency.pk.hashid
-                if company.currency
-                else "EUR",
-            }
-        )
-    serializer = ProductTransactionSerializer(data=data, many=True)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-
-
-def sent_to_srcc():
-    """Send."""
-    company = get_packhouse()
-    set_to_local("user_id", company.members.first().id)
-    set_to_local("entity_id", company.pk)
-    company_product = company.company_products.last()
-    if not company_product:
-        raise ValueError("No company product")
-    transactions = ProductTransactionModel.objects.annotate(
-        total_children=Count("children")
-    ).filter(total_children=0, destination=company, source=company)
-    data = []
-    for transaction in transactions:
-        data.append(
-            {
-                "parents": [transaction.pk],
-                "date": int(transaction.date.timestamp()),
-                "reference": transaction.reference,
-                "source": company.pk,
-                "destination": company.buyer.pk,
-                "amount": 0.0,
-                "quantity": transaction.quantity,
-                "product": company_product.product.id.hashid,
-                "currency": transaction.currency.pk.hashid,
-                "send_seperately": True,
-            }
-        )
-    serializer = ProductTransactionSerializer(data=data, many=True)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-
-
-def sent_to_dole():
-    """Sent."""
-    company = get_srcc()
-    set_to_local("user_id", company.members.first().id)
-    set_to_local("entity_id", company.pk)
-    company_product = company.company_products.last()
-    if not company_product:
-        raise ValueError("No company product")
-    transactions = ProductTransactionModel.objects.annotate(
-        total_children=Count("children")
-    ).filter(pk__in=company.incoming_transactions.only("id"), total_children=0)
-    data = []
-    for transaction in transactions:
-        data.append(
-            {
-                "parents": [transaction.pk],
-                "date": int(transaction.date.timestamp()),
-                "reference": transaction.reference,
-                "source": company.pk,
-                "destination": company.buyer.pk,
-                "amount": 0.0,
-                "quantity": transaction.quantity,
-                "product": company_product.product.id.hashid,
-                "currency": transaction.currency.pk.hashid,
+                "currency": (
+                    company.currency.pk.hashid if company.currency else "EUR"
+                ),
                 "send_seperately": True,
             }
         )
