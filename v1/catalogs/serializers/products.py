@@ -91,6 +91,14 @@ class PremiumOptionSeriazer(serializers.DynamicModelSerializer):
         fields = "__all__"
 
 
+class PremiumRangeSerializer(serializers.DynamicModelSerializer):
+    """Serializer for the PremiumRange model."""
+
+    class Meta:
+        model = product_models.PremiumRange
+        fields = "__all__"
+
+
 class PremiumSerializer(serializers.DynamicModelSerializer):
     """Serializer for the Premium model.
 
@@ -100,6 +108,9 @@ class PremiumSerializer(serializers.DynamicModelSerializer):
     """
 
     options = PremiumOptionSeriazer(
+        many=True, required=False, exclude_fields=("premium",)
+    )
+    ranges = PremiumRangeSerializer(
         many=True, required=False, exclude_fields=("premium",)
     )
 
@@ -122,8 +133,12 @@ class PremiumSerializer(serializers.DynamicModelSerializer):
             Premium: The created Premium instance.
         """
         options = validated_data.pop("options", [])
+        ranges = validated_data.pop("ranges", [])
         instance = super().create(validated_data)
         for option in options:
             option["premium"] = instance
+        for range in ranges:
+            range["premium"] = instance
         self.fields["options"].create(options)
+        self.fields["ranges"].create(ranges)
         return instance
