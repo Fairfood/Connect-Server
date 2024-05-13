@@ -154,3 +154,30 @@ class PremiumOption(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.premium.name} : {self.name} : {self.amount}"
+
+
+class PremiumRange(AbstractBaseModel):
+    """Represents a premium range for a project's premium.
+
+    Attributes:
+        premium (ForeignKey): The project premium associated with the range.
+        range_from (float): The range from value.
+        range_to (float): The range to value.
+        amount (float): The amount for the premium range.
+    """
+
+    premium = models.ForeignKey(
+        Premium,
+        on_delete=models.CASCADE,
+        related_name="ranges",
+        verbose_name=_("Premium"),
+    )
+    range_from = models.FloatField(verbose_name=_("Range From"))
+    range_to = models.FloatField(verbose_name=_("Range To"))
+    amount = models.FloatField(verbose_name=_("Amount"))
+
+    def __str__(self):
+        return (
+            f"{self.premium.name} : {self.range_from}"
+            f" - {self.range_to} : {self.amount}"
+        )

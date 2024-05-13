@@ -149,7 +149,7 @@ OAUTH2_PROVIDER = {
         "update:user": "Update User",
         "delete:user": "Delete User",
         "auth:user": "Auth User",
-        "read:transactions": "Read Transactions",
+        "read:transaction": "Read Transactions",
         "create:transaction": "Create Transactions",
         "update:transaction": "Update Transactions",
         "delete:transaction": "Delete Transactions",
