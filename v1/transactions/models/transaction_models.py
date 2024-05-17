@@ -127,5 +127,6 @@ class ProductTransaction(BaseTransaction):
 
     def _set_base_price(self):
         """Set the base price for the transaction."""
-        if self.base_price == 0.0:
-            self.base_price = self.amount / float(self.quantity)
+        # if self.base_price == 0.0:
+        #     self.base_price = self.amount / float(self.quantity)
+        pass
