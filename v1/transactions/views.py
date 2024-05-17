@@ -18,7 +18,7 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
     includes a custom action 'invoice' for uploading invoice files.
     """
 
-    queryset = ProductTransaction.objects.all()
+    queryset = ProductTransaction.objects.filter(is_deleted=False)
     serializer_class = ProductTransactionSerializer
     http_method_names = ("get", "post", "patch")
     resource_types = ["transaction"]
@@ -49,6 +49,24 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
         return SuccessResponse(
             {"id": instance.id, "invoice": instance.invoice.url}
         )
+
+    def perform_destroy(self, instance):
+        """Marks the given instance as deleted by setting the 'is_deleted'
+        attribute to True and saving the instance.
+
+        Args:
+            instance: The instance to be marked as deleted.
+
+        Returns:
+            None
+        """
+        if not instance.children.exists():
+            instance.is_deleted = True
+            instance.save()
+        else:
+            raise ValidationError(
+                "Cannot delete transaction with child transactions."
+            )
 
 
 class PaymentTransactionViewSet(IDDEcodeScopeViewset):
