@@ -63,6 +63,8 @@ class ProductTransaction(BaseTransaction):
         blank=True,
         verbose_name=_("Quantity"),
     )
+    base_price = models.FloatField(default=0.0)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.number}: {self.source} -> {self.destination}"
@@ -74,6 +76,7 @@ class ProductTransaction(BaseTransaction):
         parent class's save method.
         """
         self._update_verification_method()
+        self._set_base_price()
         super().save(*args, **kwargs)
 
     def base_payment(self):
@@ -84,16 +87,12 @@ class ProductTransaction(BaseTransaction):
 
     @property
     def amount(self):
-        """
-        Returns the total amount of the transaction.
-        """
+        """Returns the total amount of the transaction."""
         return self.base_payment().amount
 
     @property
     def currency(self):
-        """
-        Returns the currency of the transaction.
-        """
+        """Returns the currency of the transaction."""
         return self.base_payment().currency
 
     def source_poducts(self):
@@ -125,3 +124,8 @@ class ProductTransaction(BaseTransaction):
             self.method = constants.VerificationMethodType.INVOICE
         else:
             self.method = constants.VerificationMethodType.NONE
+
+    def _set_base_price(self):
+        """Set the base price for the transaction."""
+        if self.base_price == 0.0:
+            self.base_price = self.amount / float(self.quantity)

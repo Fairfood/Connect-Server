@@ -92,6 +92,9 @@ class Premium(AbstractBaseModel):
         verbose_name=_("Premium Category"),
     )
     name = models.CharField(max_length=100, verbose_name=_("Premium Name"))
+    label = models.CharField(
+        max_length=100, null=True, blank=True, verbose_name=_("Label")
+    )
     owner = models.ForeignKey(
         "supply_chains.Company",
         on_delete=models.CASCADE,
