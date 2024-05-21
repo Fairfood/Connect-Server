@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+
 from . import env
 
 
@@ -412,17 +417,17 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
-# sentry_sdk.init(
-#     dsn=env.get("SENTRY_DSN"),
-#     integrations=[
-#         DjangoIntegration(),
-#         CeleryIntegration(),
-#         RedisIntegration(),
-#     ],
-#     traces_sample_rate=1.0,
-#     environment=ENVIRONMENT,
-#     _experiments={
-#         "profiles_sample_rate": 1.0,
-#     },
-# )
-# sentry_sdk.set_tag("deployment", DEPLOYMENT)
+sentry_sdk.init(
+    dsn=env.get("SENTRY_DSN"),
+    integrations=[
+        DjangoIntegration(),
+        CeleryIntegration(),
+        RedisIntegration(),
+    ],
+    traces_sample_rate=1.0,
+    environment=ENVIRONMENT,
+    _experiments={
+        "profiles_sample_rate": 1.0,
+    },
+)
+sentry_sdk.set_tag("deployment", DEPLOYMENT)
