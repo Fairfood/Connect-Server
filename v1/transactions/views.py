@@ -20,7 +20,7 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
 
     queryset = ProductTransaction.objects.filter(is_deleted=False)
     serializer_class = ProductTransactionSerializer
-    http_method_names = ("get", "post", "patch")
+    http_method_names = ("get", "post", "patch", "delete")
     resource_types = ["transaction"]
     filterset_class = ProductTransactionFilterSet
 
