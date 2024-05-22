@@ -48,6 +48,13 @@ class PremiumOptionTabularInline(admin.TabularInline):
     extra = 0
 
 
+class PremiumRangeTabularInline(admin.TabularInline):
+    """A tabular inline admin class for the PremiumRange model."""
+
+    model = product_models.PremiumRange
+    extra = 0
+
+
 class PremiumAdmin(BaseAdmin):
     """Admin class for Premium model.
 
@@ -59,9 +66,7 @@ class PremiumAdmin(BaseAdmin):
         "owner",
         "id",
     )
-    inlines = [
-        PremiumOptionTabularInline,
-    ]
+    inlines = [PremiumOptionTabularInline, PremiumRangeTabularInline]
     search_fields = ["name", "owner"]
 
 
