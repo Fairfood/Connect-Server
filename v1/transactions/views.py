@@ -1,6 +1,7 @@
-# from rest_framework import status
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from base.request_handler.response import SuccessResponse
 from base.request_handler.views import IDDEcodeScopeViewset
@@ -71,19 +72,19 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
                 "Cannot delete transaction with child transactions."
             )
 
-    # def destroy(self, request, *args, **kwargs):
-    #     """Destroy a transaction instance.
+    def destroy(self, request, *args, **kwargs):
+        """Destroy a transaction instance.
 
-    #     Args:
-    #         request (HttpRequest): The HTTP request object.
-    #         *args: Variable length argument list.
-    #         **kwargs: Arbitrary keyword arguments.
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
-    #     Returns:
-    #     """
-    #     instance = self.get_object()
-    #     self.perform_destroy(instance)
-    #     return Response(status=status.HTTP_200_OK)
+        Returns:
+        """
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_200_OK)
 
 
 class PaymentTransactionViewSet(IDDEcodeScopeViewset):
