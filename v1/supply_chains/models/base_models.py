@@ -58,6 +58,9 @@ class Entity(AbstractBaseModel):
         blank=True,
         verbose_name=_("Entity Card"),
     )
+    only_connect = models.BooleanField(
+        default=False, verbose_name=_("Only Connect")
+    )
 
     def __str__(self):
         return f"{self.name}"

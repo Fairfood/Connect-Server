@@ -28,6 +28,9 @@ class ProductTransactionFilterSet(filters.FilterSet):
     only_quantity_available = filters.BooleanFilter(
         method="quantity_available_filter"
     )
+    skip_only_connect = filters.BooleanFilter(
+        method="skip_only_connect_filter"
+    )
 
     class Meta:
         model = transaction_models.ProductTransaction
@@ -48,6 +51,15 @@ class ProductTransactionFilterSet(filters.FilterSet):
             Q(source=entity, creator=user)
             | Q(destination=entity, creator=user)
         )
+
+    def skip_only_connect_filter(self, queryset, name, value):
+        """Return queryset."""
+        if value or value == "true":
+            return queryset.exclude(
+                Q(source__only_connect=True)
+                | Q(destination__only_connect=True)
+            )
+        return queryset
 
     def updated_after_filter(self, queryset, name, value):
         """Return queryset."""
