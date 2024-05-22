@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from base.authentication import utilities as utils
@@ -17,6 +18,9 @@ class FarmerFilterSet(filters.FilterSet):
     )
     created_after = filters.NumberFilter(
         method="after_date_time_filter", field_name="created_on"
+    )
+    skip_only_connect = filters.BooleanFilter(
+        method="skip_only_connect_filter"
     )
 
     class Meta:
@@ -38,6 +42,12 @@ class FarmerFilterSet(filters.FilterSet):
         entity = utils.get_current_entity()
         return parent.filter(buyer=entity)
 
+    def skip_only_connect_filter(self, queryset, name, value):
+        """Return queryset."""
+        if value or value == "true":
+            return queryset.exclude(buyer__only_connect=True)
+        return queryset
+
     def after_date_time_filter(self, queryset, name, value):
         """Return queryset."""
         name += "__gt"
@@ -57,6 +67,9 @@ class EntityCardFilterSet(filters.FilterSet):
     created_after = filters.NumberFilter(
         method="after_date_time_filter", field_name="updated_on"
     )
+    skip_only_connect = filters.BooleanFilter(
+        method="skip_only_connect_filter"
+    )
 
     class Meta:
         model = EntityCard
@@ -71,6 +84,15 @@ class EntityCardFilterSet(filters.FilterSet):
             return parent
         entity = utils.get_current_entity()
         return parent.filter(entity=entity)
+
+    def skip_only_connect_filter(self, queryset, name, value):
+        """Return queryset."""
+        if value or value == "true":
+            return queryset.exclude(
+                Q(entity__only_connect=True)
+                | Q(entity__buyer__only_connect=True)
+            )
+        return queryset
 
     def after_date_time_filter(self, queryset, name, value):
         """Return queryset."""
