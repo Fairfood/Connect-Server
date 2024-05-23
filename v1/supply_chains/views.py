@@ -1,3 +1,7 @@
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
 from base.request_handler.views import IDDEcodeScopeViewset
@@ -67,6 +71,14 @@ class FarmerViewSet(IDDEcodeScopeViewset):
     )
     resource_types = ["farmer"]
     filterset_class = FarmerFilterSet
+
+    @action(methods=("post",), detail=False, url_path="bulk-create")
+    def bulk_create(self, request):
+        "bulk create"
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(["Created"], status=status.HTTP_201_CREATED)
 
 
 class CompanyMemberViewSet(IDDEcodeScopeViewset):
