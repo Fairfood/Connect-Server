@@ -1,5 +1,7 @@
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from base.request_handler.response import SuccessResponse
 from base.request_handler.views import IDDEcodeScopeViewset
@@ -10,6 +12,8 @@ from v1.transactions.models.transaction_models import ProductTransaction
 from v1.transactions.serializers import PaymentTransactionsSerializer
 from v1.transactions.serializers import ProductTransactionSerializer
 
+# from rest_framework.response import Response
+
 
 class ProductTransactionViewSet(IDDEcodeScopeViewset):
     """ViewSet for managing payment transactions.
@@ -18,9 +22,9 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
     includes a custom action 'invoice' for uploading invoice files.
     """
 
-    queryset = ProductTransaction.objects.all()
+    queryset = ProductTransaction.objects.filter(is_deleted=False)
     serializer_class = ProductTransactionSerializer
-    http_method_names = ("get", "post", "patch")
+    http_method_names = ("get", "post", "patch", "delete")
     resource_types = ["transaction"]
     filterset_class = ProductTransactionFilterSet
 
@@ -49,6 +53,38 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
         return SuccessResponse(
             {"id": instance.id, "invoice": instance.invoice.url}
         )
+
+    def perform_destroy(self, instance):
+        """Marks the given instance as deleted by setting the 'is_deleted'
+        attribute to True and saving the instance.
+
+        Args:
+            instance: The instance to be marked as deleted.
+
+        Returns:
+            None
+        """
+        if not instance.children.exists():
+            instance.is_deleted = True
+            instance.save()
+        else:
+            raise ValidationError(
+                "Cannot delete transaction with child transactions."
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        """Destroy a transaction instance.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+        """
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_200_OK)
 
 
 class PaymentTransactionViewSet(IDDEcodeScopeViewset):
