@@ -45,9 +45,14 @@ class PaymentTransactionAdmin(BaseAdmin):
         "date",
         "amount",
         "creator_email",
+        "premium_name",
     ]
-    readonly_fields = ["transaction"]
+    readonly_fields = ["transaction", "source", "destination"]
 
     def creator_email(self, obj):
         """Get creator."""
         return obj.creator.email
+
+    def premium_name(self, obj):
+        """Get premium name."""
+        return obj.premium.name if obj.premium else ""
