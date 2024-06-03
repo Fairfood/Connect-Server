@@ -65,6 +65,12 @@ class ProductTransaction(BaseTransaction):
     )
     base_price = models.FloatField(default=0.0)
     is_deleted = models.BooleanField(default=False)
+    reference = models.CharField(
+        max_length=50, blank=True, null=True, verbose_name=_("Reference")
+    )
+    send_seperately = models.BooleanField(
+        default=False, verbose_name=_("Send seperately")
+    )
 
     def __str__(self):
         return f"{self.number}: {self.source} -> {self.destination}"
