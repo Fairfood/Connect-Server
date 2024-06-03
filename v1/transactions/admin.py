@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from base.db.admin import BaseAdmin
-from v1.transactions.models.payment_models import ProductTransaction
-from v1.transactions.models.transaction_models import PaymentTransaction
+from v1.transactions.models.payment_models import PaymentTransaction
+from v1.transactions.models.transaction_models import ProductTransaction
 
 
 @admin.register(ProductTransaction)
