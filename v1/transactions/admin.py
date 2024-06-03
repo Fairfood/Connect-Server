@@ -43,10 +43,10 @@ class PaymentTransactionAdmin(BaseAdmin):
         "source",
         "destination",
         "date",
-        "quantity",
+        "amount",
         "creator_email",
     ]
-    readonly_fields = ["parents"]
+    readonly_fields = ["transaction"]
 
     def creator_email(self, obj):
         """Get creator."""
