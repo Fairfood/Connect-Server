@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework.serializers import CharField
 from rest_framework.serializers import SerializerMethodField
+from rest_framework.serializers import ValidationError
 
 from base.authentication import utilities as utils
 from base.drf import serializers
@@ -54,33 +55,73 @@ class ProductSerializer(serializers.DynamicModelSerializer):
 class ConnectCardSerializer(serializers.DynamicModelSerializer):
     """Serializer for the ConnectCard model."""
 
-    card_id = CharField(validators=[])
+    card_id = CharField(validators=[], required=False)
 
     class Meta:
         model = product_models.ConnectCard
         fields = "__all__"
 
     def create(self, validated_data):
-        """Create a new ConnectCard object or update an existing one.
-
-        This method is overridden to either create a new ConnectCard object or,
-        if a card with the provided `card_id` already exists, update the
-        existing card with the provided data.
+        """Create a new product instance.
 
         Args:
-            validated_data (dict): A dictionary of validated data to create or
-                update a ConnectCard.
+            validated_data (dict): The validated data for creating the product.
 
         Returns:
-            ConnectCard: The created or updated ConnectCard object.
+            instance: The created product instance.
+
+        Raises:
+            ValidationError: If the `card_id` is not provided.
         """
+        display_id = validated_data.get("display_id")
         card_id = validated_data.get("card_id")
 
-        try:
-            instance = product_models.ConnectCard.objects.get(card_id=card_id)
-            return super().update(instance, validated_data)
-        except product_models.ConnectCard.DoesNotExist:
+        d_instance = c_instance = None
+
+        if display_id:
+            try:
+                d_instance = product_models.ConnectCard.objects.get(
+                    display_id=display_id
+                )
+            except product_models.ConnectCard.DoesNotExist:
+                card_id = card_id or display_id
+
+        if card_id:
+            try:
+                c_instance = product_models.ConnectCard.objects.get(
+                    card_id=card_id
+                )
+            except product_models.ConnectCard.DoesNotExist:
+                c_instance = None
+        else:
+            raise ValidationError("card_id is required")
+
+        if d_instance and c_instance and d_instance != c_instance:
+            instance = self._check_and_merge(c_instance, d_instance)
+        else:
+            instance = d_instance or c_instance
+
+        if not instance:
             return super().create(validated_data)
+        return instance
+
+    def _check_and_merge(self, instance, duplicated):
+        """Checks and merges the given instance with the duplicated instance.
+
+        Args:
+            instance: The instance to merge with.
+            duplicated: The duplicated instance to be merged.
+
+        Returns:
+            The merged instance.
+        """
+        duplicated.entity_cards.update(card=instance)
+        duplicated.transactions.update(card=instance)
+        instance.display_id = duplicated.display_id or duplicated.card_id
+        instance.save()
+        duplicated.refresh_from_db()
+        duplicated.delete()
+        return instance
 
 
 class PremiumOptionSeriazer(serializers.DynamicModelSerializer):
