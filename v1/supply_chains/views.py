@@ -1,10 +1,12 @@
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import generics
 
 from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
 from base.request_handler.views import IDDEcodeScopeViewset
+from base.exceptions.custom_exceptions import BadRequest
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.company_models import CompanyMember
@@ -16,7 +18,7 @@ from v1.supply_chains.serializers import CompanyProductSerializer
 from v1.supply_chains.serializers import CompanySerializer
 from v1.supply_chains.serializers import EntityCardSerializer
 from v1.supply_chains.serializers import FarmerSerializer
-
+from v1.supply_chains.serializers import AppFarmerSerializer
 
 class EntityCardViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing EntityCard instances."""
@@ -97,3 +99,21 @@ class CompanyProductViewSet(IDDEcodeScopeViewset):
     serializer_class = CompanyProductSerializer
     resource_types = ["company"]
     http_method_names = ("post",)
+
+
+class FarmerDetailsAPI(generics.ListAPIView):
+    """API to get app Farmer details."""
+
+    serializer_class = AppFarmerSerializer
+
+    def get_queryset(self):
+        # """To perform function get_queryset."""
+        try:
+            fair_id = (
+                str(self.kwargs["pk"]).upper().lstrip("FF").replace(" ", "")
+            )
+            entity = EntityCard.objects.filter(
+                card__display_id__iexact=fair_id).first().entity
+        except Exception:
+            raise BadRequest("Invalid card number")
+        return  Farmer.objects.filter(id=entity.id)

@@ -231,3 +231,32 @@ class FarmerSerializer(DynamicModelSerializer):
             instance.submission = submission
         instance.save()
         return instance
+
+class AppFarmerSerializer(serializers.ModelSerializer):
+    """Serializer for Farmer model."""
+
+    id = SerializableRelatedField(read_only=True)
+    name = serializers.CharField(required=False)
+    phone = PhoneNumberField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Farmer
+        fields = (
+            "id",
+            "name",
+            "house_name",
+            "phone",
+            "street",
+            "city",
+            "sub_province",
+            "province",
+            "country",
+        )
+
+    def to_representation(self, instance):
+        """To perform function to_representation."""
+        request = self.context.get("request")
+        language = request.headers.get("Language", 'en')       
+        data = super(AppFarmerSerializer, self).to_representation(instance)
+        data["transaction_details"] = instance.transaction_count(language) #todo
+        return data
