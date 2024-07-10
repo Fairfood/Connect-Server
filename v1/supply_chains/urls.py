@@ -24,6 +24,7 @@ router.register(
 
 urlpatterns = [
     path("open/farmer/<pk>/", FarmerDetailsAPI.as_view()),
+    path("open/transaction/", OpenTransactionAPI.as_view()),
     path("", include(router.urls)),
 
 ]
