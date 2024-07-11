@@ -8,6 +8,7 @@ from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
 from base.request_handler.views import IDDEcodeScopeViewset
 from base.exceptions.custom_exceptions import BadRequest
+from utilities.functions import decode
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.company_models import CompanyMember
@@ -145,3 +146,29 @@ class OpenTransactionAPI(generics.ListAPIView):
         query = Q(source__id=entity.id) | Q(destination__id=entity.id)
         return ProductTransaction.objects.filter(query).order_by("-date")
         
+    
+class OpenTransactionDetails(generics.ListAPIView):
+    """View for transaction details."""
+
+    serializer_class = OpenTransactionSerializer
+
+    def get(self, request, *args, **kwargs):
+        """function for get the details of transaction.
+
+
+        and here transaction id in encrypted format. so decrypt id
+        before filter Transaction.
+        """
+        trans_id = kwargs["pk"]
+        try:
+            transaction = ProductTransaction.objects.get(
+                id=decode(trans_id))
+        except Exception:
+            raise BadRequest("Invalid Transaction id.")
+
+        serializer = OpenTransactionSerializer(
+            transaction, data=request.data, partial=True, context=self.kwargs
+        )
+        if not serializer.is_valid():
+            raise BadRequest(serializer.errors)
+        return Response(serializer.data)

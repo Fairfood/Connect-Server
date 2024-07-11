@@ -10,6 +10,7 @@ from v1.supply_chains.views import EntityCardViewSet
 from v1.supply_chains.views import FarmerViewSet
 from v1.supply_chains.views import FarmerDetailsAPI
 from v1.supply_chains.views import OpenTransactionAPI
+from v1.supply_chains.views import OpenTransactionDetails
 
 router = routers.DefaultRouter()
 router.register("entity-cards", EntityCardViewSet, basename="entity-cards")
@@ -25,6 +26,7 @@ router.register(
 urlpatterns = [
     path("open/farmer/<pk>/", FarmerDetailsAPI.as_view()),
     path("open/transaction/", OpenTransactionAPI.as_view()),
+    path("open/transaction/<pk>/",OpenTransactionDetails.as_view()),
     path("", include(router.urls)),
 
 ]

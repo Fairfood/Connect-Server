@@ -15,6 +15,7 @@ from v1.catalogs.models.product_models import Premium
 from v1.catalogs.serializers.currency import CurrencySerializer
 from v1.catalogs.serializers.products import ConnectCardSerializer
 from v1.catalogs.serializers.products import ProductSerializer
+from v1.catalogs.serializers.products import PremiumSerializer
 from v1.forms.serializers import FormSerializer
 from v1.forms.serializers import SubmissionSerializer
 from v1.supply_chains.models.base_models import Entity
@@ -284,9 +285,11 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
     destination_quantity = RoundingDecimalField(
         max_digits=25, decimal_places=3, read_only=True
     )
+    method = serializers.CharField(required=False)
     created_on = UnixDateTimeField(required=False)
     date = serializers.DateTimeField(required=False)
     currency = serializers.SerializerMethodField()
+    premium = serializers.SerializerMethodField()  
 
     class Meta:
         model = ProductTransaction
@@ -300,14 +303,21 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
             "destination",
             "destination_quantity",
             "status",
+            "method",
             "created_on",
             "currency",
             "source_quantity",
-            "amount"
+            "amount",
+            "premium"
         )
 
     def get_currency(self, instance):
         return instance.currency.name
+
+    def get_premium(self, obj):
+        premiums = Premium.objects.filter(premium_payments__transaction=obj) 
+        return PremiumSerializer(premiums, many=True).data  
+
 
     def to_representation(self, instance):
         """Convert the instance to a representation suitable for serialization.
@@ -323,17 +333,16 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
         Returns:
         - dict: The serialized representation of the instance.
         """
-        request = self.context.get("request")
-        language = request.headers.get("Language", 'en')       
         data = super(OpenTransactionSerializer, self).to_representation(
             instance
         )
-        data["premium"] = 0
+        data["total_premium"] = 0
         data["destination"] = instance.destination.name
         data["date_str"] = _(instance.date.strftime("%d %B, %Y"))
         premiums = Premium.objects.filter(premium_payments__transaction=instance)
         for premium in premiums:
             if premium and premium.amount:
-                data["premium"] += premium.amount
+                data["total_premium"] += premium.amount
         return data
         
+
