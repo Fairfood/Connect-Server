@@ -1,10 +1,14 @@
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import generics
 
 from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
 from base.request_handler.views import IDDEcodeScopeViewset
+from base.exceptions.custom_exceptions import BadRequest
+from utilities.functions import decode
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.company_models import CompanyMember
@@ -16,6 +20,9 @@ from v1.supply_chains.serializers import CompanyProductSerializer
 from v1.supply_chains.serializers import CompanySerializer
 from v1.supply_chains.serializers import EntityCardSerializer
 from v1.supply_chains.serializers import FarmerSerializer
+from v1.supply_chains.serializers import AppFarmerSerializer
+from v1.supply_chains.serializers import OpenTransactionSerializer
+from v1.transactions.models.transaction_models import ProductTransaction
 
 
 class EntityCardViewSet(IDDEcodeScopeViewset):
@@ -97,3 +104,71 @@ class CompanyProductViewSet(IDDEcodeScopeViewset):
     serializer_class = CompanyProductSerializer
     resource_types = ["company"]
     http_method_names = ("post",)
+
+
+class FarmerDetailsAPI(generics.ListAPIView):
+    """API to get app Farmer details."""
+
+    serializer_class = AppFarmerSerializer
+
+    def get_queryset(self):
+        # """To perform function get_queryset."""
+        try:
+            fair_id = (
+                str(self.kwargs["pk"]).upper().lstrip("FF").replace(" ", "")
+            )
+            entity = EntityCard.objects.filter(
+                card__display_id__iexact=fair_id).first().entity
+        except Exception:
+            raise BadRequest("Invalid card number")
+        return  Farmer.objects.filter(id=entity.id)
+
+
+class OpenTransactionAPI(generics.ListAPIView):
+    """View for list transaction details of particular farmer.
+
+    The farmer id is passing through params.
+    """
+
+    serializer_class = OpenTransactionSerializer
+    # filterset_class = filters.OpenFilterTransactions
+
+    def get_queryset(self):
+        """To perform function get_queryset."""
+        card_id = self.request.query_params.get("card_id", None)
+        fair_id = card_id.upper().lstrip("FF").replace(" ", "")
+        entity_card = EntityCard.objects.filter(card__display_id__iexact=fair_id).first()
+        if not entity_card:
+            raise BadRequest("Invalid card number")
+        if not entity_card.entity:
+            raise BadRequest("Invalid card number")
+        entity = entity_card.entity
+        query = Q(source__id=entity.id) | Q(destination__id=entity.id)
+        return ProductTransaction.objects.filter(query).order_by("-date")
+        
+    
+class OpenTransactionDetails(generics.ListAPIView):
+    """View for transaction details."""
+
+    serializer_class = OpenTransactionSerializer
+
+    def get(self, request, *args, **kwargs):
+        """function for get the details of transaction.
+
+
+        and here transaction id in encrypted format. so decrypt id
+        before filter Transaction.
+        """
+        trans_id = kwargs["pk"]
+        try:
+            transaction = ProductTransaction.objects.get(
+                id=decode(trans_id))
+        except Exception:
+            raise BadRequest("Invalid Transaction id.")
+
+        serializer = OpenTransactionSerializer(
+            transaction, data=request.data, partial=True, context=self.kwargs
+        )
+        if not serializer.is_valid():
+            raise BadRequest(serializer.errors)
+        return Response(serializer.data)
