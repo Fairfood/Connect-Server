@@ -19,7 +19,11 @@ CORS_ORIGIN_WHITELIST = [
     "https://id-dev.fairfood.org",
     "https://v2.dev.api.fairfood.org",
 ]
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "https://id-dev.fairfood.org",
+    "https://v2.dev.api.fairfood.org",
+]
 
 DEBUG = True
 
