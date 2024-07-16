@@ -14,19 +14,12 @@ ALLOWED_HOSTS = [
     "v2.dev.api.fairfood.org",
 ]
 
-# CORS_ORIGIN_WHITELIST = [
-#     "http://localhost:4200",
-#     "https://id-dev.fairfood.org",
-#     "https://v2.dev.api.fairfood.org",
-# ]
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:4200",
-#     "https://id-dev.fairfood.org",
-#     "https://v2.dev.api.fairfood.org",
-# ]
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:4200",
+    "https://id-dev.fairfood.org",
+    "https://v2.dev.api.fairfood.org",
+]
 
-
-CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 CORS_ALLOW_HEADERS = [
     "accept",

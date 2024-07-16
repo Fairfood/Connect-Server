@@ -3,6 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import generics
+from rest_framework.permissions import AllowAny
+
 
 from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
@@ -110,6 +112,7 @@ class FarmerDetailsAPI(generics.ListAPIView):
     """API to get app Farmer details."""
 
     serializer_class = AppFarmerSerializer
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         # """To perform function get_queryset."""
@@ -131,7 +134,8 @@ class OpenTransactionAPI(generics.ListAPIView):
     """
 
     serializer_class = OpenTransactionSerializer
-    # filterset_class = filters.OpenFilterTransactions
+    permission_classes = (AllowAny,)
+
 
     def get_queryset(self):
         """To perform function get_queryset."""
@@ -151,6 +155,8 @@ class OpenTransactionDetails(generics.ListAPIView):
     """View for transaction details."""
 
     serializer_class = OpenTransactionSerializer
+    permission_classes = (AllowAny,)
+
 
     def get(self, request, *args, **kwargs):
         """function for get the details of transaction.
