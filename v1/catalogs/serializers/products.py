@@ -80,17 +80,17 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
 
         if display_id:
             try:
-                d_instance = product_models.ConnectCard.objects.get(
+                d_instance = product_models.ConnectCard.objects.filter(
                     display_id=display_id
-                )
+                ).first()
             except product_models.ConnectCard.DoesNotExist:
                 card_id = card_id or display_id
 
         if card_id:
             try:
-                c_instance = product_models.ConnectCard.objects.get(
+                c_instance = product_models.ConnectCard.objects.filter(
                     card_id=card_id
-                )
+                ).first()
             except product_models.ConnectCard.DoesNotExist:
                 c_instance = None
         else:
