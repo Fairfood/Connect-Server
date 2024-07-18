@@ -99,3 +99,21 @@ class EntityCardFilterSet(filters.FilterSet):
         name += "__gt"
         value = unix_to_datetime(value)
         return queryset.filter(**{name: value})
+
+
+
+class OpenFilterTransactions(filters.FilterSet):
+    """Filter to filter transactions by updated time."""
+
+    start_date = filters.NumberFilter(method="get_transactions_start_date")
+    end_date = filters.NumberFilter(method="get_transactions_end_date")
+
+    def get_transactions_start_date(self, queryset, name, value):
+        """Get transactions start_date_date."""
+        dt = unix_to_datetime(value)
+        return queryset.filter(created_on__gte=dt)
+
+    def get_transactions_end_date(self, queryset, name, value):
+        """Get transactions end_date."""
+        dt = unix_to_datetime(value)
+        return queryset.filter(created_on__lte=dt)

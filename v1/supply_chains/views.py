@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 
 from .filters import EntityCardFilterSet
 from .filters import FarmerFilterSet
+from .filters import OpenFilterTransactions
 from base.request_handler.views import IDDEcodeScopeViewset
 from base.exceptions.custom_exceptions import BadRequest
 from utilities.functions import decode
@@ -135,7 +136,7 @@ class OpenTransactionAPI(generics.ListAPIView):
 
     serializer_class = OpenTransactionSerializer
     permission_classes = (AllowAny,)
-
+    filterset_class = OpenFilterTransactions
 
     def get_queryset(self):
         """To perform function get_queryset."""
