@@ -18,7 +18,7 @@ class ProductViewSet(IDDEcodeScopeViewset):
 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    http_method_names = ("get",)
+    http_method_names = ("get","post")
     resource_types = ["catalog"]
     filterset_class = ProductFilterSet
 
