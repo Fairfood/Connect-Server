@@ -3,6 +3,7 @@ from rest_framework import generics
 from base.request_handler.views import IDDEcodeScopeViewset
 from v1.accounts import models as user_models
 from v1.accounts.serializers import user as user_serializers
+from v1.accounts.filters import UserFilter
 
 # from v1.apiauth import permissions as auth_permissions
 
@@ -20,7 +21,10 @@ class UserViewSet(IDDEcodeScopeViewset):
     http_method_names = [
         "get",
         "patch",
+        "post",
     ]
+    filterset_class = UserFilter
+
 
 
 class PrivacyPolicy(generics.RetrieveAPIView):

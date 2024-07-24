@@ -127,32 +127,32 @@ class CompanyMemerSerializer(DynamicModelSerializer):
     company member, using a nested UserSerializer.
     """
 
-    user = UserSerializer(
-        fields=(
-            "id",
-            "email",
-            "first_name",
-            "last_name",
-            "phone",
-            "dob",
-            "address",
-            "language",
-        )
-    )
+    # user = UserSerializer(
+    #     fields=(
+    #         "id",
+    #         "email",
+    #         "first_name",
+    #         "last_name",
+    #         "phone",
+    #         "dob",
+    #         "address",
+    #         "language",
+    #     )
+    # )
 
     class Meta:
         model = CompanyMember
         fields = "__all__"
 
-    def create(self, validated_data):
-        """Create method for CompanyMemerSerializer.
+    # def create(self, validated_data):
+    #     """Create method for CompanyMemerSerializer.
 
-        Handles the creation of CompanyMember instances, including the
-        creation of the associated user.
-        """
-        user = self.fields["user"].create(validated_data.pop("user"))
-        validated_data["user"] = user
-        return super().create(validated_data)
+    #     Handles the creation of CompanyMember instances, including the
+    #     creation of the associated user.
+    #     """
+    #     user = self.fields["user"].create(validated_data.pop("user"))
+    #     validated_data["user"] = user
+    #     return super().create(validated_data)
 
 
 class CompanyProductSerializer(DynamicModelSerializer):
