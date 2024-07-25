@@ -55,6 +55,10 @@ class ProductSerializer(serializers.DynamicModelSerializer):
 class ConnectCardSerializer(serializers.DynamicModelSerializer):
     """Serializer for the ConnectCard model."""
 
+    def __init__(self, *args, entity_card=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entity_card = entity_card
+
     card_id = CharField(validators=[], required=False)
 
     class Meta:
@@ -76,51 +80,75 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
         display_id = validated_data.get("display_id")
         card_id = validated_data.get("card_id")
 
+        if not display_id and not card_id:
+            raise ValidationError(
+                "Either 'display_id' or 'card_id' must be provided."
+            )
+
         d_instance = c_instance = None
 
-        if display_id:
-            try:
-                d_instance = product_models.ConnectCard.objects.filter(
-                    display_id=display_id
-                ).first()
-            except product_models.ConnectCard.DoesNotExist:
-                card_id = card_id or display_id
+        if display_id and not card_id:
+            # check if the display_id is already exists
+            d_instance = product_models.ConnectCard.objects.filter(
+                display_id=display_id).first()
+            # if entity card exist and card not exist
+            if not d_instance and self.entity_card:
+                # if the entity card exists check if the display_id 
+                # is already exists.
+                if (self.entity_card.card.card_id and 
+                    not self.entity_card.card.display_id):
+                    self.entity_card.card.display_id = display_id
+                    self.entity_card.card.save()
+                    return self.entity_card.card
+                else:
+                    self.entity_card.is_active = False
+                    self.entity_card.save()
 
-        if card_id:
-            try:
-                c_instance = product_models.ConnectCard.objects.filter(
-                    card_id=card_id
-                ).first()
-            except product_models.ConnectCard.DoesNotExist:
-                c_instance = None
-        else:
-            raise ValidationError("card_id is required")
+            # if entity card  and connect card exist
+            if d_instance and self.entity_card:
+                if self.entity_card.card != d_instance:
+                    self.entity_card.is_active = False
+                    self.entity_card.save()
 
-        if d_instance and c_instance and d_instance != c_instance:
-            instance = self._check_and_merge(c_instance, d_instance)
-        else:
-            instance = d_instance or c_instance
+
+        if card_id and not display_id:
+            # check if the card_id is already exists
+            c_instance = product_models.ConnectCard.objects.filter(
+                card_id=card_id).first()
+            # if entity card exist and card not exist
+            if not c_instance and self.entity_card:
+                # if the entity card exists check if the display_id 
+                # is already exists.
+                if (self.entity_card.card.display_id and 
+                    not self.entity_card.card.card_id):
+                    self.entity_card.card.card_id = card_id
+                    self.entity_card.card.save()
+                    return self.entity_card.card
+                else:
+                    self.entity_card.is_active = False
+                    self.entity_card.save()
+
+            # if entity card and connect card exist
+            if c_instance and self.entity_card:
+                if self.entity_card.card != c_instance:
+                    self.entity_card.is_active = False
+                    self.entity_card.save()
+
+
+        if card_id and display_id:
+            # check if the card_id is already exists
+            cd_instance = product_models.ConnectCard.objects.filter(
+                card_id=card_id, display_id=display_id).first()
+            if cd_instance and self.entity_card:
+                if cd_instance != self.entity_card.card:
+                    self.entity_card.is_active = False
+                    self.entity_card.save()
+
+
+        instance = d_instance or c_instance or cd_instance
 
         if not instance:
             return super().create(validated_data)
-        return instance
-
-    def _check_and_merge(self, instance, duplicated):
-        """Checks and merges the given instance with the duplicated instance.
-
-        Args:
-            instance: The instance to merge with.
-            duplicated: The duplicated instance to be merged.
-
-        Returns:
-            The merged instance.
-        """
-        duplicated.entity_cards.update(card=instance)
-        duplicated.transactions.update(card=instance)
-        instance.display_id = duplicated.display_id or duplicated.card_id
-        instance.save()
-        duplicated.refresh_from_db()
-        duplicated.delete()
         return instance
 
 
