@@ -1,5 +1,7 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+from pkg_resources import require
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
@@ -42,8 +44,24 @@ class EntityCardSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         card_data = validated_data.pop("card")
-        card = self.fields["card"].create(card_data)
-        validated_data["card"] = card
+        entity_id= validated_data.get("entity")
+        entity_card = EntityCard.objects.filter(
+            entity=entity_id, is_active=True).first()
+
+        card_serializer = ConnectCardSerializer(
+            data=card_data, entity_card=entity_card)
+        
+        if card_serializer.is_valid(raise_exception=True):
+            card = card_serializer.save()
+            validated_data["card"] = card
+            # deactivate entity card if it exists with given 
+            # card_id or display_id
+            other_entity_cards = EntityCard.objects.filter(
+                Q(card__card_id=card.card_id) |
+                Q(card__display_id=card.display_id))
+            for entity_card in other_entity_cards:
+                entity_card.is_active = False
+                entity_card.save()
         try:
             instance = EntityCard.objects.get(**validated_data)
             instance.is_active = True

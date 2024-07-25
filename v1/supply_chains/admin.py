@@ -40,8 +40,10 @@ class EntityCardAdmin(BaseAdmin):
     """Model representing a company member entity."""
 
     list_display = (
-        "card",
         "id",
+        "card",
+        "entity",
+        "is_active"
     )
 
 
