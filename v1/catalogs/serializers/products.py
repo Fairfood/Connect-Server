@@ -85,7 +85,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                 "Either 'display_id' or 'card_id' must be provided."
             )
 
-        d_instance = c_instance = None
+        d_instance = c_instance = cd_instance = None
 
         if display_id and not card_id:
             # check if the display_id is already exists
