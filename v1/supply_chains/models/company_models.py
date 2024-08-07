@@ -266,7 +266,7 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         """Check if the form is valid."""
         if self.forms.exists():
             for form in self.forms.all():
-                if form != form_consts.FormType.PRODUCT:
+                if form.form_type != form_consts.FormType.PRODUCT:
                     raise ValueError(
                         _("Invalid form type. Not a product form.")
                     )
