@@ -76,11 +76,16 @@ class EntitySerializer(DynamicModelSerializer):
     """Serializer for the Entity model."""
 
     name = serializers.CharField(read_only=True)
-    entity_card = EntityCardSerializer(read_only=True)
+    entity_card = serializers.SerializerMethodField()
 
     class Meta:
         model = Entity
         fields = "__all__"
+
+    def get_entity_card(self, obj):
+        """Fetch all EntityCard instances related to the company."""
+        entity_cards = EntityCard.objects.filter(entity=obj, is_active=True)
+        return EntityCardSerializer(entity_cards, many=True, read_only=True).data
 
 
 class CompanyFieldVisibiltySerilizer(DynamicModelSerializer):
@@ -115,8 +120,8 @@ class CompanySerializer(DynamicModelSerializer):
     class Meta:
         model = Company
         fields = "__all__"
-        
 
+    
 # TODO: Remove this serializer after the migration is complete.
 class CompanyCreateSerializer(DynamicModelSerializer):
     """Serializer for the Company model."""
