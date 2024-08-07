@@ -1,3 +1,4 @@
+from operator import is_
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
@@ -102,7 +103,7 @@ class CompanySerializer(DynamicModelSerializer):
         read_only=True,
         fields=("id", "name", "image", "description", "entity_card"),
     )
-    entity_card = EntityCardSerializer(read_only=True)
+    entity_cards = serializers.SerializerMethodField()
     forms = FormSerializer(
         many=True, read_only=True, exclude_fields=("owner",)
     )
@@ -114,7 +115,11 @@ class CompanySerializer(DynamicModelSerializer):
     class Meta:
         model = Company
         fields = "__all__"
-
+        
+    def get_entity_cards(self, obj):
+        """Fetch all EntityCard instances related to the company."""
+        entity_cards = EntityCard.objects.filter(entity=obj, is_active=True)
+        return EntityCardSerializer(entity_cards, many=True, read_only=True).data
 
 # TODO: Remove this serializer after the migration is complete.
 class CompanyCreateSerializer(DynamicModelSerializer):
