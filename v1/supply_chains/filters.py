@@ -6,6 +6,8 @@ from utilities.functions import unix_to_datetime
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.farmer_models import Farmer
 
+from utilities.functions import decode
+
 
 class FarmerFilterSet(filters.FilterSet):
     """A filter set for the Farmer model.
@@ -70,6 +72,9 @@ class EntityCardFilterSet(filters.FilterSet):
     skip_only_connect = filters.BooleanFilter(
         method="skip_only_connect_filter"
     )
+    entity = filters.CharFilter(
+        method="entity_filter"
+    )
 
     class Meta:
         model = EntityCard
@@ -99,6 +104,12 @@ class EntityCardFilterSet(filters.FilterSet):
         name += "__gt"
         value = unix_to_datetime(value)
         return queryset.filter(**{name: value})
+    
+    def entity_filter(self, queryset, name, value):
+        """Return queryset."""
+        queryset = queryset.filter(
+            entity__id=decode(value), is_active=True)
+        return queryset
 
 
 
