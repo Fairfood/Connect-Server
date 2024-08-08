@@ -98,12 +98,15 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                 if (self.entity_card.card.card_id and 
                     not self.entity_card.card.display_id):
                     self.entity_card.card.display_id = display_id
+                    self.entity_card.card.is_active = True
                     self.entity_card.card.save()
                     return self.entity_card.card
                 else:
                     self.entity_card.is_active = False
+                    self.entity_card.card.is_active = False
+                    self.entity_card.card.save()
                     self.entity_card.save()
-
+                    
             # if entity card  and connect card exist
             if d_instance and self.entity_card:
                 if self.entity_card.card != d_instance:
@@ -122,16 +125,21 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                 if (self.entity_card.card.display_id and 
                     not self.entity_card.card.card_id):
                     self.entity_card.card.card_id = card_id
+                    self.entity_card.card.is_active = True
                     self.entity_card.card.save()
                     return self.entity_card.card
                 else:
                     self.entity_card.is_active = False
+                    self.entity_card.card.is_active = False
+                    self.entity_card.card.save()
                     self.entity_card.save()
 
             # if entity card and connect card exist
             if c_instance and self.entity_card:
                 if self.entity_card.card != c_instance:
                     self.entity_card.is_active = False
+                    self.entity_card.card.is_active = False
+                    self.entity_card.card.save()
                     self.entity_card.save()
 
 
@@ -142,6 +150,8 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
             if cd_instance and self.entity_card:
                 if cd_instance != self.entity_card.card:
                     self.entity_card.is_active = False
+                    self.entity_card.card.is_active = False
+                    self.entity_card.card.save()
                     self.entity_card.save()
 
 
