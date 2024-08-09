@@ -7,6 +7,7 @@ from base.authentication import utilities as utils
 from base.drf import serializers
 from v1.catalogs.models import product_models
 from v1.supply_chains.models.company_models import CompanyProduct
+from v1.supply_chains.models.base_models import EntityCard
 
 
 class ProductSerializer(serializers.DynamicModelSerializer):
@@ -58,7 +59,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
     def __init__(self, *args, entity_card=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.entity_card = entity_card
-
+    
     card_id = CharField(validators=[], required=False)
 
     class Meta:
@@ -90,7 +91,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
         if display_id and not card_id:
             # check if the display_id is already exists
             d_instance = product_models.ConnectCard.objects.filter(
-                display_id=display_id).first()
+                display_id=display_id, is_active=True).first()
             # if entity card exist and card not exist
             if not d_instance and self.entity_card:
                 # if the entity card exists check if the display_id 
@@ -111,13 +112,19 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
             if d_instance and self.entity_card:
                 if self.entity_card.card != d_instance:
                     self.entity_card.is_active = False
+                    self.entity_card.card.is_active = False
+                    self.entity_card.card.save()
                     self.entity_card.save()
-
+                else:
+                    card_id = self.entity_card.card.display_id
+                    c_instance = product_models.ConnectCard.objects.filter(
+                        card_id=card_id, is_active=True).first()
+                    d_instance = None
 
         if card_id and not display_id:
             # check if the card_id is already exists
             c_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id).first()
+                card_id=card_id, is_active=True).first()
             # if entity card exist and card not exist
             if not c_instance and self.entity_card:
                 # if the entity card exists check if the display_id 
@@ -141,20 +148,63 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                     self.entity_card.card.is_active = False
                     self.entity_card.card.save()
                     self.entity_card.save()
+                else:
+                    display_id = self.entity_card.card.display_id
+                    d_instance = product_models.ConnectCard.objects.filter(
+                        display_id=display_id, is_active=True).first()
+                    c_instance = None
 
 
         if card_id and display_id:
             # check if the card_id is already exists
             cd_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, display_id=display_id).first()
-            if cd_instance and self.entity_card:
+                card_id=card_id, display_id=display_id, is_active=True).first()
+            c_instance = product_models.ConnectCard.objects.filter(
+                card_id=card_id, is_active=True).first()
+            d_instance = product_models.ConnectCard.objects.filter(
+                display_id=display_id, is_active=True).first()
+            
+            if not self.entity_card:
+                if c_instance:
+                    entity_card = EntityCard.objects.filter(
+                        card=c_instance, is_active=True).first()
+                    entity_card.is_active = False
+                    entity_card.save()
+                    c_instance.is_active = False
+                    c_instance.save()
+                    c_instance = None
+                if d_instance:
+                    entity_card = EntityCard.objects.filter(
+                        card=d_instance, is_active=True).first()
+                    entity_card.is_active = False
+                    entity_card.save()
+                    d_instance.is_active = False
+                    d_instance.save()
+                    d_instance = None
+            else:
+                if c_instance:
+                    entity_card = EntityCard.objects.filter(
+                        card=c_instance, is_active=True).first()
+                    entity_card.is_active = False
+                    entity_card.save()
+                    c_instance.is_active = False
+                    c_instance.save()
+                    c_instance = None
+                if d_instance:
+                    entity_card = EntityCard.objects.filter(
+                        card=d_instance, is_active=True).first()
+                    entity_card.is_active = False
+                    entity_card.save()
+                    d_instance.is_active = False
+                    d_instance.save()
+                    d_instance = None
+
+            if cd_instance and not self.entity_card:
                 if cd_instance != self.entity_card.card:
                     self.entity_card.is_active = False
                     self.entity_card.card.is_active = False
                     self.entity_card.card.save()
                     self.entity_card.save()
-
-
         instance = d_instance or c_instance or cd_instance
 
         if not instance:
