@@ -18,5 +18,7 @@ class EntityCardQuerySet(models.QuerySet):
         qs = self.filter(card=card, is_active=True)
         for entity_card in qs:
             entity_card.is_active = False
+            entity_card.card.is_active = False
+            entity_card.card.save()
             entity_card.save()
         return qs

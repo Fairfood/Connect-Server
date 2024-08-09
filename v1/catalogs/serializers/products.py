@@ -90,7 +90,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
         if display_id and not card_id:
             # check if the display_id is already exists
             d_instance = product_models.ConnectCard.objects.filter(
-                display_id=display_id).first()
+                display_id=display_id, is_active=True).first()
             # if entity card exist and card not exist
             if not d_instance and self.entity_card:
                 # if the entity card exists check if the display_id 
@@ -111,13 +111,19 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
             if d_instance and self.entity_card:
                 if self.entity_card.card != d_instance:
                     self.entity_card.is_active = False
+                    self.entity_card.card.is_active = False
+                    self.entity_card.card.save()
                     self.entity_card.save()
-
+                else:
+                    card_id = self.entity_card.card.display_id
+                    c_instance = product_models.ConnectCard.objects.filter(
+                        card_id=card_id, is_active=True).first()
+                    d_instance = None
 
         if card_id and not display_id:
             # check if the card_id is already exists
             c_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id).first()
+                card_id=card_id, is_active=True).first()
             # if entity card exist and card not exist
             if not c_instance and self.entity_card:
                 # if the entity card exists check if the display_id 
@@ -141,12 +147,25 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                     self.entity_card.card.is_active = False
                     self.entity_card.card.save()
                     self.entity_card.save()
+                else:
+                    print('111111111111')
+                    display_id = self.entity_card.card.display_id
+                    print(display_id,'222222222222')
+                    d_instance = product_models.ConnectCard.objects.filter(
+                        display_id=display_id, is_active=True).first()
+                    print(d_instance,'333333333333')
+                    c_instance = None
 
 
         if card_id and display_id:
             # check if the card_id is already exists
             cd_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, display_id=display_id).first()
+                card_id=card_id, display_id=display_id, is_active=True).first()
+            c_instance = product_models.ConnectCard.objects.filter(
+                card_id=card_id, is_active=True).first()
+            d_instance = product_models.ConnectCard.objects.filter(
+                display_id=display_id, is_active=True).first()
+            
             if cd_instance and self.entity_card:
                 if cd_instance != self.entity_card.card:
                     self.entity_card.is_active = False
