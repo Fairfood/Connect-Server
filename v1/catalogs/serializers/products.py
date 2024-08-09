@@ -168,38 +168,42 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                 if c_instance:
                     entity_card = EntityCard.objects.filter(
                         card=c_instance, is_active=True).first()
-                    entity_card.is_active = False
-                    entity_card.save()
-                    c_instance.is_active = False
-                    c_instance.save()
+                    if entity_card:
+                        entity_card.is_active = False
+                        entity_card.save()
+                        c_instance.is_active = False
+                        c_instance.save()
                     c_instance = None
                 if d_instance:
                     entity_card = EntityCard.objects.filter(
                         card=d_instance, is_active=True).first()
-                    entity_card.is_active = False
-                    entity_card.save()
-                    d_instance.is_active = False
-                    d_instance.save()
+                    if entity_card:
+                        entity_card.is_active = False
+                        entity_card.save()
+                        d_instance.is_active = False
+                        d_instance.save()
                     d_instance = None
             else:
                 if c_instance:
                     entity_card = EntityCard.objects.filter(
                         card=c_instance, is_active=True).first()
-                    entity_card.is_active = False
-                    entity_card.save()
-                    c_instance.is_active = False
-                    c_instance.save()
+                    if entity_card:
+                        entity_card.is_active = False
+                        entity_card.save()
+                        c_instance.is_active = False
+                        c_instance.save()
                     c_instance = None
                 if d_instance:
                     entity_card = EntityCard.objects.filter(
                         card=d_instance, is_active=True).first()
-                    entity_card.is_active = False
-                    entity_card.save()
-                    d_instance.is_active = False
-                    d_instance.save()
+                    if entity_card:
+                        entity_card.is_active = False
+                        entity_card.save()
+                        d_instance.is_active = False
+                        d_instance.save()
                     d_instance = None
 
-            if cd_instance and not self.entity_card:
+            if cd_instance and self.entity_card:
                 if cd_instance != self.entity_card.card:
                     self.entity_card.is_active = False
                     self.entity_card.card.is_active = False
