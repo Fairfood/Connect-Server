@@ -5,30 +5,24 @@ from pkg_resources import require
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
-from base.drf.fields import UnixDateTimeField
-from base.drf.fields import PhoneNumberField
-from base.drf.fields import RoundingDecimalField
-from base.drf.fields import SerializableRelatedField
+from base.drf.fields import (PhoneNumberField, RoundingDecimalField,
+                             SerializableRelatedField, UnixDateTimeField)
 from base.drf.serializers import DynamicModelSerializer
 from v1.accounts.serializers.user import UserSerializer
 from v1.catalogs.models.common_models import Currency
-from v1.catalogs.models.product_models import Product
-from v1.catalogs.models.product_models import Premium
+from v1.catalogs.models.product_models import Premium, Product
 from v1.catalogs.serializers.currency import CurrencySerializer
-from v1.catalogs.serializers.products import ConnectCardSerializer
-from v1.catalogs.serializers.products import ProductSerializer
-from v1.catalogs.serializers.products import PremiumSerializer
-from v1.forms.serializers import FormSerializer
-from v1.forms.serializers import SubmissionSerializer
-from v1.supply_chains.models.base_models import Entity
-from v1.supply_chains.models.base_models import EntityCard
-from v1.supply_chains.models.company_models import Company
-from v1.supply_chains.models.company_models import CompanyFieldVisibilty
-from v1.supply_chains.models.company_models import CompanyMember
-from v1.supply_chains.models.company_models import CompanyProduct
+from v1.catalogs.serializers.products import (ConnectCardSerializer,
+                                              PremiumSerializer,
+                                              ProductSerializer)
+from v1.forms.serializers import FormSerializer, SubmissionSerializer
+from v1.supply_chains.models.base_models import Entity, EntityCard
+from v1.supply_chains.models.company_models import (Company,
+                                                    CompanyFieldVisibilty,
+                                                    CompanyMember,
+                                                    CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
 from v1.transactions.models.transaction_models import ProductTransaction
-
 
 
 class EntityCardSerializer(DynamicModelSerializer):
@@ -58,7 +52,7 @@ class EntityCardSerializer(DynamicModelSerializer):
             # card_id or display_id
             other_entity_cards = EntityCard.objects.filter(
                 Q(card__card_id=card.card_id) |
-                Q(card__display_id=card.display_id))
+                Q(card__display_id=card.display_id)).filter(is_active = True)
             for entity_card in other_entity_cards:
                 entity_card.is_active = False
                 entity_card.save()

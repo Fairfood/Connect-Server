@@ -1,13 +1,12 @@
 from django.db import transaction
-from rest_framework.serializers import CharField
-from rest_framework.serializers import SerializerMethodField
-from rest_framework.serializers import ValidationError
+from rest_framework.serializers import (CharField, SerializerMethodField,
+                                        ValidationError)
 
 from base.authentication import utilities as utils
 from base.drf import serializers
 from v1.catalogs.models import product_models
-from v1.supply_chains.models.company_models import CompanyProduct
 from v1.supply_chains.models.base_models import EntityCard
+from v1.supply_chains.models.company_models import CompanyProduct
 
 
 class ProductSerializer(serializers.DynamicModelSerializer):
@@ -116,7 +115,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                     self.entity_card.card.save()
                     self.entity_card.save()
                 else:
-                    card_id = self.entity_card.card.display_id
+                    card_id = self.entity_card.card.card_id
                     c_instance = product_models.ConnectCard.objects.filter(
                         card_id=card_id, is_active=True).first()
                     d_instance = None
@@ -160,9 +159,14 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
             cd_instance = product_models.ConnectCard.objects.filter(
                 card_id=card_id, display_id=display_id, is_active=True).first()
             c_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, is_active=True).first()
+                card_id=card_id, is_active=True)
             d_instance = product_models.ConnectCard.objects.filter(
-                display_id=display_id, is_active=True).first()
+                display_id=display_id, is_active=True)
+            if cd_instance:
+                c_instance = c_instance.exclude(id=cd_instance.id)
+                d_instance = d_instance.exclude(id=cd_instance.id)
+            c_instance = c_instance.first()
+            d_instance = d_instance.first()
             
             if not self.entity_card:
                 if c_instance:
