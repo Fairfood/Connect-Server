@@ -1,25 +1,28 @@
 from django.db import transaction
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
+from pkg_resources import require
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
-from base.drf.fields import PhoneNumberField
-from base.drf.fields import SerializableRelatedField
+from base.drf.fields import (PhoneNumberField, RoundingDecimalField,
+                             SerializableRelatedField, UnixDateTimeField)
 from base.drf.serializers import DynamicModelSerializer
 from v1.accounts.serializers.user import UserSerializer
 from v1.catalogs.models.common_models import Currency
-from v1.catalogs.models.product_models import Product
+from v1.catalogs.models.product_models import Premium, Product
 from v1.catalogs.serializers.currency import CurrencySerializer
-from v1.catalogs.serializers.products import ConnectCardSerializer
-from v1.catalogs.serializers.products import ProductSerializer
-from v1.forms.serializers import FormSerializer
-from v1.forms.serializers import SubmissionSerializer
-from v1.supply_chains.models.base_models import Entity
-from v1.supply_chains.models.base_models import EntityCard
-from v1.supply_chains.models.company_models import Company
-from v1.supply_chains.models.company_models import CompanyFieldVisibilty
-from v1.supply_chains.models.company_models import CompanyMember
-from v1.supply_chains.models.company_models import CompanyProduct
+from v1.catalogs.serializers.products import (ConnectCardSerializer,
+                                              PremiumSerializer,
+                                              ProductSerializer)
+from v1.forms.serializers import FormSerializer, SubmissionSerializer
+from v1.supply_chains.models.base_models import Entity, EntityCard
+from v1.supply_chains.models.company_models import (Company,
+                                                    CompanyFieldVisibilty,
+                                                    CompanyMember,
+                                                    CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
+from v1.transactions.models.transaction_models import ProductTransaction
 
 
 class EntityCardSerializer(DynamicModelSerializer):
@@ -35,8 +38,24 @@ class EntityCardSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         card_data = validated_data.pop("card")
-        card = self.fields["card"].create(card_data)
-        validated_data["card"] = card
+        entity_id= validated_data.get("entity")
+        entity_card = EntityCard.objects.filter(
+            entity=entity_id, is_active=True).first()
+
+        card_serializer = ConnectCardSerializer(
+            data=card_data, entity_card=entity_card)
+        
+        if card_serializer.is_valid(raise_exception=True):
+            card = card_serializer.save()
+            validated_data["card"] = card
+            # deactivate entity card if it exists with given 
+            # card_id or display_id
+            other_entity_cards = EntityCard.objects.filter(
+                Q(card__card_id=card.card_id) |
+                Q(card__display_id=card.display_id)).filter(is_active = True)
+            for entity_card in other_entity_cards:
+                entity_card.is_active = False
+                entity_card.save()
         try:
             instance = EntityCard.objects.get(**validated_data)
             instance.is_active = True
@@ -50,11 +69,16 @@ class EntitySerializer(DynamicModelSerializer):
     """Serializer for the Entity model."""
 
     name = serializers.CharField(read_only=True)
-    entity_card = EntityCardSerializer(read_only=True)
+    entity_card = serializers.SerializerMethodField()
 
     class Meta:
         model = Entity
         fields = "__all__"
+
+    def get_entity_card(self, obj):
+        """Fetch all EntityCard instances related to the company."""
+        entity_cards = EntityCard.objects.filter(entity=obj, is_active=True)
+        return EntityCardSerializer(entity_cards, many=True, read_only=True).data
 
 
 class CompanyFieldVisibiltySerilizer(DynamicModelSerializer):
@@ -90,7 +114,7 @@ class CompanySerializer(DynamicModelSerializer):
         model = Company
         fields = "__all__"
 
-
+    
 # TODO: Remove this serializer after the migration is complete.
 class CompanyCreateSerializer(DynamicModelSerializer):
     """Serializer for the Company model."""
@@ -120,32 +144,32 @@ class CompanyMemerSerializer(DynamicModelSerializer):
     company member, using a nested UserSerializer.
     """
 
-    user = UserSerializer(
-        fields=(
-            "id",
-            "email",
-            "first_name",
-            "last_name",
-            "phone",
-            "dob",
-            "address",
-            "language",
-        )
-    )
+    # user = UserSerializer(
+    #     fields=(
+    #         "id",
+    #         "email",
+    #         "first_name",
+    #         "last_name",
+    #         "phone",
+    #         "dob",
+    #         "address",
+    #         "language",
+    #     )
+    # )
 
     class Meta:
         model = CompanyMember
         fields = "__all__"
 
-    def create(self, validated_data):
-        """Create method for CompanyMemerSerializer.
+    # def create(self, validated_data):
+    #     """Create method for CompanyMemerSerializer.
 
-        Handles the creation of CompanyMember instances, including the
-        creation of the associated user.
-        """
-        user = self.fields["user"].create(validated_data.pop("user"))
-        validated_data["user"] = user
-        return super().create(validated_data)
+    #     Handles the creation of CompanyMember instances, including the
+    #     creation of the associated user.
+    #     """
+    #     user = self.fields["user"].create(validated_data.pop("user"))
+    #     validated_data["user"] = user
+    #     return super().create(validated_data)
 
 
 class CompanyProductSerializer(DynamicModelSerializer):
@@ -231,3 +255,111 @@ class FarmerSerializer(DynamicModelSerializer):
             instance.submission = submission
         instance.save()
         return instance
+
+class AppFarmerSerializer(serializers.ModelSerializer):
+    """Serializer for Farmer model."""
+
+    id = SerializableRelatedField(read_only=True)
+    name = serializers.CharField(required=False)
+    phone = PhoneNumberField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Farmer
+        fields = (
+            "id",
+            "name",
+            "house_name",
+            "phone",
+            "street",
+            "city",
+            "sub_province",
+            "province",
+            "country",
+        )
+
+    def to_representation(self, instance):
+        """To perform function to_representation."""
+        request = self.context.get("request")
+        language = request.headers.get("Language", 'en')       
+        data = super(AppFarmerSerializer, self).to_representation(instance)
+        data["transaction_details"] = instance.transaction_count(language) 
+        return data
+    
+
+
+
+class OpenTransactionSerializer(serializers.ModelSerializer):
+    """Serializer for creating external transaction as well as getting
+    details."""
+
+    quantity = RoundingDecimalField(
+        max_digits=25, decimal_places=3, write_only=True
+    )
+    unit = serializers.IntegerField(write_only=True)
+    product = ProductSerializer(required=False)
+    id = SerializableRelatedField(read_only=True)
+    status = serializers.IntegerField(read_only=True)
+    destination_quantity = RoundingDecimalField(
+        max_digits=25, decimal_places=3, read_only=True
+    )
+    method = serializers.CharField(required=False)
+    created_on = UnixDateTimeField(required=False)
+    date = serializers.DateTimeField(required=False)
+    currency = serializers.SerializerMethodField()
+    premium = serializers.SerializerMethodField()  
+
+    class Meta:
+        model = ProductTransaction
+        fields = (
+            "id",
+            "date",
+            "quantity",
+            "unit",
+            "product",
+            "unit",
+            "destination",
+            "destination_quantity",
+            "status",
+            "method",
+            "created_on",
+            "currency",
+            "source_quantity",
+            "amount",
+            "premium"
+        )
+
+    def get_currency(self, instance):
+        return instance.currency.name
+
+    def get_premium(self, obj):
+        premiums = Premium.objects.filter(premium_payments__transaction=obj) 
+        return PremiumSerializer(premiums, many=True).data  
+
+
+    def to_representation(self, instance):
+        """Convert the instance to a representation suitable for serialization.
+
+        This method is responsible for converting the given instance to a
+        representation that can be serialized and returned in the API response.
+        It applies specific formatting and modifications to the data before
+        returning it.
+
+        Parameters:
+        - instance: The instance to be serialized.
+
+        Returns:
+        - dict: The serialized representation of the instance.
+        """
+        data = super(OpenTransactionSerializer, self).to_representation(
+            instance
+        )
+        data["total_premium"] = 0
+        data["destination"] = instance.destination.name
+        data["date_str"] = _(instance.date.strftime("%d %B, %Y"))
+        premiums = Premium.objects.filter(premium_payments__transaction=instance)
+        for premium in premiums:
+            if premium and premium.amount:
+                data["total_premium"] += premium.amount
+        return data
+        
+
