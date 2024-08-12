@@ -44,7 +44,8 @@ class EntityCardAdmin(BaseAdmin):
         "entity",
         "is_active"
     )
-    search_fields = ['id','card__card_id', 'card__display_id','entity__name']
+    search_fields = ['id','card__card_id', 'card__display_id']
+
 
 
 class FarmerAdmin(BaseAdmin):
