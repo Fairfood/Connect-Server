@@ -2,13 +2,16 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from . import base_models
-from .. import constants as sc_consts
 from base.db import models as abstarct_models
+from v1.catalogs.models.product_models import Premium
 from v1.forms.models import Submission
+from v1.supply_chains import constants as sc_consts
+from v1.supply_chains.models import base_models
+from v1.supply_chains.validators import (validate_coordinates,
+                                         validate_geojson_polygon)
 from v1.transactions.models.transaction_models import ProductTransaction
-from v1.transactions.models.payment_models import PaymentTransaction
-from v1.catalogs.models.product_models import Premium 
+
+
 class AbstractFarmerModel(
     abstarct_models.AbstractAddressModel,
     abstarct_models.AbstractNumberedModel,
@@ -68,6 +71,9 @@ class Farmer(AbstractFarmerModel):
         blank=True,
         verbose_name=_("Submission"),
     )
+    geo_json = models.JSONField(null=True, blank=True,
+                         validators=[validate_geojson_polygon,
+                                     validate_coordinates])
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
