@@ -157,7 +157,7 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
         if card_id and display_id:
             # check if the card_id is already exists
             cd_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, display_id=display_id, is_active=True).first()
+                card_id=card_id, display_id=display_id).first()
             c_instance = product_models.ConnectCard.objects.filter(
                 card_id=card_id, is_active=True)
             d_instance = product_models.ConnectCard.objects.filter(
@@ -206,6 +206,13 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                         d_instance.is_active = False
                         d_instance.save()
                     d_instance = None
+            #fixing duplicate cards
+            if cd_instance:
+                _ = product_models.ConnectCard.objects.filter(
+                card_id=card_id, display_id=display_id, is_active=True).exclude(id=cd_instance.pk).update(is_active=False)
+                if not cd_instance.is_active:
+                    cd_instance.is_active =  True
+                    cd_instance.save()
 
             if cd_instance and self.entity_card:
                 if cd_instance != self.entity_card.card:
