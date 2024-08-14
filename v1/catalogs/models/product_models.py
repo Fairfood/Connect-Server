@@ -55,8 +55,9 @@ class ConnectCard(AbstractBaseModel):
         max_length=100, null=True, blank=True, verbose_name=_("Display ID")
     )
     card_id = models.CharField(
-        max_length=100, unique=True, verbose_name=_("Card ID")
+        max_length=100, null=True, blank=True, verbose_name=_("Card ID")
     )
+    is_active = models.BooleanField(default=True, verbose_name=_("Is Active"))
 
     def __str__(self):
         """Function to return value in django admin."""

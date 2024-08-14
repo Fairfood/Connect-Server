@@ -1,13 +1,17 @@
 from django.db.models import Count
 from django.db.models import Q
 from django_filters import rest_framework as filters
+from rest_framework.serializers import SerializerMethodField
+
+from base.drf import serializers
+from utilities.functions import decode
 
 from .models import payment_models
 from .models import transaction_models
 from base.authentication import utilities as auth_utils
 from utilities.functions import unix_to_datetime
 from v1.transactions.constants import PaymentType
-
+from v1.supply_chains.models.base_models import Entity
 
 class ProductTransactionFilterSet(filters.FilterSet):
     """A filter set for the Farmer model.
@@ -31,6 +35,7 @@ class ProductTransactionFilterSet(filters.FilterSet):
     skip_only_connect = filters.BooleanFilter(
         method="skip_only_connect_filter"
     )
+    entity = filters.CharFilter(method="entity_filter")
 
     class Meta:
         model = transaction_models.ProductTransaction
@@ -82,6 +87,12 @@ class ProductTransactionFilterSet(filters.FilterSet):
             )
         return queryset
 
+    def entity_filter(self, queryset, name, value):
+        """Return queryset."""
+        entity = Entity.objects.filter(id=decode(value)).first()
+        return queryset.filter(
+            Q(source=entity) | Q(destination=entity)
+        )
 
 class PaymentTransactionFilterSet(filters.FilterSet):
     """A filter set for the Farmer model.

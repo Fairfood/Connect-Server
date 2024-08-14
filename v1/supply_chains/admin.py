@@ -1,10 +1,9 @@
 """Models are registered with django admin at here."""
 from django.contrib import admin
 
-from .models import base_models
-from .models import company_models
-from .models import farmer_models
 from base.db.admin import BaseAdmin
+
+from .models import base_models, company_models, farmer_models
 
 
 class CompanyProductInline(admin.TabularInline):
@@ -40,9 +39,13 @@ class EntityCardAdmin(BaseAdmin):
     """Model representing a company member entity."""
 
     list_display = (
-        "card",
         "id",
+        "card",
+        "entity",
+        "is_active"
     )
+    search_fields = ['id','card__card_id', 'card__display_id']
+
 
 
 class FarmerAdmin(BaseAdmin):

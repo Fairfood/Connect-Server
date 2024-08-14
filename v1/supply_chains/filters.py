@@ -6,6 +6,8 @@ from utilities.functions import unix_to_datetime
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.farmer_models import Farmer
 
+from utilities.functions import decode
+
 
 class FarmerFilterSet(filters.FilterSet):
     """A filter set for the Farmer model.
@@ -70,6 +72,9 @@ class EntityCardFilterSet(filters.FilterSet):
     skip_only_connect = filters.BooleanFilter(
         method="skip_only_connect_filter"
     )
+    entity = filters.CharFilter(
+        method="entity_filter"
+    )
 
     class Meta:
         model = EntityCard
@@ -99,3 +104,27 @@ class EntityCardFilterSet(filters.FilterSet):
         name += "__gt"
         value = unix_to_datetime(value)
         return queryset.filter(**{name: value})
+    
+    def entity_filter(self, queryset, name, value):
+        """Return queryset."""
+        queryset = queryset.filter(
+            entity__id=decode(value), is_active=True)
+        return queryset
+
+
+
+class OpenFilterTransactions(filters.FilterSet):
+    """Filter to filter transactions by updated time."""
+
+    start_date = filters.NumberFilter(method="get_transactions_start_date")
+    end_date = filters.NumberFilter(method="get_transactions_end_date")
+
+    def get_transactions_start_date(self, queryset, name, value):
+        """Get transactions start_date_date."""
+        dt = unix_to_datetime(value)
+        return queryset.filter(created_on__gte=dt)
+
+    def get_transactions_end_date(self, queryset, name, value):
+        """Get transactions end_date."""
+        dt = unix_to_datetime(value)
+        return queryset.filter(created_on__lte=dt)

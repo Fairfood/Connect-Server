@@ -31,8 +31,10 @@ class ConnectCardAdmin(BaseAdmin):
     """ConnectCard admin class."""
 
     list_display = (
-        "display_id",
         "id",
+        "display_id",
+        "card_id",
+        "is_active"
     )
     search_fields = ["display_id", "display_id"]
 

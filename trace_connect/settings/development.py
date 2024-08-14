@@ -14,8 +14,31 @@ ALLOWED_HOSTS = [
     "v2.dev.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://v2.dev.api.fairfood.org",)
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:4200",
+    "https://id-dev.fairfood.org",
+    "https://v2.dev.api.fairfood.org",
+]
 
+CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-disposition",
+    "content-type",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "Otp", 
+    "token",
+    "language",
+    "timezone",
+]
+
+CORS_PREFLIGHT_MAX_AGE = 86400
+CORS_ALLOW_CREDENTIALS = True
 DEBUG = True
 
 INSTALLED_APPS += [
