@@ -1,17 +1,12 @@
-from django.db.models import Count
-from django.db.models import Q
+from django.db.models import Count, Q
 from django_filters import rest_framework as filters
-from rest_framework.serializers import SerializerMethodField
 
-from base.drf import serializers
-from utilities.functions import decode
-
-from .models import payment_models
-from .models import transaction_models
 from base.authentication import utilities as auth_utils
-from utilities.functions import unix_to_datetime
-from v1.transactions.constants import PaymentType
+from utilities.functions import decode, unix_to_datetime
 from v1.supply_chains.models.base_models import Entity
+from v1.transactions.constants import PaymentType
+from v1.transactions.models import payment_models, transaction_models
+
 
 class ProductTransactionFilterSet(filters.FilterSet):
     """A filter set for the Farmer model.
@@ -21,25 +16,28 @@ class ProductTransactionFilterSet(filters.FilterSet):
 
     # TODO: Change this filter after informing the frontend.
     updated_after = filters.NumberFilter(
-        method="updated_after_filter", field_name="created_on"
+        method="updated_after_filter", field_name="updated_on"
     )
     created_after = filters.NumberFilter(
         method="updated_after_filter", field_name="created_on"
     )
     updated_before = filters.NumberFilter(
-        method="updated_before_filter", field_name="created_on"
+        method="updated_before_filter", field_name="updated_on"
     )
-    only_quantity_available = filters.BooleanFilter(
-        method="quantity_available_filter"
-    )
-    skip_only_connect = filters.BooleanFilter(
-        method="skip_only_connect_filter"
-    )
+    only_quantity_available = filters.BooleanFilter(method="quantity_available_filter")
+    skip_only_connect = filters.BooleanFilter(method="skip_only_connect_filter")
     entity = filters.CharFilter(method="entity_filter")
 
     class Meta:
         model = transaction_models.ProductTransaction
-        fields = []
+        fields = (
+            "updated_after",
+            "created_after",
+            "updated_before",
+            "only_quantity_available",
+            "skip_only_connect",
+            "entity",
+        )
 
     @property
     def qs(self):
@@ -53,16 +51,14 @@ class ProductTransactionFilterSet(filters.FilterSet):
 
         entity = auth_utils.get_current_entity()
         return parent.filter(
-            Q(source=entity, creator=user)
-            | Q(destination=entity, creator=user)
+            Q(source=entity, creator=user) | Q(destination=entity, creator=user)
         )
 
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
         if value or value == "true":
-            return queryset.exclude(
-                Q(source__only_connect=True)
-                | Q(destination__only_connect=True)
+            return queryset.filter(
+                Q(source__only_connect=False) | Q(destination__only_connect=False)
             )
         return queryset
 
@@ -90,9 +86,8 @@ class ProductTransactionFilterSet(filters.FilterSet):
     def entity_filter(self, queryset, name, value):
         """Return queryset."""
         entity = Entity.objects.filter(id=decode(value)).first()
-        return queryset.filter(
-            Q(source=entity) | Q(destination=entity)
-        )
+        return queryset.filter(Q(source=entity) | Q(destination=entity))
+
 
 class PaymentTransactionFilterSet(filters.FilterSet):
     """A filter set for the Farmer model.
@@ -101,12 +96,24 @@ class PaymentTransactionFilterSet(filters.FilterSet):
     """
 
     updated_after = filters.NumberFilter(
+        method="updated_after_filter", field_name="updated_on"
+    )
+    created_after = filters.NumberFilter(
         method="updated_after_filter", field_name="created_on"
+    )
+    updated_before = filters.NumberFilter(
+        method="updated_before_filter", field_name="updated_on"
     )
 
     class Meta:
         model = payment_models.PaymentTransaction
         fields = ["payment_type"]
+        fields = (
+            "payment_type",
+            "updated_after",
+            "created_after",
+            "updated_before",
+        )
 
     @property
     def qs(self):
