@@ -52,10 +52,17 @@ class FarmerAdmin(BaseAdmin):
     """Model representing a company entity."""
 
     list_display = ("first_name", "last_name", "id", "buyer")
-    search_fields = ["first_name", "last_name"]
+    search_fields = ["first_name", "last_name", "id"]
 
+
+class EntityAdmin(BaseAdmin):
+    """Model representing a company entity."""
+
+    list_display = ("id", "only_connect", "buyer")
 
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
 admin.site.register(base_models.EntityCard, EntityCardAdmin)
+admin.site.register(base_models.Entity, EntityAdmin)
+
