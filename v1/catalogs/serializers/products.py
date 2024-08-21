@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from django.db import transaction
 from rest_framework.serializers import (CharField, SerializerMethodField,
                                         ValidationError)
@@ -36,11 +38,7 @@ class ProductSerializer(serializers.DynamicModelSerializer):
             list: A list of premiums associated with the product.
         """
         c_product = self._get_company_product(instance)
-        return (
-            c_product.premiums.values_list("id", flat=True)
-            if c_product
-            else []
-        )
+        return c_product.premiums.values_list("id", flat=True) if c_product else []
 
     def get_is_active(self, instance):
         """Get the is_active associated with the company product.
@@ -58,173 +56,124 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
     def __init__(self, *args, entity_card=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.entity_card = entity_card
-    
+
     card_id = CharField(validators=[], required=False)
 
     class Meta:
         model = product_models.ConnectCard
         fields = "__all__"
 
-    def create(self, validated_data):
-        """Create a new product instance.
+    def deactivate_entity_cards(
+        self, associated_card: "product_models.ConnectCard"
+    ) -> None:
+        """
+        Deactivates all active EntityCard objects associated with the given ConnectCard.
 
         Args:
-            validated_data (dict): The validated data for creating the product.
+            associated_card (ConnectCard): The ConnectCard for which associated EntityCard objects should be deactivated.
 
         Returns:
-            instance: The created product instance.
+            None
+        """
+        # Retrieve all active EntityCard objects associated with the provided ConnectCard
+        active_entity_cards = EntityCard.objects.filter(
+            card=associated_card, is_active=True
+        ).all()
+
+        # Deactivate each EntityCard by setting is_active to False and saving the change
+        for entity_card in active_entity_cards:
+            entity_card.is_active = False
+            entity_card.save()
+
+    def create(self, validated_data: Dict[str, Any]) -> "product_models.ConnectCard":
+        """
+        Retrieves or creates a ConnectCard based on provided card_data. If both display_id and card_id are provided,
+        it checks for existing cards and handles potential conflicts.
+
+        Args:
+            validated_data (Dict[str, Any]): A dictionary containing 'display_id' and/or 'card_id' to identify the ConnectCard.
+
+        Returns:
+            ConnectCard: The retrieved or newly created ConnectCard object.
 
         Raises:
-            ValidationError: If the `card_id` is not provided.
+            serializers.ValidationError: If neither 'display_id' nor 'card_id' is provided in card_data.
         """
         display_id = validated_data.get("display_id")
         card_id = validated_data.get("card_id")
 
+        # Validate that at least one identifier (display_id or card_id) is provided
         if not display_id and not card_id:
-            raise ValidationError(
-                "Either 'display_id' or 'card_id' must be provided."
-            )
+            raise ValidationError("Either 'display_id' or 'card_id' must be provided.")
 
-        d_instance = c_instance = cd_instance = None
+        # If both display_id and card_id are provided
+        if display_id and card_id:
+            # Retrieve any active ConnectCards by display_id or card_id
+            qr_card = product_models.ConnectCard.objects.filter(
+                display_id=display_id, is_active=True
+            ).first()
+            nfc_card = product_models.ConnectCard.objects.filter(
+                card_id=card_id, is_active=True
+            ).first()
 
-        if display_id and not card_id:
-            # check if the display_id is already exists
-            d_instance = product_models.ConnectCard.objects.filter(
-                display_id=display_id, is_active=True).first()
-            # if entity card exist and card not exist
-            if not d_instance and self.entity_card:
-                # if the entity card exists check if the display_id 
-                # is already exists.
-                if (self.entity_card.card.card_id and 
-                    not self.entity_card.card.display_id):
-                    self.entity_card.card.display_id = display_id
-                    self.entity_card.card.is_active = True
-                    self.entity_card.card.save()
-                    return self.entity_card.card
+            # If both cards exist and are the same instance, deactivate entity cards and return the card
+            if qr_card and nfc_card:
+                if qr_card.pk == nfc_card.pk:  # Both refer to the same card
+                    self.deactivate_entity_cards(qr_card)
+                    return qr_card
                 else:
-                    self.entity_card.is_active = False
-                    self.entity_card.card.is_active = False
-                    self.entity_card.card.save()
-                    self.entity_card.save()
-                    
-            # if entity card  and connect card exist
-            if d_instance and self.entity_card:
-                if self.entity_card.card != d_instance:
-                    self.entity_card.is_active = False
-                    self.entity_card.card.is_active = False
-                    self.entity_card.card.save()
-                    self.entity_card.save()
-                else:
-                    card_id = self.entity_card.card.card_id
-                    c_instance = product_models.ConnectCard.objects.filter(
-                        card_id=card_id, is_active=True).first()
-                    d_instance = None
+                    # Deactivate entity cards and the cards themselves, then create a new combined card
+                    self.deactivate_entity_cards(qr_card)
+                    self.deactivate_entity_cards(nfc_card)
 
-        if card_id and not display_id:
-            # check if the card_id is already exists
-            c_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, is_active=True).first()
-            # if entity card exist and card not exist
-            if not c_instance and self.entity_card:
-                # if the entity card exists check if the display_id 
-                # is already exists.
-                if (self.entity_card.card.display_id and 
-                    not self.entity_card.card.card_id):
-                    self.entity_card.card.card_id = card_id
-                    self.entity_card.card.is_active = True
-                    self.entity_card.card.save()
-                    return self.entity_card.card
-                else:
-                    self.entity_card.is_active = False
-                    self.entity_card.card.is_active = False
-                    self.entity_card.card.save()
-                    self.entity_card.save()
+                    # inactivate both connect card
+                    qr_card.is_active = False
+                    qr_card.save()
+                    nfc_card.is_active = False
+                    nfc_card.save()
 
-            # if entity card and connect card exist
-            if c_instance and self.entity_card:
-                if self.entity_card.card != c_instance:
-                    self.entity_card.is_active = False
-                    self.entity_card.card.is_active = False
-                    self.entity_card.card.save()
-                    self.entity_card.save()
-                else:
-                    display_id = self.entity_card.card.display_id
-                    d_instance = product_models.ConnectCard.objects.filter(
-                        display_id=display_id, is_active=True).first()
-                    c_instance = None
-
-
-        if card_id and display_id:
-            # check if the card_id is already exists
-            cd_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, display_id=display_id).first()
-            c_instance = product_models.ConnectCard.objects.filter(
-                card_id=card_id, is_active=True)
-            d_instance = product_models.ConnectCard.objects.filter(
-                display_id=display_id, is_active=True)
-            if cd_instance:
-                c_instance = c_instance.exclude(id=cd_instance.id)
-                d_instance = d_instance.exclude(id=cd_instance.id)
-            c_instance = c_instance.first()
-            d_instance = d_instance.first()
-            
-            if not self.entity_card:
-                if c_instance:
-                    entity_card = EntityCard.objects.filter(
-                        card=c_instance, is_active=True).first()
-                    if entity_card:
-                        entity_card.is_active = False
-                        entity_card.save()
-                        c_instance.is_active = False
-                        c_instance.save()
-                    c_instance = None
-                if d_instance:
-                    entity_card = EntityCard.objects.filter(
-                        card=d_instance, is_active=True).first()
-                    if entity_card:
-                        entity_card.is_active = False
-                        entity_card.save()
-                        d_instance.is_active = False
-                        d_instance.save()
-                    d_instance = None
+            # If only one of the cards exists, update it with the other card's ID and return it
             else:
-                if c_instance:
-                    entity_card = EntityCard.objects.filter(
-                        card=c_instance, is_active=True).first()
-                    if entity_card:
-                        entity_card.is_active = False
-                        entity_card.save()
-                        c_instance.is_active = False
-                        c_instance.save()
-                    c_instance = None
-                if d_instance:
-                    entity_card = EntityCard.objects.filter(
-                        card=d_instance, is_active=True).first()
-                    if entity_card:
-                        entity_card.is_active = False
-                        entity_card.save()
-                        d_instance.is_active = False
-                        d_instance.save()
-                    d_instance = None
-            #fixing duplicate cards
-            if cd_instance:
-                _ = product_models.ConnectCard.objects.filter(
-                card_id=card_id, display_id=display_id, is_active=True).exclude(id=cd_instance.pk).update(is_active=False)
-                if not cd_instance.is_active:
-                    cd_instance.is_active =  True
-                    cd_instance.save()
+                if qr_card and not nfc_card:
+                    self.deactivate_entity_cards(qr_card)
+                    qr_card.card_id = card_id
+                    qr_card.save()
+                    return qr_card
 
-            if cd_instance and self.entity_card:
-                if cd_instance != self.entity_card.card:
-                    self.entity_card.is_active = False
-                    self.entity_card.card.is_active = False
+                else:
+                    self.deactivate_entity_cards(nfc_card)
+                    nfc_card.display_id = display_id
+                    nfc_card.save()
+                    return nfc_card
+
+        # If only one of display_id or card_id is provided
+        else:
+            card_data = {"is_active": True}
+            check_field = ""
+            if display_id and not card_id:
+                card_data["display_id"] = display_id
+                check_field = "display_id"
+            else:
+                card_data["card_id"] = card_id
+                check_field = "card_id"
+
+            # Retrieve the card based on the provided identifier
+            card = product_models.ConnectCard.objects.filter(**card_data).first()
+            if card:
+                self.deactivate_entity_cards(card)
+                return card
+            else:
+                # If an entity_card is provided and it doesn't have the identifier, update and return it
+                if (
+                    self.entity_card
+                    and hasattr(self.entity_card.card, check_field)
+                    and not getattr(self.entity_card.card, check_field, None)
+                ):
+                    setattr(self.entity_card.card, check_field, card_data[check_field])
                     self.entity_card.card.save()
-                    self.entity_card.save()
-        instance = d_instance or c_instance or cd_instance
+                    return self.entity_card.card
 
-        if not instance:
-            return super().create(validated_data)
-        return instance
+        return super().create(validated_data)
 
 
 class PremiumOptionSeriazer(serializers.DynamicModelSerializer):
