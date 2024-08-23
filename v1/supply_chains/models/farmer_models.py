@@ -86,7 +86,7 @@ class Farmer(AbstractFarmerModel):
     def transaction_count(self, language):
         """To perform function transaction_count."""
         data = {"volume": 0, "income": 0, "premium": 0}
-        transactions = ProductTransaction.objects.filter(
+        transactions = ProductTransaction.objects.filter(is_deleted=False).filter(
             Q(source=self) | Q(destination=self)
         )
         data["count"] = transactions.count()
