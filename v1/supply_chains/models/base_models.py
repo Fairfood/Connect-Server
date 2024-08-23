@@ -113,12 +113,6 @@ class EntityCard(AbstractBaseModel):
 
     objects = managers.EntityCardQuerySet.as_manager()
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["card", "entity"], name="unique_entity_card"
-            )
-        ]
 
     def __str__(self):
         return f"{self.card} - {self.entity.name}"
