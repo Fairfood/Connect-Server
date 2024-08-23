@@ -149,7 +149,7 @@ class OpenTransactionAPI(generics.ListAPIView):
             raise BadRequest("Invalid card number")
         entity = entity_card.entity
         query = Q(source__id=entity.id) | Q(destination__id=entity.id)
-        return ProductTransaction.objects.filter(query).order_by("-date")
+        return ProductTransaction.objects.filter(is_deleted=False).filter(query).order_by("-date")
         
     
 class OpenTransactionDetails(generics.ListAPIView):
