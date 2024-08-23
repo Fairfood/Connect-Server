@@ -122,6 +122,9 @@ class FarmerDetailsAPI(generics.ListAPIView):
                 card__display_id__iexact=fair_id).order_by('-created_on').first().entity
         except Exception:
             raise BadRequest("Invalid card number")
+        if not Farmer.objects.filter(id=entity.id).exists():
+            raise BadRequest("No farmer associated with this card number.")
+
         return  Farmer.objects.filter(id=entity.id)
 
 
