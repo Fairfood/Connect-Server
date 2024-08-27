@@ -133,18 +133,16 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
                     nfc_card.save()
 
             # If only one of the cards exists, update it with the other card's ID and return it
-            else:
-                if qr_card and not nfc_card:
-                    self.deactivate_entity_cards(qr_card)
-                    qr_card.card_id = card_id
-                    qr_card.save()
-                    return qr_card
-
-                else:
-                    self.deactivate_entity_cards(nfc_card)
-                    nfc_card.display_id = display_id
-                    nfc_card.save()
-                    return nfc_card
+            elif qr_card and not nfc_card:
+                self.deactivate_entity_cards(qr_card)
+                qr_card.card_id = card_id
+                qr_card.save()
+                return qr_card
+            elif not qr_card and nfc_card:
+                self.deactivate_entity_cards(nfc_card)
+                nfc_card.display_id = display_id
+                nfc_card.save()
+                return nfc_card
 
         # If only one of display_id or card_id is provided
         else:
