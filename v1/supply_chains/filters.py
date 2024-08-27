@@ -33,6 +33,7 @@ class FarmerFilterSet(filters.FilterSet):
             "updated_after",
             "created_after",
             "skip_only_connect",
+            "reference_number",
         )
 
     @property
