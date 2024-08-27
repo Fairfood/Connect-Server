@@ -61,5 +61,3 @@ MEDIA_ROOT = "/%s/" % DEFAULT_S3_PATH
 MEDIA_URL = "//%s.s3.amazonaws.com/media/" % AWS_STORAGE_BUCKET_NAME
 
 # SENTRY SETUP AWS_STORAGE_BUCKET_NAME:
-
-STATIC_URL = env.get("STATIC_URL_PATH", default="static/")
