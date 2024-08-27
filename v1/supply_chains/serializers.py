@@ -47,8 +47,12 @@ class EntityCardSerializer(DynamicModelSerializer):
         card = card_serializer.save()
         # Always return a card
         if entity_card:
-            if card.pk == entity_card.card.pk:
-                # Possibly all the cards became inactive
+            # FAIRFOOD-5857 Avoiding farmer table updation while updating card_id or disply id of an existing card
+            if card.pk == entity_card.card.pk and (
+                not entity_card.is_active
+                or entity_card.entity.entity_card
+                != entity_card  # Make suring farmer table entity_card is the same entity card
+            ):
                 entity_card.is_active = True
                 entity_card.save()
                 return entity_card
