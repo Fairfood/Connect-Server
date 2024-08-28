@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from django.db import transaction
 from rest_framework.serializers import (CharField, SerializerMethodField,
@@ -66,7 +66,6 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
     def deactivate_entity_cards(
         self,
         associated_card: "product_models.ConnectCard",
-        exclude_entity: Optional["EntityCard"] = None,
     ) -> None:
         """
         Deactivates all active EntityCard objects associated with the given ConnectCard.
@@ -81,8 +80,6 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
         active_entity_cards = EntityCard.objects.filter(
             card=associated_card, is_active=True
         ).all()
-        if exclude_entity:
-            active_entity_cards = active_entity_cards.exclude(id=exclude_entity.id)
 
         # Deactivate each EntityCard by setting is_active to False and saving the change
         for entity_card in active_entity_cards:
@@ -138,13 +135,12 @@ class ConnectCardSerializer(serializers.DynamicModelSerializer):
 
             # If only one of the cards exists, update it with the other card's ID and return it
             elif qr_card and not nfc_card:
-                # FAIRFOOD-5857 Avoiding farmer table updation while updating card_id or disply id of an existing card
-                self.deactivate_entity_cards(qr_card, exclude_entity=self.entity_card)
+                self.deactivate_entity_cards(qr_card)
                 qr_card.card_id = card_id
                 qr_card.save()
                 return qr_card
             elif not qr_card and nfc_card:
-                self.deactivate_entity_cards(nfc_card, exclude_entity=self.entity_card)
+                self.deactivate_entity_cards(nfc_card)
                 nfc_card.display_id = display_id
                 nfc_card.save()
                 return nfc_card
