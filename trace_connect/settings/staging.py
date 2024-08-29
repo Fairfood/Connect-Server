@@ -1,10 +1,7 @@
 from datetime import timedelta
 
 from .base import *  # noqa
-from .base import env
-from .base import REST_FRAMEWORK
-from .base import SIMPLE_JWT
-
+from .base import REST_FRAMEWORK, SIMPLE_JWT, env
 
 ENVIRONMENT = "staging"
 DEBUG = True
@@ -13,7 +10,10 @@ ALLOWED_HOSTS = [
     "v2.staging.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://v2.staging.api.fairfood.org",)
+CORS_ORIGIN_WHITELIST = [
+    "https://v2.staging.api.fairfood.org",
+    "https://id-stage.fairfood.org",
+]
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
 
