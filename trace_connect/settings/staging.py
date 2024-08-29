@@ -14,6 +14,10 @@ CORS_ORIGIN_WHITELIST = [
     "https://v2.staging.api.fairfood.org",
     "https://id-stage.fairfood.org",
 ]
+CORS_ALLOW_HEADERS += [
+    "Otp"
+]
+
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
 
