@@ -24,7 +24,7 @@ CORS_ALLOW_HEADERS += [
     "Otp"
 ]
 
-REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "5/min"
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "50/min"
 
 HEDERA_NETWORK = 3  # For Mainnet
 
