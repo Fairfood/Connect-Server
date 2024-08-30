@@ -281,12 +281,12 @@ class AppFarmerSerializer(serializers.ModelSerializer):
 
 class OpenTransactionPremiumSerializer(serializers.ModelSerializer):
     id = SerializableRelatedField(read_only=True)
-    premium_id = SerializableRelatedField(read_only=True)
     amount = serializers.FloatField(read_only=True)
+    premium = PremiumSerializer(read_only=True)
 
     class Meta:
         model = PaymentTransaction
-        fields = ("id", "premium_id", "amount",)
+        fields = ("id", "amount",'premium',)
 
 class OpenTransactionSerializer(serializers.ModelSerializer):
     """Serializer for creating external transaction as well as getting
@@ -336,7 +336,7 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
         return PremiumSerializer(premiums, many=True).data
 
     def get_premium_transacton(self, obj):
-        payments = obj.transaction_payments.all()
+        payments = obj.transaction_payments.filter(premium__isnull=False).all()
         return OpenTransactionPremiumSerializer(payments, many=True).data
 
     def to_representation(self, instance):
