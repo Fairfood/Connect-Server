@@ -18,7 +18,6 @@ from sentry_sdk.integrations.redis import RedisIntegration
 
 from . import env
 
-
 ENVIRONMENT = env.get("ENVIRONMENT")
 DEPLOYMENT = env.get("DEPLOYMENT")
 ENTERPRISE_MODE = False
@@ -231,7 +230,7 @@ DATABASES = {
         "NAME": env.get("DB_NAME"),
         "USER": env.get("DB_USER"),
         "PASSWORD": env.get("DB_PASSWORD"),
-        "PORT": "5432",
+        "PORT": env.get("DB_PORT", default="5432"),
         "HOST": env.get("DB_HOST", default="localhost"),
         "DISABLE_SERVER_SIDE_CURSORS": True,
     }
@@ -307,7 +306,7 @@ MODELTRANSLATION_DEFAULT_LANGUAGE = "en-us"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = env.get("STATIC_URL_PATH", default="static/")
 STATIC_ROOT = BASE_DIR / "static"
 
 MEDIA_URL = "/media/"

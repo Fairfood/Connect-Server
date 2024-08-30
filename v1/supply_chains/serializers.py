@@ -1,14 +1,11 @@
 from django.db import transaction
-from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from pkg_resources import require
 from rest_framework import serializers
 
 from base.authentication import utilities as utils
 from base.drf.fields import (PhoneNumberField, RoundingDecimalField,
                              SerializableRelatedField, UnixDateTimeField)
 from base.drf.serializers import DynamicModelSerializer
-from v1.accounts.serializers.user import UserSerializer
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.models.product_models import Premium, Product
 from v1.catalogs.serializers.currency import CurrencySerializer
@@ -22,6 +19,7 @@ from v1.supply_chains.models.company_models import (Company,
                                                     CompanyMember,
                                                     CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
+from v1.transactions.models.payment_models import PaymentTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
 
 
@@ -38,31 +36,29 @@ class EntityCardSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         card_data = validated_data.pop("card")
-        entity_id= validated_data.get("entity")
-        entity_card = EntityCard.objects.filter(
-            entity=entity_id, is_active=True).first()
+        entity_id = validated_data.get("entity")
 
-        card_serializer = ConnectCardSerializer(
-            data=card_data, entity_card=entity_card)
-        
-        if card_serializer.is_valid(raise_exception=True):
-            card = card_serializer.save()
-            validated_data["card"] = card
-            # deactivate entity card if it exists with given 
-            # card_id or display_id
-            other_entity_cards = EntityCard.objects.filter(
-                Q(card__card_id=card.card_id) |
-                Q(card__display_id=card.display_id)).filter(is_active = True)
-            for entity_card in other_entity_cards:
+        entity_card = EntityCard.objects.filter(
+            entity=entity_id, is_active=True
+        ).first()
+
+        card_serializer = ConnectCardSerializer(data=card_data, entity_card=entity_card)
+
+        card_serializer.is_valid(raise_exception=True)
+        card = card_serializer.save()
+        # Always return a card
+        if entity_card:
+            if card.pk == entity_card.card.pk:
+                # Possibly all the cards became inactive
+                entity_card.is_active = True
+                entity_card.save()
+                return entity_card
+            if card.pk != entity_card.card.pk:
                 entity_card.is_active = False
                 entity_card.save()
-        try:
-            instance = EntityCard.objects.get(**validated_data)
-            instance.is_active = True
-            instance.save()
-            return instance
-        except EntityCard.DoesNotExist:
-            return super().create(validated_data)
+
+        validated_data["card"] = card
+        return super().create(validated_data)
 
 
 class EntitySerializer(DynamicModelSerializer):
@@ -102,19 +98,15 @@ class CompanySerializer(DynamicModelSerializer):
         fields=("id", "name", "image", "description", "entity_card"),
     )
     entity_card = EntityCardSerializer(read_only=True)
-    forms = FormSerializer(
-        many=True, read_only=True, exclude_fields=("owner",)
-    )
-    field_visibilties = CompanyFieldVisibiltySerilizer(
-        many=True, read_only=True
-    )
+    forms = FormSerializer(many=True, read_only=True, exclude_fields=("owner",))
+    field_visibilties = CompanyFieldVisibiltySerilizer(many=True, read_only=True)
     owned_premiums = SerializableRelatedField(read_only=True, many=True)
 
     class Meta:
         model = Company
         fields = "__all__"
 
-    
+
 # TODO: Remove this serializer after the migration is complete.
 class CompanyCreateSerializer(DynamicModelSerializer):
     """Serializer for the Company model."""
@@ -256,6 +248,7 @@ class FarmerSerializer(DynamicModelSerializer):
         instance.save()
         return instance
 
+
 class AppFarmerSerializer(serializers.ModelSerializer):
     """Serializer for Farmer model."""
 
@@ -280,21 +273,26 @@ class AppFarmerSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """To perform function to_representation."""
         request = self.context.get("request")
-        language = request.headers.get("Language", 'en')       
+        language = request.headers.get("Language", "en")
         data = super(AppFarmerSerializer, self).to_representation(instance)
-        data["transaction_details"] = instance.transaction_count(language) 
+        data["transaction_details"] = instance.transaction_count(language)
         return data
-    
 
 
+class OpenTransactionPremiumSerializer(serializers.ModelSerializer):
+    id = SerializableRelatedField(read_only=True)
+    amount = serializers.FloatField(read_only=True)
+    premium = PremiumSerializer(read_only=True)
+
+    class Meta:
+        model = PaymentTransaction
+        fields = ("id", "amount",'premium',)
 
 class OpenTransactionSerializer(serializers.ModelSerializer):
     """Serializer for creating external transaction as well as getting
     details."""
 
-    quantity = RoundingDecimalField(
-        max_digits=25, decimal_places=3, write_only=True
-    )
+    quantity = RoundingDecimalField(max_digits=25, decimal_places=3, write_only=True)
     unit = serializers.IntegerField(write_only=True)
     product = ProductSerializer(required=False)
     id = SerializableRelatedField(read_only=True)
@@ -306,7 +304,8 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
     created_on = UnixDateTimeField(required=False)
     date = serializers.DateTimeField(required=False)
     currency = serializers.SerializerMethodField()
-    premium = serializers.SerializerMethodField()  
+    premium = serializers.SerializerMethodField()
+    premium_transacton = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductTransaction
@@ -325,16 +324,20 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
             "currency",
             "source_quantity",
             "amount",
-            "premium"
+            "premium",
+            "premium_transacton",
         )
 
     def get_currency(self, instance):
         return instance.currency.name
 
     def get_premium(self, obj):
-        premiums = Premium.objects.filter(premium_payments__transaction=obj) 
-        return PremiumSerializer(premiums, many=True).data  
+        premiums = Premium.objects.filter(premium_payments__transaction=obj)
+        return PremiumSerializer(premiums, many=True).data
 
+    def get_premium_transacton(self, obj):
+        payments = obj.transaction_payments.filter(premium__isnull=False).all()
+        return OpenTransactionPremiumSerializer(payments, many=True).data
 
     def to_representation(self, instance):
         """Convert the instance to a representation suitable for serialization.
@@ -350,16 +353,12 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
         Returns:
         - dict: The serialized representation of the instance.
         """
-        data = super(OpenTransactionSerializer, self).to_representation(
-            instance
-        )
+        data = super(OpenTransactionSerializer, self).to_representation(instance)
         data["total_premium"] = 0
         data["destination"] = instance.destination.name
         data["date_str"] = _(instance.date.strftime("%d %B, %Y"))
-        premiums = Premium.objects.filter(premium_payments__transaction=instance)
-        for premium in premiums:
-            if premium and premium.amount:
-                data["total_premium"] += premium.amount
+        payment_transactions = instance.transaction_payments.filter(premium__isnull=False).all()
+        for payment_transaction in payment_transactions:
+            if payment_transaction.amount:
+                data["total_premium"] += payment_transaction.amount
         return data
-        
-

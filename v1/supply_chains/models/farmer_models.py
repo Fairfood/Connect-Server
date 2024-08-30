@@ -2,13 +2,16 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from . import base_models
-from .. import constants as sc_consts
 from base.db import models as abstarct_models
+from v1.catalogs.models.product_models import Premium
 from v1.forms.models import Submission
+from v1.supply_chains import constants as sc_consts
+from v1.supply_chains.models import base_models
+from v1.supply_chains.validators import (validate_coordinates,
+                                         validate_geojson_polygon)
 from v1.transactions.models.transaction_models import ProductTransaction
-from v1.transactions.models.payment_models import PaymentTransaction
-from v1.catalogs.models.product_models import Premium 
+
+
 class AbstractFarmerModel(
     abstarct_models.AbstractAddressModel,
     abstarct_models.AbstractNumberedModel,
@@ -68,6 +71,9 @@ class Farmer(AbstractFarmerModel):
         blank=True,
         verbose_name=_("Submission"),
     )
+    geo_json = models.JSONField(null=True, blank=True,
+                         validators=[validate_geojson_polygon,
+                                     validate_coordinates])
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -80,17 +86,17 @@ class Farmer(AbstractFarmerModel):
     def transaction_count(self, language):
         """To perform function transaction_count."""
         data = {"volume": 0, "income": 0, "premium": 0}
-        transactions = ProductTransaction.objects.filter(
+        transactions = ProductTransaction.objects.filter(is_deleted=False).filter(
             Q(source=self) | Q(destination=self)
         )
         data["count"] = transactions.count()
         for transaction in transactions:
             data["volume"] += float(transaction.quantity)
             data["income"] += transaction.amount
-            premiums = Premium.objects.filter(premium_payments__transaction=transaction)
-            for premium in premiums:
-                if premium and premium.amount:
-                    data["premium"] += premium.amount
+            payment_transactions = transaction.transaction_payments.filter(premium__isnull=False).all()
+            for payment_transaction in payment_transactions:
+                if payment_transaction.amount:
+                    data["premium"] += payment_transaction.amount
         first_transaction = transactions.first()
         data["currency"] = (
             first_transaction.currency.name 

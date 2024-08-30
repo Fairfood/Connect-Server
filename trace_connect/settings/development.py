@@ -1,11 +1,7 @@
 from datetime import timedelta
 
 from .base import *  # noqa
-from .base import env
-from .base import INSTALLED_APPS
-from .base import REST_FRAMEWORK
-from .base import SIMPLE_JWT
-
+from .base import INSTALLED_APPS, REST_FRAMEWORK, SIMPLE_JWT, env
 
 ENVIRONMENT = "development"
 DEBUG = True

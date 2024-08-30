@@ -1,31 +1,28 @@
 from django.db.models import Q
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import generics
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-
-from .filters import EntityCardFilterSet
-from .filters import FarmerFilterSet
-from .filters import OpenFilterTransactions
-from base.request_handler.views import IDDEcodeScopeViewset
 from base.exceptions.custom_exceptions import BadRequest
+from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.functions import decode
 from v1.supply_chains.models.base_models import EntityCard
-from v1.supply_chains.models.company_models import Company
-from v1.supply_chains.models.company_models import CompanyMember
-from v1.supply_chains.models.company_models import CompanyProduct
+from v1.supply_chains.models.company_models import (Company, CompanyMember,
+                                                    CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
-from v1.supply_chains.serializers import CompanyCreateSerializer
-from v1.supply_chains.serializers import CompanyMemerSerializer
-from v1.supply_chains.serializers import CompanyProductSerializer
-from v1.supply_chains.serializers import CompanySerializer
-from v1.supply_chains.serializers import EntityCardSerializer
-from v1.supply_chains.serializers import FarmerSerializer
-from v1.supply_chains.serializers import AppFarmerSerializer
-from v1.supply_chains.serializers import OpenTransactionSerializer
+from v1.supply_chains.serializers import (AppFarmerSerializer,
+                                          CompanyCreateSerializer,
+                                          CompanyMemerSerializer,
+                                          CompanyProductSerializer,
+                                          CompanySerializer,
+                                          EntityCardSerializer,
+                                          FarmerSerializer,
+                                          OpenTransactionSerializer)
 from v1.transactions.models.transaction_models import ProductTransaction
+
+from .filters import (EntityCardFilterSet, FarmerFilterSet,
+                      OpenFilterTransactions)
 
 
 class EntityCardViewSet(IDDEcodeScopeViewset):
@@ -122,9 +119,12 @@ class FarmerDetailsAPI(generics.ListAPIView):
                 str(self.kwargs["pk"]).upper().lstrip("FF").replace(" ", "")
             )
             entity = EntityCard.objects.filter(
-                card__display_id__iexact=fair_id).first().entity
+                card__display_id__iexact=fair_id).order_by('-created_on').first().entity
         except Exception:
             raise BadRequest("Invalid card number")
+        if not Farmer.objects.filter(id=entity.id).exists():
+            raise BadRequest("No farmer associated with this card number.")
+
         return  Farmer.objects.filter(id=entity.id)
 
 
@@ -142,14 +142,14 @@ class OpenTransactionAPI(generics.ListAPIView):
         """To perform function get_queryset."""
         card_id = self.request.query_params.get("card_id", None)
         fair_id = card_id.upper().lstrip("FF").replace(" ", "")
-        entity_card = EntityCard.objects.filter(card__display_id__iexact=fair_id).first()
+        entity_card = EntityCard.objects.filter(card__display_id__iexact=fair_id).order_by('-created_on').first()
         if not entity_card:
             raise BadRequest("Invalid card number")
         if not entity_card.entity:
             raise BadRequest("Invalid card number")
         entity = entity_card.entity
         query = Q(source__id=entity.id) | Q(destination__id=entity.id)
-        return ProductTransaction.objects.filter(query).order_by("-date")
+        return ProductTransaction.objects.filter(is_deleted=False).filter(query).order_by("-date")
         
     
 class OpenTransactionDetails(generics.ListAPIView):

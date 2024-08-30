@@ -113,12 +113,6 @@ class EntityCard(AbstractBaseModel):
 
     objects = managers.EntityCardQuerySet.as_manager()
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["card", "entity"], name="unique_entity_card"
-            )
-        ]
 
     def __str__(self):
         return f"{self.card} - {self.entity.name}"
@@ -126,8 +120,8 @@ class EntityCard(AbstractBaseModel):
     def save(self, *args, **kwargs):
         """Overrides the save method to perform additional actions before and
         after saving."""
-        if self.is_active:
-            self.__class__.objects.deactivate_other_entities(self.card)
+        # if self.is_active: handled in serializer
+        #     self.__class__.objects.deactivate_other_entities(self.card)
 
         super().save(*args, **kwargs)
 

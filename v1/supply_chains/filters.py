@@ -2,11 +2,9 @@ from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from base.authentication import utilities as utils
-from utilities.functions import unix_to_datetime
+from utilities.functions import decode, unix_to_datetime
 from v1.supply_chains.models.base_models import EntityCard
 from v1.supply_chains.models.farmer_models import Farmer
-
-from utilities.functions import decode
 
 
 class FarmerFilterSet(filters.FilterSet):
@@ -21,17 +19,22 @@ class FarmerFilterSet(filters.FilterSet):
     created_after = filters.NumberFilter(
         method="after_date_time_filter", field_name="created_on"
     )
-    skip_only_connect = filters.BooleanFilter(
-        method="skip_only_connect_filter"
-    )
+    skip_only_connect = filters.BooleanFilter(method="skip_only_connect_filter")
+    first_name = filters.CharFilter(lookup_expr="icontains")
+    last_name = filters.CharFilter(lookup_expr="icontains")
+    number = filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = Farmer
-        fields = {
-            "first_name": ["icontains"],
-            "last_name": ["icontains"],
-            "number": ["icontains"],
-        }
+        fields = (
+            "first_name",
+            "last_name",
+            "number",
+            "updated_after",
+            "created_after",
+            "skip_only_connect",
+            "reference_number",
+        )
 
     @property
     def qs(self):
@@ -47,7 +50,7 @@ class FarmerFilterSet(filters.FilterSet):
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
         if value or value == "true":
-            return queryset.exclude(buyer__only_connect=True)
+            return queryset.filter(buyer__only_connect=False)
         return queryset
 
     def after_date_time_filter(self, queryset, name, value):
@@ -63,18 +66,12 @@ class EntityCardFilterSet(filters.FilterSet):
     This filter set allows filtering of EntityCard objects.
     """
 
-    card_id = filters.CharFilter(
-        field_name="card__card_id", lookup_expr="icontains"
-    )
+    card_id = filters.CharFilter(field_name="card__card_id", lookup_expr="icontains")
     created_after = filters.NumberFilter(
         method="after_date_time_filter", field_name="updated_on"
     )
-    skip_only_connect = filters.BooleanFilter(
-        method="skip_only_connect_filter"
-    )
-    entity = filters.CharFilter(
-        method="entity_filter"
-    )
+    skip_only_connect = filters.BooleanFilter(method="skip_only_connect_filter")
+    entity = filters.CharFilter(method="entity_filter")
 
     class Meta:
         model = EntityCard
@@ -93,9 +90,8 @@ class EntityCardFilterSet(filters.FilterSet):
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
         if value or value == "true":
-            return queryset.exclude(
-                Q(entity__only_connect=True)
-                | Q(entity__buyer__only_connect=True)
+            return queryset.filter(
+                Q(entity__only_connect=False) | Q(entity__buyer__only_connect=False)
             )
         return queryset
 
@@ -104,13 +100,11 @@ class EntityCardFilterSet(filters.FilterSet):
         name += "__gt"
         value = unix_to_datetime(value)
         return queryset.filter(**{name: value})
-    
+
     def entity_filter(self, queryset, name, value):
         """Return queryset."""
-        queryset = queryset.filter(
-            entity__id=decode(value), is_active=True)
+        queryset = queryset.filter(entity__id=decode(value), is_active=True)
         return queryset
-
 
 
 class OpenFilterTransactions(filters.FilterSet):
