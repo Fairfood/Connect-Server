@@ -357,8 +357,8 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
         data["total_premium"] = 0
         data["destination"] = instance.destination.name
         data["date_str"] = _(instance.date.strftime("%d %B, %Y"))
-        premiums = Premium.objects.filter(premium_payments__transaction=instance)
-        for premium in premiums:
-            if premium and premium.amount:
-                data["total_premium"] += premium.amount
+        payment_transactions = instance.transaction_payments.filter(premium__isnull=False).all()
+        for payment_transaction in payment_transactions:
+            if payment_transaction.amount:
+                data["total_premium"] += payment_transaction.amount
         return data
