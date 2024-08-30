@@ -325,6 +325,7 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
             "source_quantity",
             "amount",
             "premium",
+            "premium_transacton",
         )
 
     def get_currency(self, instance):
