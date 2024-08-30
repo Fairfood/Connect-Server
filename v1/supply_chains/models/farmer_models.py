@@ -93,10 +93,10 @@ class Farmer(AbstractFarmerModel):
         for transaction in transactions:
             data["volume"] += float(transaction.quantity)
             data["income"] += transaction.amount
-            premiums = Premium.objects.filter(premium_payments__transaction=transaction)
-            for premium in premiums:
-                if premium and premium.amount:
-                    data["premium"] += premium.amount
+            payment_transactions = transaction.transaction_payments.filter(premium__isnull=False).all()
+            for payment_transaction in payment_transactions:
+                if payment_transaction.amount:
+                    data["premium"] += payment_transaction.amount
         first_transaction = transactions.first()
         data["currency"] = (
             first_transaction.currency.name 

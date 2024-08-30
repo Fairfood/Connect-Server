@@ -19,6 +19,7 @@ from v1.supply_chains.models.company_models import (Company,
                                                     CompanyMember,
                                                     CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
+from v1.transactions.models.payment_models import PaymentTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
 
 
@@ -278,6 +279,15 @@ class AppFarmerSerializer(serializers.ModelSerializer):
         return data
 
 
+class OpenTransactionPremiumSerializer(serializers.ModelSerializer):
+    id = SerializableRelatedField(read_only=True)
+    amount = serializers.FloatField(read_only=True)
+    premium = PremiumSerializer(read_only=True)
+
+    class Meta:
+        model = PaymentTransaction
+        fields = ("id", "amount",'premium',)
+
 class OpenTransactionSerializer(serializers.ModelSerializer):
     """Serializer for creating external transaction as well as getting
     details."""
@@ -295,6 +305,7 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(required=False)
     currency = serializers.SerializerMethodField()
     premium = serializers.SerializerMethodField()
+    premium_transacton = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductTransaction
@@ -314,6 +325,7 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
             "source_quantity",
             "amount",
             "premium",
+            "premium_transacton",
         )
 
     def get_currency(self, instance):
@@ -322,6 +334,10 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
     def get_premium(self, obj):
         premiums = Premium.objects.filter(premium_payments__transaction=obj)
         return PremiumSerializer(premiums, many=True).data
+
+    def get_premium_transacton(self, obj):
+        payments = obj.transaction_payments.filter(premium__isnull=False).all()
+        return OpenTransactionPremiumSerializer(payments, many=True).data
 
     def to_representation(self, instance):
         """Convert the instance to a representation suitable for serialization.
@@ -341,8 +357,8 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
         data["total_premium"] = 0
         data["destination"] = instance.destination.name
         data["date_str"] = _(instance.date.strftime("%d %B, %Y"))
-        premiums = Premium.objects.filter(premium_payments__transaction=instance)
-        for premium in premiums:
-            if premium and premium.amount:
-                data["total_premium"] += premium.amount
+        payment_transactions = instance.transaction_payments.filter(premium__isnull=False).all()
+        for payment_transaction in payment_transactions:
+            if payment_transaction.amount:
+                data["total_premium"] += payment_transaction.amount
         return data
