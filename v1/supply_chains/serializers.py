@@ -19,6 +19,8 @@ from v1.supply_chains.models.company_models import (Company,
                                                     CompanyMember,
                                                     CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
+from v1.supply_chains.validators import (validate_coordinates,
+                                         validate_geojson_polygon)
 from v1.transactions.models.payment_models import PaymentTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
 
@@ -229,10 +231,13 @@ class FarmerSerializer(DynamicModelSerializer):
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer(required=False)
     phone = PhoneNumberField(required=False, allow_blank=True, allow_null=True)
+    plots = serializers.JSONField(source="geo_json", allow_null=True, validators=[validate_geojson_polygon,
+                                     validate_coordinates])
 
     class Meta:
         model = Farmer
         fields = "__all__"
+
 
     @transaction.atomic
     def create(self, validated_data):
@@ -247,6 +252,14 @@ class FarmerSerializer(DynamicModelSerializer):
             instance.submission = submission
         instance.save()
         return instance
+
+    def to_representation(self, instance):
+        representation =  super().to_representation(instance)
+        # Optionally, remove the original field if it's automatically included
+        if 'geo_json' in representation:
+            representation.pop('geo_json')
+
+        return representation
 
 
 class AppFarmerSerializer(serializers.ModelSerializer):
