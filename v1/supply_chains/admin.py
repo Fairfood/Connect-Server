@@ -24,7 +24,8 @@ class FarmerBuyerListFilter(admin.SimpleListFilter):
         return (
             model_admin.model.objects.values_list("buyer__id", "buyer__company__name")
             .distinct("buyer__id")
-            .all()
+            .order_by("-buyer__id")
+            .all()[:10]
         )
 
     def queryset(self, request, queryset):
@@ -34,7 +35,7 @@ class FarmerBuyerListFilter(admin.SimpleListFilter):
         `self.value()`.
         """
         if self.value():
-            return queryset.filter(buyer=self.value())[:10]
+            return queryset.filter(buyer=self.value())
 
 
 class FarmerCreatorListFilter(admin.SimpleListFilter):
@@ -53,7 +54,8 @@ class FarmerCreatorListFilter(admin.SimpleListFilter):
             model_admin.model.objects.filter(creator__id__isnull=False)
             .values_list("creator__id", "creator__first_name", "creator__last_name")
             .distinct("creator__id")
-            .all()
+            .order_by("-creator__id")
+            .all()[:10]
         )
 
         return [(creator[0], creator[1] + " " + creator[2]) for creator in creators]
@@ -65,7 +67,7 @@ class FarmerCreatorListFilter(admin.SimpleListFilter):
         `self.value()`.
         """
         if self.value():
-            return queryset.filter(creator=self.value())[:10]
+            return queryset.filter(creator=self.value())
 
 
 class CompanyProductInline(admin.TabularInline):
