@@ -1,9 +1,71 @@
 """Models are registered with django admin at here."""
+
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from base.db.admin import BaseAdmin
 
 from .models import base_models, company_models, farmer_models
+
+
+class FarmerBuyerListFilter(admin.SimpleListFilter):
+    title = _("Buyer")
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = "buyer"
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        return (
+            model_admin.model.objects.values_list("buyer__id", "buyer__company__name")
+            .distinct("buyer__id")
+            .all()
+        )
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        if self.value():
+            return queryset.filter(buyer=self.value())[:10]
+
+
+class FarmerCreatorListFilter(admin.SimpleListFilter):
+    title = _("Creator")
+    parameter_name = "creator"
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        creators = (
+            model_admin.model.objects.filter(creator__id__isnull=False)
+            .values_list("creator__id", "creator__first_name", "creator__last_name")
+            .distinct("creator__id")
+            .all()
+        )
+
+        return [(creator[0], creator[1] + " " + creator[2]) for creator in creators]
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        if self.value():
+            return queryset.filter(creator=self.value())[:10]
 
 
 class CompanyProductInline(admin.TabularInline):
@@ -38,21 +100,27 @@ class CompanyMemberAdmin(BaseAdmin):
 class EntityCardAdmin(BaseAdmin):
     """Model representing a company member entity."""
 
-    list_display = (
-        "id",
-        "card",
-        "entity",
-        "is_active"
-    )
-    search_fields = ['id','card__card_id', 'card__display_id']
-
+    list_display = ("id", "card", "entity", "is_active")
+    search_fields = ["id", "card__card_id", "card__display_id"]
 
 
 class FarmerAdmin(BaseAdmin):
     """Model representing a company entity."""
 
-    list_display = ("first_name", "last_name", "id", "buyer")
+    list_display = (
+        "id",
+        "first_name",
+        "last_name",
+        "province",
+        "country",
+        "buyer",
+        "creator",
+    )
     search_fields = ["first_name", "last_name", "id"]
+    list_filter = [
+        FarmerBuyerListFilter,
+        FarmerCreatorListFilter,
+    ]
 
 
 class EntityAdmin(BaseAdmin):
@@ -60,9 +128,9 @@ class EntityAdmin(BaseAdmin):
 
     list_display = ("id", "only_connect", "buyer")
 
+
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
 admin.site.register(base_models.EntityCard, EntityCardAdmin)
 admin.site.register(base_models.Entity, EntityAdmin)
-
