@@ -1,3 +1,4 @@
+
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -6,6 +7,7 @@ from base.authentication import utilities as utils
 from base.drf.fields import (PhoneNumberField, RoundingDecimalField,
                              SerializableRelatedField, UnixDateTimeField)
 from base.drf.serializers import DynamicModelSerializer
+from utilities.country_data import COUNTRY_LIST, COUNTRY_WITH_PROVINCE
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.models.product_models import Premium, Product
 from v1.catalogs.serializers.currency import CurrencySerializer
@@ -232,12 +234,23 @@ class FarmerSerializer(DynamicModelSerializer):
     submission = SubmissionSerializer(required=False)
     phone = PhoneNumberField(required=False, allow_blank=True, allow_null=True)
     plots = serializers.JSONField(source="geo_json", allow_null=True, validators=[validate_geojson_polygon,
-                                     validate_coordinates])
+                                     validate_coordinates], required=False)
+
+    province = serializers.CharField(required=True)
+    country = serializers.CharField(required=True)
 
     class Meta:
         model = Farmer
         fields = "__all__"
 
+    def validate_country(self, value):
+        if value not in COUNTRY_LIST:
+            raise serializers.ValidationError(_("Invalid country."))
+        return value
+    def validate(self, attrs):
+        if attrs["province"] not in COUNTRY_WITH_PROVINCE[attrs["country"]]:
+            raise serializers.ValidationError({"province": _("Invalid province.")})
+        return super().validate(attrs)
 
     @transaction.atomic
     def create(self, validated_data):
