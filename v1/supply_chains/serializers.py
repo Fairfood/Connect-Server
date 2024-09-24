@@ -248,7 +248,7 @@ class FarmerSerializer(DynamicModelSerializer):
             raise serializers.ValidationError(_("Invalid country."))
         return value
     def validate(self, attrs):
-        if attrs["province"] not in COUNTRY_WITH_PROVINCE[attrs["country"]]:
+        if "province" in attrs and attrs["province"] not in COUNTRY_WITH_PROVINCE[attrs["country"]]:
             raise serializers.ValidationError({"province": _("Invalid province.")})
         return super().validate(attrs)
 
