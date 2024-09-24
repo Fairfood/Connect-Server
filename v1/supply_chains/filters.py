@@ -49,7 +49,7 @@ class FarmerFilterSet(filters.FilterSet):
 
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
-        if value or value == "true":
+        if value:
             return queryset.filter(buyer__only_connect=False)
         return queryset
 
@@ -89,9 +89,9 @@ class EntityCardFilterSet(filters.FilterSet):
 
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
-        if value or value == "true":
+        if value:
             return queryset.filter(
-                Q(entity__only_connect=False) | Q(entity__buyer__only_connect=False)
+                Q(entity__only_connect=False) & Q(entity__buyer__only_connect=False)
             )
         return queryset
 
