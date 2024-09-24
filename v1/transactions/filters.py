@@ -56,9 +56,9 @@ class ProductTransactionFilterSet(filters.FilterSet):
 
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
-        if value or value == "true":
+        if value:
             return queryset.filter(
-                Q(source__only_connect=False) | Q(destination__only_connect=False)
+                Q(source__only_connect=False) & Q(destination__only_connect=False)
             )
         return queryset
 

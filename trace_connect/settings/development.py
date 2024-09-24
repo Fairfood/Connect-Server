@@ -43,7 +43,7 @@ INSTALLED_APPS += [
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
 
-SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(minutes=5)
+SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(days=1)
 SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(days=30)
 
 # Media file settings for S3
