@@ -440,7 +440,6 @@ if SSO_ENABLED == "1":
         "description": "Login with Single Sign-On",
         "sso_login_url": env.get("SSO_LOGIN_URL"),
         "client_id": env.get("SSO_AUDIENCE"),
-        "client_secret": env.get("SSO_CLIENT_SECRET"),
         "response_type": env.get("SSO_AUTH_RESPONSE_TYPE", default="code"),
         "code_challenge_method": env.get("SSO_AUTH_CHALLENGE_METHOD", default="S256"),
         "sso_token_url": env.get("SSO_TOKEN_URL"),
