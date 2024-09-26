@@ -1,17 +1,24 @@
+from importlib import import_module
+from typing import Tuple, TypeVar
+
 from django.conf import settings
+from django.contrib.auth.models import AbstractBaseUser
+from django.utils.translation import gettext_lazy as _
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 from rest_framework import authentication
+from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken
-from sentry_sdk import set_tag
+from rest_framework_simplejwt.models import TokenUser
+from rest_framework_simplejwt.tokens import Token
 
-from base.authentication.session import set_to_local
+from base.authentication.utilities import AuthMixin
 from base.exceptions import custom_exceptions as exceptions
-from utilities.functions import decode
+
+AuthUser = TypeVar("AuthUser", AbstractBaseUser, TokenUser)
 
 
-class ExtendedOAuth2Authentication(OAuth2Authentication):
+class OAuth2Authentication(OAuth2Authentication, AuthMixin):
     """Custom OAuth2 authentication class with extended functionality.
 
     This class extends the default OAuth2Authentication to provide
@@ -28,81 +35,78 @@ class ExtendedOAuth2Authentication(OAuth2Authentication):
             request, scopes=[settings.OAUTH2_PROVIDER_AUTH_SCOPE]
         )
         if valid:
+            self.set_section(r.user, r.access_token)
             return r.user, r.access_token
         request.oauth2_error = getattr(r, "oauth2_error", {})
         return None
 
 
-class CombinedAuthentication(authentication.BaseAuthentication):
-    """Custom authentication class combining JWTAuthentication and
-    ExtendedOAuth2Authentication.
-
-    This authentication class first attempts to authenticate using
-    JWTAuthentication. If the token is invalid, it switches to
-    ExtendedOAuth2Authentication and retries authentication.
-
-    Args:
-        request (HttpRequest): The HTTP request to be authenticated.
-
-    Returns:
-        tuple: A tuple containing user and validated token if authentication is
-              successful, or None if authentication fails.
+class JWTAuthentication(JWTAuthentication, AuthMixin):
+    """
+    An authentication plugin that authenticates requests through a JSON web
+    token provided in a request header.
     """
 
-    authentication = JWTAuthentication()
-
-    def authenticate(self, request):
-        """Authenticate the user based on the provided request.
-
-        Args:
-            request (HttpRequest): The HTTP request to be authenticated.
-
-        Returns:
-            tuple: A tuple containing user and validated token if
-                   authentication is successful, or None if authentication
-                   fails.
-        """
-
-        try:
-            user_token = self.authentication.authenticate(request)
-        except InvalidToken:
-            # Switch to ExtendedOAuth2Authentication if JWTAuthentication fails
-            self.authentication = ExtendedOAuth2Authentication()
-            user_token = self.authentication.authenticate(request)
-
-        if not user_token:
-            return None
-
-        user, validated_token = user_token
+    def authenticate(self, request: Request) -> Tuple[AuthUser, Token] | None:
+        auth_response = super().authenticate(request)
+        if not auth_response:
+            return auth_response
+        user, validated_token = auth_response
         self.set_section(user, validated_token)
         return user, validated_token
 
-    def set_section(self, user, validated_token):
-        """Set session data to local storage and tags based on the
-        authentication method used.
+
+class CustomDynamicAuthentication(authentication.BaseAuthentication):
+    """
+    Custom authentication class that dynamically selects and uses the appropriate
+    authentication mechanism based on the `Auth-Type` header in the request.
+    """
+
+    def get_auth_class(self, auth_type):
+        """
+        Retrieves the authentication class based on the provided auth type.
 
         Args:
-            user (User): The authenticated user.
-            validated_token (dict): Validated token data.
+            auth_type (str): The type of authentication specified in the request header.
+
+        Returns:
+            Type: The authentication class corresponding to the auth type.
+
+        Raises:
+            AuthenticationFailed: If the provided auth type is not supported.
         """
-        if self.authentication.__class__ == JWTAuthentication:
-            session_data = {
-                k: decode(v) if k.endswith("_id") else v
-                for k, v in validated_token["session_data"].items()
-            }
 
-            # Check if the device associated with the user is active
-            if not user.is_device_active(session_data["device"]):
-                raise exceptions.AccessForbidden(
-                    "Device deactivated login again."
-                )
-        else:
-            session_data = {
-                "user_id": user.id,
-                "entity_id": validated_token.company_id,
-            }
+        # Get the authentication class path from settings
+        auth_class_path = settings.AUTH_TYPE_CLASSES.get(auth_type)
+        if not auth_class_path:
+            raise exceptions.AuthenticationFailed(
+                f"Unsupported authentication type: {auth_type}"
+            )
 
-        # Set session data to local storage and tags
-        for k, v in session_data.items():
-            set_to_local(k, v)
-            set_tag(f"session.{k}", v)
+        # Split the path into module path and class name
+        module_path, class_name = auth_class_path.rsplit(".", 1)
+
+        # Import the module and get the class
+        module = import_module(module_path)
+        return getattr(module, class_name)
+
+    def authenticate(self, request):
+        """
+        Dynamically selects and uses the appropriate authentication mechanism based on the
+        `Auth-Type` header in the request. Calls the `authenticate` method of the selected
+        authentication class.
+
+        Args:
+            request (HttpRequest): The HTTP request object containing the authentication data.
+
+        Returns:
+            tuple or None: A tuple of (user, auth) if authentication is successful, or None if not.
+        """
+
+        # Extract auth type from request header or default to 'client_credentials'
+        auth_type = request.headers.get("Auth-Type", "client_credentials").lower()
+
+        # Get the relevant authentication class
+        auth_class = self.get_auth_class(auth_type)
+        # Instantiate the authentication class and authenticate
+        return auth_class().authenticate(request)

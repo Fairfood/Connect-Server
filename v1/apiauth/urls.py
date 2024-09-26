@@ -8,6 +8,9 @@ from . import views
 urlpatterns = [
     # Authentication APIS
     path("login/", views.LoginView.as_view(), name="login"),
+    path("handshake/", views.AuthHandshakeView.as_view(), name="handshake"),
+    path("device/registration/", views.AuthDeviceRegisterView.as_view(), name="device_registration"),
+    path("devices/", views.UserDeviceView.as_view(), name="device_registration"),
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path(
         "token/refresh/",

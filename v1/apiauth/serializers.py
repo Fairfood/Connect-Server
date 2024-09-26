@@ -1,27 +1,31 @@
 """Serializer customization for Authentication."""
-from django.contrib.auth import get_user_model
-from django.contrib.auth import password_validation
+
+from datetime import datetime, timedelta
+
+from django.conf import settings
+from django.contrib.auth import get_user_model, password_validation
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.serializers import (
-    TokenRefreshSerializer as SJWTTokenRefreshSerializer,
-)
+from rest_framework_simplejwt.serializers import \
+    TokenRefreshSerializer as SJWTTokenRefreshSerializer
 from rest_framework_simplejwt.state import token_backend
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from base.authentication import utilities as auth_utils
 from base.drf import fields
+from base.drf import utils as base_utils
 from base.exceptions import custom_exceptions as exceptions
 from utilities import functions as util_functions
 from v1.accounts import constants as acc_constants
-from v1.accounts.models import CustomUser
-from v1.accounts.models import PrivacyPolicy
-from v1.accounts.models import UserDevice
-from v1.accounts.models import ValidationToken
-from v1.supply_chains.models.company_models import Company
-from v1.supply_chains.models.company_models import CompanyMember
+from v1.accounts.constants import DeviceType
+from v1.accounts.models import (CustomUser, PrivacyPolicy, UserDevice,
+                                ValidationToken)
+from v1.supply_chains.models.company_models import Company, CompanyMember
+
+from . import models as auth_models
 
 
 class APILoginSerializer(TokenObtainPairSerializer):
@@ -164,9 +168,7 @@ class TokenRefreshSerializer(SJWTTokenRefreshSerializer):
         data["user_id"] = user.id.hashid
         data["entity_id"] = entity.id.hashid
         # setting expiry
-        expires_in = (
-            refresh.access_token.get("exp") - timezone.now().timestamp()
-        )
+        expires_in = refresh.access_token.get("exp") - timezone.now().timestamp()
         data["expires_in"] = int(expires_in if expires_in > 0 else 0)
 
         data["member_type"] = entity_member.type
@@ -187,14 +189,10 @@ class APIPasswordResetSerializer(serializers.Serializer):
             ip, location, device = util_functions.client_details(
                 (self.context["request"])
             )
-            user = CustomUser.objects.get(
-                email=validated_data["email"], is_active=True
-            )
+            user = CustomUser.objects.get(email=validated_data["email"], is_active=True)
             user.reset_password(ip, location, device)
         except CustomUser.DoesNotExist:
-            raise exceptions.BadRequest(
-                _("Email is not registered with any user")
-            )
+            raise exceptions.BadRequest(_("Email is not registered with any user"))
         return validated_data
 
     def to_representation(self, instance):
@@ -269,9 +267,7 @@ class ValidationSerializer(serializers.Serializer):
         user = attrs.get("user", None)
         attrs["user"] = user.id.id
         entity = attrs.pop("entity", None)
-        validation_token = attrs.get("validation_token", {"object": None}).pop(
-            "object"
-        )
+        validation_token = attrs.get("validation_token", {"object": None}).pop("object")
         if entity and not entity.entity_members.filter(user=user).exists():
             raise serializers.ValidationError(
                 _("Member is removed or not available, please contact admin.")
@@ -281,26 +277,20 @@ class ValidationSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     {
                         "validation_token": [
-                            _(
-                                "User ID is required to validate "
-                                "Validation Token"
-                            )
+                            _("User ID is required to validate " "Validation Token")
                         ]
                     }
                 )
             if (
                 not user.password
                 or not user.has_usable_password()
-                or validation_token.type
-                == acc_constants.ValidationTokenType.RESET_PASS
+                or validation_token.type == acc_constants.ValidationTokenType.RESET_PASS
             ):
                 attrs["validation_token"]["set_password"] = True
             if user != getattr(validation_token, "user", None):
                 attrs["validation_token"]["value"] = "-"
                 attrs["validation_token"]["valid"] = False
-                attrs["validation_token"]["message"] = _(
-                    "Invalid validation token"
-                )
+                attrs["validation_token"]["message"] = _("Invalid validation token")
         return attrs
 
     def create(self, validated_data):
@@ -324,9 +314,7 @@ class PasswordResetConfirmSerializer(ValidationSerializer):
         """Validate the serializer data."""
         attrs = super(PasswordResetConfirmSerializer, self).validate(attrs)
         try:
-            attrs["token"] = ValidationToken.objects.get(
-                key=attrs.get("token")
-            )
+            attrs["token"] = ValidationToken.objects.get(key=attrs.get("token"))
         except ValidationToken.DoesNotExist:
             raise exceptions.BadRequest(_("Token does not exist."))
         try:
@@ -336,23 +324,17 @@ class PasswordResetConfirmSerializer(ValidationSerializer):
         if (
             attrs["user"].password
             and attrs["user"].has_usable_password()
-            and attrs["token"].type
-            != acc_constants.ValidationTokenType.RESET_PASS
+            and attrs["token"].type != acc_constants.ValidationTokenType.RESET_PASS
         ):
             raise serializers.ValidationError(
-                _(
-                    "Password already set. "
-                    "User reset password to change password."
-                )
+                _("Password already set. " "User reset password to change password.")
             )
-        if attrs.get("old_password", None) and not attrs[
-            "user"
-        ].check_password(attrs["old_password"]):
+        if attrs.get("old_password", None) and not attrs["user"].check_password(
+            attrs["old_password"]
+        ):
             raise serializers.ValidationError(_("Password is incorrect."))
         if attrs["new_password1"] != attrs["new_password2"]:
-            raise serializers.ValidationError(
-                _("Your passwords didn't match.")
-            )
+            raise serializers.ValidationError(_("Your passwords didn't match."))
         return attrs
 
     def create(self, validated_data):
@@ -361,10 +343,7 @@ class PasswordResetConfirmSerializer(ValidationSerializer):
         super(PasswordResetConfirmSerializer, self).create(validated_data)
         user = validated_data["user"]
         user.set_password(validated_data["new_password1"])
-        if (
-            validated_data["token"].type
-            == acc_constants.ValidationTokenType.INVITE
-        ):
+        if validated_data["token"].type == acc_constants.ValidationTokenType.INVITE:
             user.accepted_policy = PrivacyPolicy.current_privacy_policy()
         user.save()
         validated_data["token"].invalidate()
@@ -390,3 +369,141 @@ class CheckPasswordSerializer(serializers.Serializer):
     def to_representation(self, instance):
         """Return success response."""
         return {"message": "Password is correct"}
+
+
+class AuthHandshakeSerializer(serializers.Serializer):
+    """Serializer to validate and return token after logging in the user."""
+
+    device_id = serializers.CharField(required=True)
+    type = serializers.ChoiceField(choices=DeviceType, required=True)
+    version = serializers.CharField(
+        validators=[base_utils.validate_semantic_version], required=True
+    )
+    nonce = serializers.CharField(required=True)
+
+    def get_device_info(self, validated_data):
+        device_info = {
+            "is_registered": False,
+            "device_id": "",
+            "type": "",
+            "status": "not_registered",
+        }
+        device = UserDevice.objects.filter(
+            registration_id=validated_data["device_id"],
+            version=validated_data["version"],
+            type=validated_data["type"],
+        ).first()
+        if device:
+            device_info["is_registered"] = True
+            device_info["device_id"] = device.registration_id
+            device_info["type"] = device.type
+            device_info["status"] = "active" if device.active else "deactivated"
+        else:
+            device_info["device_id"] = validated_data["device_id"]
+            device_info["type"] = validated_data["type"]
+        return device_info
+
+    def validate_nonce(self, value):
+        if auth_models.AuthSession.objects.filter(
+            client_nonce=value, expires_at__isnull=True
+        ).exists():
+            raise serializers.ValidationError(
+                _(
+                    "The provided nonce value is invalid. This nonce has already been used."
+                )
+            )
+        return value
+
+    @transaction.atomic
+    def generate_session(self, client_nonce):
+        """
+        Create a new session by generating a server_nonce, session_token, and setting expiration.
+
+        Args:
+            client_nonce (str): The client's nonce sent during the handshake.
+
+        Returns:
+            dict: Contains the session token, client nonce, and server nonce.
+        """
+        # Set the session to expire after 15 minutes
+        expires_at = datetime.now() + timedelta(days=1)
+
+        # Store the session information in the database
+        session = auth_models.AuthSession.objects.create(
+            client_nonce=client_nonce, expires_at=expires_at
+        )
+
+        return {
+            "session_token": session.session_token,
+            "server_nonce": session.server_nonce,
+            "expires_at": session.expires_at,
+        }
+
+    def to_representation(self, validated_data):
+        response = {}
+        response["device_info"] = self.get_device_info(validated_data)
+        response["server_info"] = {
+            "server_name": settings.SERVER_NAME,
+            "server_version": base_utils.get_server_version(),
+        }
+        response["authentication_method"] = settings.CONNECT_AUTHENTICATION_METHOD
+        response.update(self.generate_session(validated_data["nonce"]))
+        response["security"] = settings.CONNECT_REQUEST_SECURITY_INFO
+        return response
+
+
+class UserDeviceSerializer(serializers.ModelSerializer):
+    device_id = serializers.CharField(required=True, source="registration_id")
+    type = serializers.ChoiceField(choices=DeviceType, required=True)
+    version = serializers.CharField(
+        validators=[base_utils.validate_semantic_version], required=True
+    )
+    class Meta:
+        model = UserDevice
+        fields = (
+            "id",
+            "type",
+            "device_id",
+            "device_name",
+            "device_loc",
+            "active",
+            "version"
+        )
+
+class AuthDeviceRegistrationSerializer(UserDeviceSerializer):
+    """Serializer to validate and return token after logging in the user."""
+
+    force_logout =  serializers.BooleanField()
+
+    class Meta:
+        model = UserDevice
+        fields = (
+            "id",
+            "type",
+            "device_id",
+            "active",
+            "version",
+            "device_name",
+            "device_loc",
+            "force_logout"
+        )
+
+    def validate(self, attrs):
+        attrs["user"] = auth_utils.get_current_user()
+        entity = attrs["user"].get_default_entity()
+        if not entity.company.allow_multiple_login:
+            if attrs["force_logout"]:
+                UserDevice.deactivate_devices(attrs["user"])
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        device, created = UserDevice.objects.get_or_create(
+            registration_id=validated_data["device_id"], user=validated_data["user"]
+        )
+        if not created:
+            device.active = True
+        device.device_name = validated_data["device_name"]
+        device.device_loc = validated_data["device_loc"]
+        device.version = validated_data["version"]
+        device.save()
+        return device

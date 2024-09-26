@@ -1,5 +1,8 @@
+from django.conf import settings
 from rest_framework import permissions
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
+
+from base.sso.settings import sso_settings
 
 
 class CombinedPermission(permissions.BasePermission):
@@ -58,9 +61,10 @@ class CombinedPermission(permissions.BasePermission):
 
         if token.__class__ in jwt_settings.AUTH_TOKEN_CLASSES:
             return permissions.IsAuthenticated()
+        elif settings.SSO_ENABLED == "1" and token.__class__ in sso_settings.AUTH_TOKEN_CLASSES:
+            return permissions.IsAuthenticated()
         else:
-            from oauth2_provider.contrib.rest_framework import (
-                TokenMatchesOASRequirements,
-            )
+            from oauth2_provider.contrib.rest_framework import \
+                TokenMatchesOASRequirements
 
             return TokenMatchesOASRequirements()

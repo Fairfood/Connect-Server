@@ -8,6 +8,8 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -97,23 +99,17 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "base.authentication.custom_authentication.CombinedAuthentication",
+        "base.authentication.CustomDynamicAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("base.permissions.CombinedPermission",),
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {"anon": "5/min"},
-    "EXCEPTION_HANDLER": (
-        "base.exceptions.exception_handler.custom_exception_handler"
-    ),
+    "EXCEPTION_HANDLER": ("base.exceptions.exception_handler.custom_exception_handler"),
     "DATETIME_FORMAT": "%s",
-    "DEFAULT_PAGINATION_CLASS": (
-        "rest_framework.pagination.LimitOffsetPagination"
-    ),
+    "DEFAULT_PAGINATION_CLASS": ("rest_framework.pagination.LimitOffsetPagination"),
     "PAGE_SIZE": 10,
     "DEFAULT_RENDERER_CLASSES": ("base.request_handler.response.ApiRenderer",),
-    "DEFAULT_FILTER_BACKENDS": (
-        "django_filters.rest_framework.DjangoFilterBackend",
-    ),
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
 }
@@ -132,9 +128,7 @@ OAUTH2_PROVIDER_AUTH_SCOPE = "auth:user"
 OAUTH2_PROVIDER = {
     "APPLICATION_ADMIN_CLASS": "v1.oauth.admin.ClientServerAdmin",
     "ACCESS_TOKEN_ADMIN_CLASS": "v1.oauth.admin.ClientAccessTokenAdmin",
-    "OAUTH2_VALIDATOR_CLASS": (
-        "v1.oauth.validators.OAuth2ClientAccessValidator"
-    ),
+    "OAUTH2_VALIDATOR_CLASS": ("v1.oauth.validators.OAuth2ClientAccessValidator"),
     "SCOPES": {
         "read:farmer": "Read Farmer",
         "create:farmer": "Create Farmer",
@@ -188,8 +182,7 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
     "USER_AUTHENTICATION_RULE": (
-        "rest_framework_simplejwt.authentication"
-        ".default_user_authentication_rule"
+        "rest_framework_simplejwt.authentication.default_user_authentication_rule"
     ),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
@@ -259,21 +252,13 @@ AUTH_PASSWORD_VALIDATORS = [
         ),
     },
     {
-        "NAME": (
-            "django.contrib.auth.password_validation.MinimumLengthValidator"
-        ),
+        "NAME": ("django.contrib.auth.password_validation.MinimumLengthValidator"),
     },
     {
-        "NAME": (
-            "django.contrib.auth.password_validation"
-            ".CommonPasswordValidator"
-        ),
+        "NAME": ("django.contrib.auth.password_validation" ".CommonPasswordValidator"),
     },
     {
-        "NAME": (
-            "django.contrib.auth.password_validation"
-            ".NumericPasswordValidator"
-        ),
+        "NAME": ("django.contrib.auth.password_validation" ".NumericPasswordValidator"),
     },
 ]
 
@@ -430,3 +415,57 @@ sentry_sdk.init(
     },
 )
 sentry_sdk.set_tag("deployment", DEPLOYMENT)
+
+AUTH_TYPE_CLASSES = {
+    'password_grant': 'base.authentication.JWTAuthentication',
+    'client_credentials': 'base.authentication.OAuth2Authentication',
+}
+
+CONNECT_LOGIN_URL = ROOT_URL + "/v1/auth/login/"
+
+CONNECT_AUTHENTICATION_METHOD = {
+    "type": "username_password",
+    "description": "Login with username and password",
+    "url": CONNECT_LOGIN_URL,
+    "auth_type": "password_grant",
+}
+
+SERVER_NAME = env.get("SERVER_NAME")
+SSO_ENABLED = env.get("SSO_ENABLED", default="0")
+CONNECT_REQUEST_SECURITY_INFO = {"nonce_required": True, "hmac_algorithm": "HMAC-SHA256"}
+
+if SSO_ENABLED == "1":
+    CONNECT_AUTHENTICATION_METHOD = {
+        "type": "oauth2",
+        "description": "Login with Single Sign-On",
+        "sso_login_url": env.get("SSO_LOGIN_URL"),
+        "client_id": env.get("SSO_AUDIENCE"),
+        "client_secret": env.get("SSO_CLIENT_SECRET"),
+        "response_type": env.get("SSO_AUTH_RESPONSE_TYPE", default="code"),
+        "code_challenge_method": env.get("SSO_AUTH_CHALLENGE_METHOD", default="S256"),
+        "sso_token_url": env.get("SSO_TOKEN_URL"),
+        "sso_logout_url": env.get("SSO_LOGOUT_URL"),
+        "auth_type": "external_auth",
+    }
+
+    SSO_AUTH = {
+        "ALGORITHM": "RS256",
+        "AUDIENCE": env.get("SSO_AUDIENCE"),
+        "ISSUER": env.get("SSO_TOKEN_ISSUER"),
+        "LEEWAY": 0,
+        "AUTH_HEADER_TYPES": ("Bearer",),
+        "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+        "USER_ID_FIELD": "email",
+        "USER_ID_CLAIM": "email",
+        "AUTH_TOKEN_CLASSES": ("base.sso.tokens.AccessToken",),
+        "TOKEN_TYPE_CLAIM": None,
+        "JTI_CLAIM": "jti",
+        "VERFIFICATION_FILE_PATH": os.path.join(BASE_DIR, "public-key.pem")
+    }
+
+    SSO_SETTINGS_DOC_URL = env.get("SSO_SETTINGS_DOC_URL", default="")
+
+
+    AUTH_TYPE_CLASSES['external_auth'] = 'base.sso.authentication.SSOJWTAuthentication',
+
+

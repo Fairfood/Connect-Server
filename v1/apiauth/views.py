@@ -3,15 +3,14 @@ from django.contrib.auth import logout
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.views import (
-    TokenRefreshView as SJWTTokenRefreshView,
-)
+from rest_framework_simplejwt.views import \
+    TokenRefreshView as SJWTTokenRefreshView
 
-from . import serializers as auth_serializers
 from base.authentication import utilities as utils
 from base.exceptions.custom_exceptions import BadRequest
 from base.request_handler.response import SuccessResponse
 
+from . import serializers as auth_serializers
 
 # Create your views here.
 
@@ -123,3 +122,90 @@ class TraceSyncView(APIView):
         except Exception:
             raise BadRequest("Check your task id.")
         return SuccessResponse(data)
+
+
+class AuthHandshakeView(generics.CreateAPIView):
+    """
+    API View to handle the initial authentication handshake between
+    the client (mobile/web app) and the server. This handshake provides
+    authentication options and returns server-related information like
+    nonce and session tokens for enhanced security.
+    """
+    serializer_class = auth_serializers.AuthHandshakeSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle the POST request for the handshake. It validates the incoming
+        request data using the specified serializer and returns a success response
+        with the serialized data (e.g., authentication methods, server info, etc.).
+
+        Args:
+            request: The incoming request object containing device/app info.
+            *args, **kwargs: Additional arguments for the view.
+
+        Returns:
+            SuccessResponse: A JSON response with the validated handshake data.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return SuccessResponse(serializer.data)
+
+
+class AuthDeviceRegisterView(generics.CreateAPIView):
+    """
+    API View to handle the initial authentication handshake between
+    the client (mobile/web app) and the server. This handshake provides
+    authentication options and returns server-related information like
+    nonce and session tokens for enhanced security.
+    """
+    serializer_class = auth_serializers.AuthDeviceRegistrationSerializer
+    # permission_classes = []
+    # authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle the POST request for the handshake. It validates the incoming
+        request data using the specified serializer and returns a success response
+        with the serialized data (e.g., authentication methods, server info, etc.).
+
+        Args:
+            request: The incoming request object containing device/app info.
+            *args, **kwargs: Additional arguments for the view.
+
+        Returns:
+            SuccessResponse: A JSON response with the validated handshake data.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return SuccessResponse(serializer.data)
+
+
+class UserDeviceView(generics.ListAPIView):
+    """
+    API View to handle the initial authentication handshake between
+    the client (mobile/web app) and the server. This handshake provides
+    authentication options and returns server-related information like
+    nonce and session tokens for enhanced security.
+    """
+    serializer_class = auth_serializers.UserDeviceSerializer
+    # permission_classes = []
+    # authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle the POST request for the handshake. It validates the incoming
+        request data using the specified serializer and returns a success response
+        with the serialized data (e.g., authentication methods, server info, etc.).
+
+        Args:
+            request: The incoming request object containing device/app info.
+            *args, **kwargs: Additional arguments for the view.
+
+        Returns:
+            SuccessResponse: A JSON response with the validated handshake data.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return SuccessResponse(serializer.data)
