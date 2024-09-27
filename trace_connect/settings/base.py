@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from pickle import FALSE
 
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -67,6 +68,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     # 'fcm_django',
     # External utility libraries
     "django_extensions",
@@ -168,7 +170,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(weeks=100),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
@@ -441,6 +443,7 @@ if SSO_ENABLED == "1":
         "sso_login_url": env.get("SSO_LOGIN_URL"),
         "client_id": env.get("SSO_AUDIENCE"),
         "response_type": env.get("SSO_AUTH_RESPONSE_TYPE", default="code"),
+        "app_type": env.get("SSO_AUTH_APP_TYPE", default="Connect"),
         "code_challenge_method": env.get("SSO_AUTH_CHALLENGE_METHOD", default="S256"),
         "sso_token_url": env.get("SSO_TOKEN_URL"),
         "sso_logout_url": env.get("SSO_LOGOUT_URL"),
@@ -465,6 +468,7 @@ if SSO_ENABLED == "1":
     SSO_SETTINGS_DOC_URL = env.get("SSO_SETTINGS_DOC_URL", default="")
 
 
-    AUTH_TYPE_CLASSES['external_auth'] = 'base.sso.authentication.SSOJWTAuthentication',
+    AUTH_TYPE_CLASSES['external_auth'] = 'base.sso.authentication.SSOJWTAuthentication'
+    VALIDATE_HMAC_SIGNATURE = False
 
 

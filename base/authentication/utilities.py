@@ -58,6 +58,14 @@ def get_current_device():
         return current_device
     return None
 
+def get_session_device():
+    """Returns the currently authenticated device while calling handshake.
+
+    Otherwise, returns None.
+    """
+
+    return get_from_local("device", None)
+
 
 class AuthMixin:
 
@@ -80,7 +88,6 @@ class AuthMixin:
             if not user.is_device_active(session_data["device"]):
                 raise exceptions.AccessForbidden("Device deactivated login again.")
         elif self.__class__.__name__ == "OAuth2Authentication":
-            print(dir(validated_token))
             session_data = {
                 "user_id": user.id,
                 "entity_id": validated_token.company_id,
@@ -89,7 +96,7 @@ class AuthMixin:
             from v1.supply_chains.models.company_models import CompanyMember
 
             entity = user.get_default_entity()
-            if not self.entity:
+            if not entity:
                 raise exceptions.AuthenticationFailed(
                     _("User does not have access any Entities")
                 )
@@ -104,8 +111,9 @@ class AuthMixin:
                 )
             session_data = {
                 "user_id": user.id.hashid,
-                "entity_id": self.entity.id.hashid,
+                "entity_id": entity.id.hashid,
                 "member_type": entity_member.type,
+                "device": validated_token["device"]
             }
 
         # Set session data to local storage and tags

@@ -415,7 +415,7 @@ class AuthHandshakeSerializer(serializers.Serializer):
         return value
 
     @transaction.atomic
-    def generate_session(self, client_nonce):
+    def generate_session(self, client_nonce, device_id):
         """
         Create a new session by generating a server_nonce, session_token, and setting expiration.
 
@@ -430,7 +430,7 @@ class AuthHandshakeSerializer(serializers.Serializer):
 
         # Store the session information in the database
         session = auth_models.AuthSession.objects.create(
-            client_nonce=client_nonce, expires_at=expires_at
+            client_nonce=client_nonce, expires_at=expires_at, device_id=device_id
         )
 
         return {
@@ -447,7 +447,7 @@ class AuthHandshakeSerializer(serializers.Serializer):
             "server_version": base_utils.get_server_version(),
         }
         response["authentication_method"] = settings.CONNECT_AUTHENTICATION_METHOD
-        response.update(self.generate_session(validated_data["nonce"]))
+        response.update(self.generate_session(validated_data["nonce"], validated_data["device_id"]))
         response["security"] = settings.CONNECT_REQUEST_SECURITY_INFO
         return response
 
@@ -458,6 +458,7 @@ class UserDeviceSerializer(serializers.ModelSerializer):
     version = serializers.CharField(
         validators=[base_utils.validate_semantic_version], required=True
     )
+    id = fields.SerializableRelatedField(read_only=True)
     class Meta:
         model = UserDevice
         fields = (
@@ -473,7 +474,11 @@ class UserDeviceSerializer(serializers.ModelSerializer):
 class AuthDeviceRegistrationSerializer(UserDeviceSerializer):
     """Serializer to validate and return token after logging in the user."""
 
-    force_logout =  serializers.BooleanField()
+    force_logout =  serializers.BooleanField(required=False)
+    id = fields.SerializableRelatedField(read_only=True)
+    device_name = serializers.CharField(required=True)
+    device_id = serializers.CharField(required=True, source="registration_id")
+
 
     class Meta:
         model = UserDevice
@@ -490,20 +495,34 @@ class AuthDeviceRegistrationSerializer(UserDeviceSerializer):
 
     def validate(self, attrs):
         attrs["user"] = auth_utils.get_current_user()
+        session_device = auth_utils.get_session_device()
+        if session_device != attrs["registration_id"]:
+            raise serializers.ValidationError({"device_id": _("Invalid device_id.")})
         entity = attrs["user"].get_default_entity()
         if not entity.company.allow_multiple_login:
-            if attrs["force_logout"]:
-                UserDevice.deactivate_devices(attrs["user"])
+            if self.check_multiple_login(attrs):
+                raise serializers.ValidationError({"device_id": _("User is already logged in another device.")})
         return super().validate(attrs)
 
     def create(self, validated_data):
         device, created = UserDevice.objects.get_or_create(
-            registration_id=validated_data["device_id"], user=validated_data["user"]
+            registration_id=validated_data["registration_id"], user=validated_data["user"]
         )
         if not created:
             device.active = True
-        device.device_name = validated_data["device_name"]
-        device.device_loc = validated_data["device_loc"]
+        device.device_name = validated_data["device_name"] if "device_name" in validated_data else ""
+        device.device_loc = validated_data["device_loc"] if "device_loc" in validated_data else ""
         device.version = validated_data["version"]
         device.save()
         return device
+
+    def check_multiple_login(self, attrs):
+        """Check if user is already logged in on another device."""
+        if "force_logout" in attrs and attrs["force_logout"]:
+            UserDevice.deactivate_devices(attrs["user"])
+        active_devices = UserDevice.active_devices(attrs["user"]).exclude(
+            registration_id=attrs["registration_id"]
+        )
+        if active_devices.exists():
+            return True
+        return False
