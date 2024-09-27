@@ -82,7 +82,6 @@ class CustomDynamicAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed(
                 f"Unsupported authentication type: {auth_type}"
             )
-
         # Split the path into module path and class name
         module_path, class_name = auth_class_path.rsplit(".", 1)
 
