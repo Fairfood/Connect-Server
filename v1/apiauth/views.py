@@ -178,6 +178,7 @@ class AuthDeviceRegisterView(generics.CreateAPIView):
     nonce and session tokens for enhanced security.
     """
     serializer_class = auth_serializers.AuthDeviceRegistrationSerializer
+    exclude_device_validation = True
 
     def post(self, request, *args, **kwargs):
         """

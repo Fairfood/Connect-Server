@@ -23,6 +23,8 @@ if not isinstance(sso_settings.AUTH_HEADER_TYPES, (list, tuple)):
 AUTH_HEADER_TYPE_BYTES: Set[bytes] = {
     h.encode(HTTP_HEADER_ENCODING) for h in AUTH_HEADER_TYPES
 }
+from sentry_sdk import capture_exception, capture_message
+
 from base.authentication import utilities as auth_utils
 
 AuthUser = TypeVar("AuthUser", AbstractBaseUser, TokenUser)
@@ -36,18 +38,33 @@ class SSOJWTAuthentication(JWTAuthentication, auth_utils.AuthMixin):
     """
 
     def authenticate(self, request: Request) -> Optional[Tuple[AuthUser, Token]]:
+        # Get the authorization header from the request
         header = self.get_header(request)
         if header is None:
-            return None
+            return None  # No authorization header found
+
+        # Extract the raw token from the header
         raw_token = self.get_raw_token(header)
         if raw_token is None:
-            return None
+            return None  # No token found in the header
+
+        # Validate the raw token
         validated_token = self.get_validated_token(raw_token)
+
+        # Get the user associated with the validated token
         user = self.get_user(validated_token, request)
+
+        # Get the user session
         session = self.get_user_session(request)
-        self.set_section(
-            user, {"token": validated_token, "device": self.get_device(session)}
-        )
+
+        # Get the device ID from the session
+        device_id = self.get_device(session)
+
+        # Validate the device associated with the request and user
+        self.validate_device(request, device_id, user)
+
+        # Set user session information with token and device details
+        self.set_section(user, {"token": validated_token, "device": device_id})
         return user, validated_token
 
     def get_validated_token(self, raw_token: bytes) -> Token:
@@ -141,8 +158,6 @@ class SSOJWTAuthentication(JWTAuthentication, auth_utils.AuthMixin):
 
             return True  # HMAC validation successful
         except Exception as e:
-            from sentry_sdk import capture_exception
-
             capture_exception(e)
             raise AuthenticationFailed(
                 "HMAC validation failed: An unexpected error occurred during validation."
@@ -184,4 +199,55 @@ class SSOJWTAuthentication(JWTAuthentication, auth_utils.AuthMixin):
         return auth_session
 
     def get_device(self, session):
+        """
+        Get the device ID from the session.
+
+        Args:
+            session: The user session object.
+
+        Returns:
+            The device ID associated with the session.
+        """
         return session.device_id
+
+    def validate_device(self, request, device_id, user):
+        """
+        Validate the device making the request to ensure it is an authorized device for the user.
+
+        Args:
+            request: The Django request object.
+            device_id: The device ID extracted from the session.
+            user: The authenticated user object.
+
+        Raises:
+            AuthenticationFailed: If the device validation fails.
+        """
+        from v1.accounts.models import UserDevice
+
+        # Access the view instance from the request context
+        view = request.parser_context.get("view", None)
+
+        # Skip device validation if the view has 'exclude_device_validation' set to True
+        if view and getattr(view, "exclude_device_validation", False):
+            return
+
+        # Retrieve the device associated with the user and device ID
+        logged_device = UserDevice.get_device_with_device_id(device_id, user)
+
+        # Raise an authentication failure if no valid device is found
+        if not logged_device:
+            self.log_device_auth_failure(user, device_id)
+            raise AuthenticationFailed("Device authentication failed")
+
+    def log_device_auth_failure(self, user, device_id):
+        """
+        Log an authentication failure due to device validation.
+
+        Args:
+            user: The user attempting to authenticate.
+            device_id: The device ID that failed validation.
+        """
+
+        capture_message(
+            f"Device authentication failed for user {user.id} with device ID {device_id}"
+        )
