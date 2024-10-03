@@ -526,3 +526,12 @@ class AuthDeviceRegistrationSerializer(UserDeviceSerializer):
         if active_devices.exists():
             return True
         return False
+
+    def to_representation(self, instance):
+        response =  super().to_representation(instance)
+        response["user_id"] = instance.user.id
+        entity = instance.user.get_default_entity()
+        response["entity_id"] = ""
+        if entity:
+            response["entity_id"] = entity.id
+        return response
