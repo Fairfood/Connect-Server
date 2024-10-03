@@ -12,7 +12,7 @@ class AuthSession(AbstractBaseModel):
     """
 
     session_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    client_nonce = models.CharField(max_length=256)
+    client_nonce = models.CharField(max_length=256, unique=True)
     server_nonce = models.UUIDField(default=uuid.uuid4, editable=False)
     device_id = models.CharField(max_length=256, null=True, blank=True)  # To track device
     created_at = models.DateTimeField(auto_now_add=True)

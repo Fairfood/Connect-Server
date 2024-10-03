@@ -195,7 +195,13 @@ class SSOJWTAuthentication(JWTAuthentication, auth_utils.AuthMixin):
                 raise AuthenticationFailed(
                     "HMAC validation failed: 'HMAC-Signature' header required"
                 )
-            self.validate_hmac_signature(auth_session, received_signature, request)
+
+            # Access the view instance from the request context
+            view = request.parser_context.get("view", None)
+
+            # Validate signature only if the view has 'validate_payload_signature' set to True
+            if view and getattr(view, "validate_payload_signature", False):
+                self.validate_hmac_signature(auth_session, received_signature, request)
         return auth_session
 
     def get_device(self, session):
