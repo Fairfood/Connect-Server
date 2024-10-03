@@ -446,6 +446,7 @@ if SSO_ENABLED == "1":
         "app_type": env.get("SSO_AUTH_APP_TYPE", default="Connect"),
         "code_challenge_method": env.get("SSO_AUTH_CHALLENGE_METHOD", default="S256"),
         "sso_token_url": env.get("SSO_TOKEN_URL"),
+        "sso_revoke_token_url": env.get("SSO_REVOKE_TOKEN_URL"),
         "sso_logout_url": env.get("SSO_LOGOUT_URL"),
         "auth_type": "external_auth",
     }
