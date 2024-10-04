@@ -405,7 +405,7 @@ class AuthHandshakeSerializer(serializers.Serializer):
 
     def validate_nonce(self, value):
         if auth_models.AuthSession.objects.filter(
-            client_nonce=value, expires_at__isnull=True
+            client_nonce=value
         ).exists():
             raise serializers.ValidationError(
                 _(
