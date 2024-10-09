@@ -33,6 +33,7 @@ class Farmer(AbstractFarmerModel):
 
     Attributes:
         identification_no (str): The identification number of the farmer.
+        reference_number (str): Used to mention external reference of a farmer.
         first_name (str): The first name of the farmer.
         last_name (str, optional): The last name of the farmer (optional).
         date_of_birth (date, optional): The date of birth of the farmer
@@ -74,6 +75,7 @@ class Farmer(AbstractFarmerModel):
     geo_json = models.JSONField(null=True, blank=True,
                          validators=[validate_geojson_polygon,
                                      validate_coordinates])
+    meta_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
