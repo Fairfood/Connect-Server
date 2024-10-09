@@ -238,6 +238,7 @@ class FarmerSerializer(DynamicModelSerializer):
 
     province = serializers.CharField(required=True)
     country = serializers.CharField(required=True)
+    meta_data = serializers.JSONField(allow_null=True, required=False)
 
     class Meta:
         model = Farmer
