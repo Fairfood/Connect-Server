@@ -117,8 +117,10 @@ class FarmerAdmin(BaseAdmin):
         "country",
         "buyer",
         "creator",
+        "created_on"
     )
     search_fields = ["first_name", "last_name", "id"]
+    readonly_fields = ["submission", "buyer", "entity_card"]
     list_filter = [
         FarmerBuyerListFilter,
         FarmerCreatorListFilter,
