@@ -83,6 +83,7 @@ class CompanyAdmin(BaseAdmin):
     list_display = (
         "name",
         "id",
+        "created_on"
     )
     search_fields = ["name"]
     inlines = [CompanyProductInline]
