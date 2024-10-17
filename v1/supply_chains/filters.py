@@ -19,6 +19,9 @@ class FarmerFilterSet(filters.FilterSet):
     created_after = filters.NumberFilter(
         method="after_date_time_filter", field_name="created_on"
     )
+    created_after_farmer = filters.CharFilter(
+        method="after_farmer_id_filter", field_name="id"
+    )
     skip_only_connect = filters.BooleanFilter(method="skip_only_connect_filter")
     first_name = filters.CharFilter(lookup_expr="icontains")
     last_name = filters.CharFilter(lookup_expr="icontains")
@@ -34,6 +37,7 @@ class FarmerFilterSet(filters.FilterSet):
             "created_after",
             "skip_only_connect",
             "reference_number",
+            "created_after_farmer"
         )
 
     @property
@@ -58,6 +62,10 @@ class FarmerFilterSet(filters.FilterSet):
         name += "__gt"
         value = unix_to_datetime(value)
         return queryset.filter(**{name: value})
+
+    def after_farmer_id_filter(self, queryset, name, value):
+        """Return queryset."""
+        return queryset.filter(id__gt= value)
 
 
 class EntityCardFilterSet(filters.FilterSet):
