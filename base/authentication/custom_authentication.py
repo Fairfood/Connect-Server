@@ -102,8 +102,8 @@ class CustomDynamicAuthentication(authentication.BaseAuthentication):
             tuple or None: A tuple of (user, auth) if authentication is successful, or None if not.
         """
 
-        # Extract auth type from request header or default to 'client_credentials'
-        auth_type = request.headers.get("Auth-Type", "client_credentials").lower()
+        # Extract auth type from request header or default to 'password_grant'
+        auth_type = request.headers.get("Auth-Type", "password_grant").lower()
 
         # Get the relevant authentication class
         auth_class = self.get_auth_class(auth_type)
