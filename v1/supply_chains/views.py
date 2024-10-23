@@ -13,6 +13,7 @@ from v1.supply_chains.models.company_models import (Company, CompanyMember,
 from v1.supply_chains.models.farmer_models import Farmer
 from v1.supply_chains.serializers import (AppFarmerSerializer,
                                           CompanyCreateSerializer,
+                                          CompanyMemerMiniSerializer,
                                           CompanyMemerSerializer,
                                           CompanyProductSerializer,
                                           CompanySerializer,
@@ -92,9 +93,9 @@ class CompanyMemberViewSet(IDDEcodeScopeViewset):
     """A viewset for viewing and editing CompanyMember instances."""
 
     queryset = CompanyMember.objects.all()
-    serializer_class = CompanyMemerSerializer
+    serializer_class = CompanyMemerMiniSerializer
     resource_types = ["company"]
-    http_method_names = ("post", "get")
+    http_method_names = ("post")
 
 
 class CompanyProductViewSet(IDDEcodeScopeViewset):
@@ -127,6 +128,17 @@ class FarmerDetailsAPI(generics.ListAPIView):
 
         return  Farmer.objects.filter(id=entity.id)
 
+class CompanyMemberView(generics.ListAPIView):
+    """A viewset for viewing and editing CompanyMember instances."""
+
+    queryset = CompanyMember.objects.all()
+    serializer_class = CompanyMemerSerializer
+    http_method_names = ("get")
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.filter(company=self.kwargs["pk"])
+        return qs
 
 class OpenTransactionAPI(generics.ListAPIView):
     """View for list transaction details of particular farmer.

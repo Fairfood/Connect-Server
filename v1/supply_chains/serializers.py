@@ -8,6 +8,7 @@ from base.drf.fields import (PhoneNumberField, RoundingDecimalField,
                              SerializableRelatedField, UnixDateTimeField)
 from base.drf.serializers import DynamicModelSerializer
 from utilities.country_data import COUNTRY_LIST, COUNTRY_WITH_PROVINCE
+from v1.accounts.serializers import user as user_serializers
 from v1.catalogs.models.common_models import Currency
 from v1.catalogs.models.product_models import Premium, Product
 from v1.catalogs.serializers.currency import CurrencySerializer
@@ -133,7 +134,7 @@ class CompanyCreateSerializer(DynamicModelSerializer):
         return super().create(validated_data)
 
 
-class CompanyMemerSerializer(DynamicModelSerializer):
+class CompanyMemerMiniSerializer(DynamicModelSerializer):
     """Serializer for CompanyMember.
 
     This serializer includes details about the user associated with the
@@ -390,3 +391,24 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
             if payment_transaction.amount:
                 data["total_premium"] += payment_transaction.amount
         return data
+
+
+class CompanyMemerSerializer(CompanyMemerMiniSerializer):
+    """Serializer for CompanyMember.
+
+    This serializer includes details about the user associated with the
+    company member, using a nested UserSerializer.
+    """
+
+    user = user_serializers.UserSerializer(
+        fields=(
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "dob",
+            "address",
+            "language",
+        )
+    )
