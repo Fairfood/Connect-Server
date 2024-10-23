@@ -94,7 +94,7 @@ class CompanyMemberViewSet(IDDEcodeScopeViewset):
     queryset = CompanyMember.objects.all()
     serializer_class = CompanyMemerSerializer
     resource_types = ["company"]
-    http_method_names = ("post",)
+    http_method_names = ("post", "get")
 
 
 class CompanyProductViewSet(IDDEcodeScopeViewset):
