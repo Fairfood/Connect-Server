@@ -13,6 +13,7 @@ from rest_framework_simplejwt.exceptions import (AuthenticationFailed,
 from rest_framework_simplejwt.models import TokenUser
 from rest_framework_simplejwt.tokens import Token
 
+from base.exceptions import custom_exceptions as exceptions
 from base.sso.settings import sso_settings
 
 AUTH_HEADER_TYPES = sso_settings.AUTH_HEADER_TYPES
@@ -244,6 +245,10 @@ class SSOJWTAuthentication(JWTAuthentication, auth_utils.AuthMixin):
         if not logged_device:
             self.log_device_auth_failure(user, device_id)
             raise AuthenticationFailed("Device authentication failed")
+
+        # Raise an authentication failure if device is inactive
+        if not logged_device.active:
+            raise exceptions.AccessForbidden("Device deactivated login again.")
 
     def log_device_auth_failure(self, user, device_id):
         """
