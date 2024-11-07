@@ -131,7 +131,14 @@ class CompanyCreateSerializer(DynamicModelSerializer):
             except Currency.DoesNotExist:
                 currency_obj = Currency.objects.get(code=currency)
             validated_data["currency"] = currency_obj
-        return super().create(validated_data)
+        image = None
+        if "image" in validated_data:
+            image  = validated_data.pop("image")
+        company_obj =  super().create(validated_data)
+        if image:
+            company_obj.image = image
+            company_obj.save()
+        return company_obj
 
 
 class CompanyMemerMiniSerializer(DynamicModelSerializer):
