@@ -86,6 +86,15 @@ class CompanyAdmin(BaseAdmin):
         "created_on"
     )
     search_fields = ["name"]
+    readonly_fields = (
+        "created_on",
+        "updated_on",
+        "creator",
+        "updater",
+        'currency',
+        'buyer',
+        'entity_card',
+    )
     inlines = [CompanyProductInline]
 
 
