@@ -471,6 +471,3 @@ if SSO_ENABLED == "1":
 
     AUTH_TYPE_CLASSES['external_auth'] = 'base.sso.authentication.SSOJWTAuthentication'
     VALIDATE_HMAC_SIGNATURE = False
-
-
-DEFAULT_CURRENCY_CODE = env.get("DEFAULT_CURRENCY_CODE", default="IDR")

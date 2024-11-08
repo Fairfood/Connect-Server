@@ -1,5 +1,4 @@
 
-from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -111,17 +110,6 @@ class CompanySerializer(DynamicModelSerializer):
     class Meta:
         model = Company
         fields = "__all__"
-
-    def create(self, validated_data):
-        company_obj = super().create(validated_data)
-        if not company_obj.currency:
-            currency_code = settings.DEFAULT_CURRENCY_CODE
-            from v1.catalogs.models import common_models as catalog_models
-            currency_obj = catalog_models.Currency.objects.filter(code=currency_code).first()
-            if currency_obj:
-                company_obj.currency = currency_obj
-                company_obj.save()
-        return company_obj
 
 
 # TODO: Remove this serializer after the migration is complete.
