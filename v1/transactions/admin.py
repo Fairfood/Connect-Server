@@ -22,7 +22,7 @@ class ProductTransactionAdmin(BaseAdmin):
         "quantity",
         "creator_email",
     ]
-    readonly_fields = ["parents"]
+    autocomplete_fields = ['product', "source", "destination", "card","parents",]
 
     def creator_email(self, obj):
         """Get creator."""
@@ -47,7 +47,7 @@ class PaymentTransactionAdmin(BaseAdmin):
         "creator_email",
         "premium_name",
     ]
-    readonly_fields = ["transaction", "source", "destination"]
+    autocomplete_fields = ['premium', "currency", "transaction", "source", "destination", "card",]
 
     def creator_email(self, obj):
         """Get creator."""
