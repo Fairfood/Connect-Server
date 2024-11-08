@@ -91,9 +91,6 @@ class CompanyAdmin(BaseAdmin):
         "updated_on",
         "creator",
         "updater",
-        'currency',
-        'buyer',
-        'entity_card',
     )
     inlines = [CompanyProductInline]
 
