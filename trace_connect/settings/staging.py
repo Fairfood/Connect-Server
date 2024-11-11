@@ -22,7 +22,7 @@ CORS_ALLOW_HEADERS += [
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
 
 SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(minutes=5)
-SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(days=7)
+SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(minutes=10)
 
 # Media file settings for S3
 
