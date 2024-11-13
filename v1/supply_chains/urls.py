@@ -1,16 +1,12 @@
 """URLs of the app supply_chains."""
-from django.urls import path
-from django.urls import include
+from django.urls import include, path
 from rest_framework import routers
 
-from v1.supply_chains.views import CompanyMemberViewSet
-from v1.supply_chains.views import CompanyProductViewSet
-from v1.supply_chains.views import CompanyViewSet
-from v1.supply_chains.views import EntityCardViewSet
-from v1.supply_chains.views import FarmerViewSet
-from v1.supply_chains.views import FarmerDetailsAPI
-from v1.supply_chains.views import OpenTransactionAPI
-from v1.supply_chains.views import OpenTransactionDetails
+from v1.supply_chains.views import (CompanyMemberView, CompanyMemberViewSet,
+                                    CompanyProductViewSet, CompanyViewSet,
+                                    EntityCardViewSet, FarmerDetailsAPI,
+                                    FarmerViewSet, OpenTransactionAPI,
+                                    OpenTransactionDetails)
 
 router = routers.DefaultRouter()
 router.register("entity-cards", EntityCardViewSet, basename="entity-cards")
@@ -28,5 +24,6 @@ urlpatterns = [
     path("open/transaction/", OpenTransactionAPI.as_view()),
     path("open/transaction/<pk>/",OpenTransactionDetails.as_view()),
     path("", include(router.urls)),
+    path("company/<pk>/members/",CompanyMemberView.as_view()),
 
 ]

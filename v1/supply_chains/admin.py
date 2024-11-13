@@ -86,6 +86,13 @@ class CompanyAdmin(BaseAdmin):
         "created_on"
     )
     search_fields = ["name"]
+    readonly_fields = (
+        "created_on",
+        "updated_on",
+        "creator",
+        "updater",
+    )
+    autocomplete_fields = ['buyer', "currency", "entity_card",]
     inlines = [CompanyProductInline]
 
 
@@ -121,7 +128,7 @@ class FarmerAdmin(BaseAdmin):
         "created_on"
     )
     search_fields = ["first_name", "last_name", "id"]
-    readonly_fields = ["submission", "buyer", "entity_card"]
+    autocomplete_fields = ['buyer', "submission", "entity_card",]
     list_filter = [
         FarmerBuyerListFilter,
         FarmerCreatorListFilter,
