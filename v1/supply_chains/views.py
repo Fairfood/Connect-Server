@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from base.authentication import utilities as utils
 from base.exceptions.custom_exceptions import BadRequest
 from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.functions import decode
@@ -65,6 +66,24 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         if self.action in ["create", "update", "partial_update"]:
             return CompanyCreateSerializer
         return super().get_serializer_class()
+
+    @action(methods=("post",), detail=False, url_path="buyer")
+    def buyer_create(self, request):
+        """
+        Create a new company as buyer
+        """
+        source_company_id = request.data.pop("source_company_id", None)
+        source_company = Company.objects.filter(id=source_company_id).first()
+        if not source_company:
+            source_company = utils.get_current_entity()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        company = serializer.save()
+        if company and source_company:
+            source_company.buyer = company
+            source_company.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class FarmerViewSet(IDDEcodeScopeViewset):
