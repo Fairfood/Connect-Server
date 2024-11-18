@@ -16,15 +16,17 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include
-from django.urls import path
-from django.urls import register_converter
+from django.urls import include, path, register_converter
+from django_otp.admin import OTPAdminSite
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from base.request_handler import converters
 from base.request_handler import views as base_views
+
+if settings.ENVIRONMENT == "production":
+    admin.site.__class__ = OTPAdminSite
 
 register_converter(converters.IDConverter, "hashid")
 

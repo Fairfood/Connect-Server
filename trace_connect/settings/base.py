@@ -75,6 +75,8 @@ INSTALLED_APPS = [
     "modeltranslation",
     "phonenumber_field",
     "admin_extra_buttons",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
     # Internal Apps (V1)
     "v1.accounts",
     "v1.oauth",
@@ -94,6 +96,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
