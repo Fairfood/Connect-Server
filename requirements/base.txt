@@ -55,3 +55,6 @@ django-redis==5.2.0
 sentry-sdk==1.32.0
 pre-commit==3.4.0
 pytype==2023.10.5
+
+django-otp==1.5.4
+qrcode==8.0
