@@ -1,5 +1,6 @@
 """Models are registered with django admin at here."""
 
+from django import forms
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
@@ -141,8 +142,45 @@ class EntityAdmin(BaseAdmin):
     list_display = ("id", "only_connect", "buyer")
 
 
+class ExternalServiceAdminForm(forms.ModelForm):
+    def clean_service_url(self):
+        if "{{refernce_id}}" not in self.cleaned_data["service_url"]:
+            raise forms.ValidationError("The service url should contain a {{refernce_id}} text.")
+        return self.cleaned_data["service_url"]
+
+
+
+class ExternalServiceAdmin(BaseAdmin):
+    """Model representing a external service entity."""
+
+    form = ExternalServiceAdminForm
+    list_display = ("id", "name", "is_available")
+    readonly_fields = (
+        "created_on",
+        "updated_on",
+        "creator",
+        "updater",
+    )
+
+
+class FarmerServiceAdmin(BaseAdmin):
+    """Model representing a farmer service entity."""
+
+    list_display = ("id", "farmer", "service", "refernce_id", "is_active", "updated_on")
+    autocomplete_fields = ['farmer',]
+    readonly_fields = (
+        "created_on",
+        "updated_on",
+        "creator",
+        "updater",
+    )
+
+
 admin.site.register(company_models.Company, CompanyAdmin)
 admin.site.register(company_models.CompanyMember, CompanyMemberAdmin)
 admin.site.register(farmer_models.Farmer, FarmerAdmin)
 admin.site.register(base_models.EntityCard, EntityCardAdmin)
 admin.site.register(base_models.Entity, EntityAdmin)
+admin.site.register(farmer_models.ExternalService, ExternalServiceAdmin)
+admin.site.register(farmer_models.FarmerService, FarmerServiceAdmin)
+
