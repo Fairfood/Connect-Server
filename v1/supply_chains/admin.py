@@ -23,7 +23,9 @@ class FarmerBuyerListFilter(admin.SimpleListFilter):
         in the right sidebar.
         """
         return (
-            model_admin.model.objects.values_list("buyer__id", "buyer__company__name")
+            base_models.EntityBuyer.objects.values_list(
+                "buyer__id", "buyer__company__name"
+            )
             .distinct("buyer__id")
             .order_by("-buyer__id")
             .all()[:10]
@@ -36,7 +38,11 @@ class FarmerBuyerListFilter(admin.SimpleListFilter):
         `self.value()`.
         """
         if self.value():
-            return queryset.filter(buyer=self.value())
+            return farmer_models.Farmer.objects.filter(
+                id__in=base_models.EntityBuyer.objects.filter(
+                    buyer=self.value()
+                ).values_list("entity__id", flat=True)
+            )
 
 
 class FarmerCreatorListFilter(admin.SimpleListFilter):
@@ -78,14 +84,18 @@ class CompanyProductInline(admin.TabularInline):
     extra = 0
 
 
+class EntiityBuyerAdminInline(admin.TabularInline):
+    model = base_models.EntityBuyer
+    extra = 0
+    verbose_name = "Buyer"
+    fk_name = "entity"
+    raw_id_fields = ("buyer", "entity", "creator", "updater")
+
+
 class CompanyAdmin(BaseAdmin):
     """Model representing a company entity."""
 
-    list_display = (
-        "name",
-        "id",
-        "created_on"
-    )
+    list_display = ("name", "id", "created_on")
     search_fields = ["name"]
     readonly_fields = (
         "created_on",
@@ -93,8 +103,11 @@ class CompanyAdmin(BaseAdmin):
         "creator",
         "updater",
     )
-    autocomplete_fields = ['buyer', "currency", "entity_card",]
-    inlines = [CompanyProductInline]
+    autocomplete_fields = [
+        "currency",
+        "entity_card",
+    ]
+    inlines = [CompanyProductInline, EntiityBuyerAdminInline]
 
 
 class CompanyMemberAdmin(BaseAdmin):
@@ -124,16 +137,24 @@ class FarmerAdmin(BaseAdmin):
         "last_name",
         "province",
         "country",
-        "buyer",
+        "default_buyer",
         "creator",
-        "created_on"
+        "created_on",
     )
+
     search_fields = ["first_name", "last_name", "id"]
-    autocomplete_fields = ['buyer', "submission", "entity_card",]
+    autocomplete_fields = [
+        "submission",
+        "entity_card",
+    ]
     list_filter = [
         FarmerBuyerListFilter,
         FarmerCreatorListFilter,
     ]
+    inlines = [EntiityBuyerAdminInline]
+
+    def default_buyer(self, inst):
+        return inst.buyer
 
 
 class EntityAdmin(BaseAdmin):
@@ -142,12 +163,20 @@ class EntityAdmin(BaseAdmin):
     list_display = ("id", "only_connect", "buyer")
 
 
+class EntityBuyerAdmin(BaseAdmin):
+    """Model representing a company entity."""
+
+    list_display = ("id", "entity", "buyer", "is_default")
+
+
+
 class ExternalServiceAdminForm(forms.ModelForm):
     def clean_service_url(self):
         if "{{refernce_id}}" not in self.cleaned_data["service_url"]:
-            raise forms.ValidationError("The service url should contain a {{refernce_id}} text.")
+            raise forms.ValidationError(
+                "The service url should contain a {{refernce_id}} text."
+            )
         return self.cleaned_data["service_url"]
-
 
 
 class ExternalServiceAdmin(BaseAdmin):
@@ -167,7 +196,9 @@ class FarmerServiceAdmin(BaseAdmin):
     """Model representing a farmer service entity."""
 
     list_display = ("id", "farmer", "service", "refernce_id", "is_active", "updated_on")
-    autocomplete_fields = ['farmer',]
+    autocomplete_fields = [
+        "farmer",
+    ]
     readonly_fields = (
         "created_on",
         "updated_on",
@@ -183,4 +214,4 @@ admin.site.register(base_models.EntityCard, EntityCardAdmin)
 admin.site.register(base_models.Entity, EntityAdmin)
 admin.site.register(farmer_models.ExternalService, ExternalServiceAdmin)
 admin.site.register(farmer_models.FarmerService, FarmerServiceAdmin)
-
+admin.site.register(base_models.EntityBuyer, EntityBuyerAdmin)
