@@ -67,7 +67,10 @@ class Entity(AbstractBaseModel):
 
     @property
     def buyer(self):
-        return EntityBuyer.objects.filter(entity=self, is_default=True).first()
+        entity_buyer = EntityBuyer.objects.filter(entity=self, is_default=True).first()
+        if entity_buyer:
+            return entity_buyer.buyer
+        return None
 
 
 class EntityBuyer(AbstractBaseModel):

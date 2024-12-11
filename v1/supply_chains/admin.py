@@ -191,6 +191,14 @@ class ExternalServiceAdmin(BaseAdmin):
         "updater",
     )
 
+    def save_model(self, request, obj, form, change):
+        icon = obj.icon
+        obj.icon = None
+        super().save_model(request, obj, form, change)
+        if icon:
+            obj.icon = icon
+            obj.save()
+
 
 class FarmerServiceAdmin(BaseAdmin):
     """Model representing a farmer service entity."""
