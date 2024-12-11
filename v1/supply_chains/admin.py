@@ -118,7 +118,14 @@ class CompanyMemberAdmin(BaseAdmin):
         "user",
         "id",
     )
-    search_fields = ["company"]
+    search_fields = [
+        "company__name",
+        "user__email",
+        "user__first_name",
+        "user__last_name",
+        "company__id",
+        "user__id",
+    ]
 
 
 class EntityCardAdmin(BaseAdmin):
@@ -167,7 +174,6 @@ class EntityBuyerAdmin(BaseAdmin):
     """Model representing a company entity."""
 
     list_display = ("id", "entity", "buyer", "is_default")
-
 
 
 class ExternalServiceAdminForm(forms.ModelForm):
