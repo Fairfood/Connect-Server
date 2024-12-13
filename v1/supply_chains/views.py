@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.decorators import action
@@ -8,16 +9,17 @@ from base.authentication import utilities as utils
 from base.exceptions.custom_exceptions import BadRequest
 from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.functions import decode
-from v1.supply_chains.models.base_models import EntityCard
+from v1.supply_chains.models.base_models import EntityBuyer, EntityCard
 from v1.supply_chains.models.company_models import (Company, CompanyMember,
                                                     CompanyProduct)
-from v1.supply_chains.models.farmer_models import Farmer
+from v1.supply_chains.models.farmer_models import ExternalService, Farmer
 from v1.supply_chains.serializers import (AppFarmerSerializer,
                                           CompanyCreateSerializer,
                                           CompanyMemerMiniSerializer,
                                           CompanyMemerSerializer,
                                           CompanyProductSerializer,
                                           CompanySerializer,
+                                          EntityBuyerSerializer,
                                           EntityCardSerializer,
                                           FarmerSerializer,
                                           OpenTransactionSerializer)
@@ -67,6 +69,7 @@ class CompanyViewSet(IDDEcodeScopeViewset):
             return CompanyCreateSerializer
         return super().get_serializer_class()
 
+    @transaction.atomic
     @action(methods=("post",), detail=False, url_path="buyer")
     def buyer_create(self, request):
         """
@@ -80,8 +83,30 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         serializer.is_valid(raise_exception=True)
         company = serializer.save()
         if company and source_company:
-            source_company.buyer = company
-            source_company.save()
+            data = {
+                "entity" : source_company,
+                "buyer" : company
+            }
+            if not EntityBuyer.objects.filter(entity=source_company, is_default=True).exists():
+                data["is_default"] =  True
+            _ = EntityBuyer.objects.create(**data)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @transaction.atomic
+    @action(methods=("post",), detail=False, url_path="map-buyer")
+    def map_buyer(self, request):
+        """
+        Create a new company as buyer
+        """
+        extra_args = {}
+        extra_args['context'] = self.get_serializer_context()
+        serializer = EntityBuyerSerializer(data=request.data, **extra_args)
+        serializer.is_valid(raise_exception=True)
+        entity_buyer_obj = serializer.save()
+        if not EntityBuyer.objects.filter(entity=serializer.validated_data["entity"], is_default=True).exists():
+            entity_buyer_obj.is_default = True
+            entity_buyer_obj.save()
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

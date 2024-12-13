@@ -83,7 +83,7 @@ class EntitySerializer(DynamicModelSerializer):
         return EntityCardSerializer(entity_cards, many=True, read_only=True).data
 
 
-class EntityBuyerSerializer(DynamicModelSerializer):
+class EntityBuyerReadOnlySerializer(DynamicModelSerializer):
     """Serializer for the Entity buyer model."""
 
     id = serializers.CharField(read_only=True, source="buyer.id")
@@ -100,6 +100,28 @@ class EntityBuyerSerializer(DynamicModelSerializer):
         """Fetch all EntityCard instances related to the company."""
         entity_cards = EntityCard.objects.filter(entity=obj.buyer, is_active=True)
         return EntityCardSerializer(entity_cards, many=True, read_only=True).data
+
+
+class EntityBuyerSerializer(DynamicModelSerializer):
+    id = serializers.CharField(read_only=True)
+    is_default = serializers.BooleanField(read_only=True)
+    company = serializers.PrimaryKeyRelatedField(
+        required=False,
+        queryset=Entity.objects.all(), source = "entity"
+    )
+    buyer = serializers.PrimaryKeyRelatedField(
+        required=False,
+        queryset=Entity.objects.all(),
+    )
+
+    class Meta:
+        model = EntityBuyer
+        fields = ("id", "company", "buyer", "is_default",)
+
+    def validate(self, attrs):
+        if EntityBuyer.objects.filter(entity=attrs["entity"], buyer=attrs["buyer"]).exists():
+            raise serializers.ValidationError({"buyer": _("buyer company relation already exist.")})
+        return super().validate(attrs)
 
 
 class CompanyFieldVisibiltySerilizer(DynamicModelSerializer):
@@ -131,7 +153,7 @@ class CompanySerializer(DynamicModelSerializer):
     def get_buyers(self, obj):
         buyers = EntityBuyer.objects.filter(entity=obj).all()
         if buyers:
-            serializer = EntityBuyerSerializer(
+            serializer = EntityBuyerReadOnlySerializer(
                 instance=buyers,
                 many=True
             )
