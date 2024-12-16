@@ -83,13 +83,14 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         serializer.is_valid(raise_exception=True)
         company = serializer.save()
         if company and source_company:
-            data = {
-                "entity" : source_company,
-                "buyer" : company
-            }
-            if not EntityBuyer.objects.filter(entity=source_company, is_default=True).exists():
-                data["is_default"] =  True
-            _ = EntityBuyer.objects.create(**data)
+            if not EntityBuyer.objects.filter(entity=source_company, buyer=company).exists():
+                data = {
+                    "entity" : source_company,
+                    "buyer" : company
+                }
+                if not EntityBuyer.objects.filter(entity=source_company, is_default=True).exists():
+                    data["is_default"] =  True
+                _ = EntityBuyer.objects.create(**data)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
