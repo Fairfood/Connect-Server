@@ -2,14 +2,13 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from oauth2_provider.models import AbstractAccessToken
-from oauth2_provider.models import AbstractApplication
-from oauth2_provider.models import AbstractIDToken
-from oauth2_provider.models import AbstractRefreshToken
-from oauth2_provider.models import redirect_to_uri_allowed
+from oauth2_provider.models import (AbstractAccessToken, AbstractApplication,
+                                    AbstractIDToken, AbstractRefreshToken,
+                                    redirect_to_uri_allowed)
+
+from v1.supply_chains.constants import CompanyMemberType
 
 from ..supply_chains.models.company_models import CompanyMember
-from v1.supply_chains.constants import CompanyMemberType
 
 UserModel = get_user_model()
 
@@ -189,7 +188,7 @@ class ClientServerCompany(models.Model):
         Returns:
             None
         """
-        obj, _ = CompanyMember.objects.get_or_create(
+        obj, created = CompanyMember.objects.get_or_create(
             company=self.company, user=self.client_server.user
         )
         obj.type = CompanyMemberType.ADMIN

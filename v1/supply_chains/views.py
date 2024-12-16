@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import Q
-from rest_framework import generics, status
+from django.utils.translation import gettext_lazy as _
+from rest_framework import generics, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -12,7 +13,7 @@ from utilities.functions import decode
 from v1.supply_chains.models.base_models import EntityBuyer, EntityCard
 from v1.supply_chains.models.company_models import (Company, CompanyMember,
                                                     CompanyProduct)
-from v1.supply_chains.models.farmer_models import ExternalService, Farmer
+from v1.supply_chains.models.farmer_models import Farmer
 from v1.supply_chains.serializers import (AppFarmerSerializer,
                                           CompanyCreateSerializer,
                                           CompanyMemerMiniSerializer,
@@ -65,9 +66,19 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         Returns:
             Serializer: The appropriate serializer class based on the action.
         """
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action in ["create", "update", "partial_update", "buyer_create"]:
             return CompanyCreateSerializer
         return super().get_serializer_class()
+
+    def create(self, request, *args, **kwargs):
+        if "name" not in request.data or not request.data["name"]:
+            raise serializers.ValidationError({"name": _("This field is required.")})
+        company_obj = Company.objects.filter(name=request.data["name"].strip()).first()
+        if company_obj:
+            serializer = CompanySerializer(instance=company_obj)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        return super().create(request, *args, **kwargs)
 
     @transaction.atomic
     @action(methods=("post",), detail=False, url_path="buyer")
@@ -79,9 +90,15 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         source_company = Company.objects.filter(id=source_company_id).first()
         if not source_company:
             source_company = utils.get_current_entity()
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        company = serializer.save()
+        if "name" not in request.data or not request.data["name"]:
+            raise serializers.ValidationError({"name": _("This field is required.")})
+        company = Company.objects.filter(name=request.data["name"].strip()).first()
+        if not company:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            company = serializer.save()
+        else:
+            serializer = CompanySerializer(instance=company)
         if company and source_company:
             if not EntityBuyer.objects.filter(entity=source_company, buyer=company).exists():
                 data = {
@@ -90,7 +107,7 @@ class CompanyViewSet(IDDEcodeScopeViewset):
                 }
                 if not EntityBuyer.objects.filter(entity=source_company, is_default=True).exists():
                     data["is_default"] =  True
-                _ = EntityBuyer.objects.create(**data)
+                eb_obj = EntityBuyer.objects.create(**data)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
