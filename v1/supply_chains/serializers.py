@@ -99,8 +99,8 @@ class EntityBuyerReadOnlySerializer(DynamicModelSerializer):
     def get_entity_card(self, obj):
         """Fetch all EntityCard instances related to the company."""
         if obj.buyer.entity_card:
-            return [EntityCardSerializer(obj.buyer.entity_card, read_only=True).data]
-        return []
+            return EntityCardSerializer(obj.buyer.entity_card, read_only=True).data
+        return None
 
 
 class EntityBuyerSerializer(DynamicModelSerializer):
