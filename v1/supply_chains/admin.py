@@ -174,6 +174,22 @@ class EntityBuyerAdmin(BaseAdmin):
     """Model representing a company entity."""
 
     list_display = ("id", "entity", "buyer", "is_default")
+    autocomplete_fields = [
+        "entity",
+        "buyer",
+    ]
+    readonly_fields = (
+        "created_on",
+        "updated_on",
+        "creator",
+        "updater",
+    )
+    search_fields = [
+        "entity__company__name",
+        "entity__id",
+        "buyer__company__name",
+        "buyer__id"
+    ]
 
 
 class ExternalServiceAdminForm(forms.ModelForm):
