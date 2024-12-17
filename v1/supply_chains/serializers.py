@@ -355,14 +355,17 @@ class FarmerSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         user = utils.get_current_user()
+        buyer = validated_data.pop("buyer", None)
         if not user.is_admin:
-            validated_data["buyer"] = utils.get_current_entity()
+            buyer = utils.get_current_entity()
         submission_data = validated_data.pop("submission", None)
         instance = super().create(validated_data)
         if submission_data:
             submission = self.fields["submission"].create(submission_data)
             instance.submission = submission
         instance.save()
+        if buyer:
+            EntityBuyer.objects.create(entity=instance, buyer=buyer, is_default=True)
         return instance
 
     def to_representation(self, instance):
