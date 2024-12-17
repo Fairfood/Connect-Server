@@ -71,7 +71,7 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         return super().get_serializer_class()
 
     def create(self, request, *args, **kwargs):
-        if "name" not in request.data or not request.data["name"]:
+        if "name" not in request.data or not request.data["name"].strip():
             raise serializers.ValidationError({"name": _("This field is required.")})
         company_obj = Company.objects.filter(name=request.data["name"].strip()).first()
         if company_obj:
@@ -90,7 +90,7 @@ class CompanyViewSet(IDDEcodeScopeViewset):
         source_company = Company.objects.filter(id=source_company_id).first()
         if not source_company:
             source_company = utils.get_current_entity()
-        if "name" not in request.data or not request.data["name"]:
+        if "name" not in request.data or not request.data["name"].strip():
             raise serializers.ValidationError({"name": _("This field is required.")})
         company = Company.objects.filter(name=request.data["name"].strip()).first()
         if not company:
