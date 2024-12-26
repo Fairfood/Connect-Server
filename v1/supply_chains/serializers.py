@@ -103,6 +103,18 @@ class EntityBuyerReadOnlySerializer(DynamicModelSerializer):
         return None
 
 
+class EntityBuyerReadOnlySingleEntityCardSerializer(EntityBuyerReadOnlySerializer):
+    """Serializer for the Entity buyer model."""
+
+    entity_card = serializers.SerializerMethodField()
+
+    def get_entity_card(self, obj):
+        """Fetch all EntityCard instances related to the company."""
+        if obj.buyer.entity_card:
+            return [EntityCardSerializer(obj.buyer.entity_card, read_only=True).data]
+        return []
+
+
 class EntityBuyerSerializer(DynamicModelSerializer):
     id = serializers.CharField(read_only=True)
     is_default = serializers.BooleanField(read_only=True)
@@ -142,6 +154,7 @@ class CompanySerializer(DynamicModelSerializer):
 
     currency = CurrencySerializer(read_only=True)
     buyers = serializers.SerializerMethodField(method_name="get_buyers")
+    buyer = serializers.SerializerMethodField(method_name="get_buyer")
     entity_card = EntityCardSerializer(read_only=True)
     forms = FormSerializer(many=True, read_only=True, exclude_fields=("owner",))
     field_visibilties = CompanyFieldVisibiltySerilizer(many=True, read_only=True)
@@ -160,6 +173,15 @@ class CompanySerializer(DynamicModelSerializer):
             )
             return serializer.data
         return []
+
+    def get_buyer(self, obj):
+        default_buyer = EntityBuyer.objects.filter(entity=obj, is_default=True).first()
+        if default_buyer:
+            serializer = EntityBuyerReadOnlySingleEntityCardSerializer(
+                instance=default_buyer
+            )
+            return serializer.data
+        return None
 
 
 # TODO: Remove this serializer after the migration is complete.
