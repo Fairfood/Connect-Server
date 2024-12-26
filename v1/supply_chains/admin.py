@@ -133,6 +133,10 @@ class EntityCardAdmin(BaseAdmin):
 
     list_display = ("id", "card", "entity", "is_active")
     search_fields = ["id", "card__card_id", "card__display_id"]
+    autocomplete_fields = [
+        "entity",
+        "card",
+    ]
 
 
 class FarmerAdmin(BaseAdmin):
