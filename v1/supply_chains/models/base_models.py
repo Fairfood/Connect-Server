@@ -42,14 +42,6 @@ class Entity(AbstractBaseModel):
         blank=True,
         verbose_name=_("Description"),
     )
-    buyer = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        related_name="%(class)s_supplers",
-        null=True,
-        blank=True,
-        verbose_name=_("Buyer"),
-    )
     entity_card = models.ForeignKey(
         "supply_chains.EntityCard",
         on_delete=models.SET_NULL,
@@ -72,6 +64,32 @@ class Entity(AbstractBaseModel):
             return self.company.name
         elif hasattr(self, "farmer"):
             return self.farmer.name
+
+    @property
+    def buyer(self):
+        entity_buyer = EntityBuyer.objects.filter(entity=self, is_default=True).first()
+        if entity_buyer:
+            return entity_buyer.buyer
+        return None
+
+
+class EntityBuyer(AbstractBaseModel):
+    entity = models.ForeignKey(
+        Entity,
+        related_name="entity_buyers",
+        on_delete=models.CASCADE,
+        verbose_name=_(" Entity"),
+    )
+    buyer = models.ForeignKey(
+        Entity,
+        related_name="entity_suppliers",
+        on_delete=models.CASCADE,
+        verbose_name=_("Buyer"),
+    )
+    is_default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.buyer)
 
 
 class EntityCard(AbstractBaseModel):
