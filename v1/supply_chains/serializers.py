@@ -1,4 +1,5 @@
 
+
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -16,12 +17,12 @@ from v1.catalogs.serializers.products import (ConnectCardSerializer,
                                               PremiumSerializer,
                                               ProductSerializer)
 from v1.forms.serializers import FormSerializer, SubmissionSerializer
-from v1.supply_chains.models.base_models import Entity, EntityCard
+from v1.supply_chains.models.base_models import Entity, EntityBuyer, EntityCard
 from v1.supply_chains.models.company_models import (Company,
                                                     CompanyFieldVisibilty,
                                                     CompanyMember,
                                                     CompanyProduct)
-from v1.supply_chains.models.farmer_models import Farmer
+from v1.supply_chains.models.farmer_models import Farmer, FarmerService
 from v1.supply_chains.validators import (validate_coordinates,
                                          validate_geojson_polygon)
 from v1.transactions.models.payment_models import PaymentTransaction
@@ -82,6 +83,60 @@ class EntitySerializer(DynamicModelSerializer):
         return EntityCardSerializer(entity_cards, many=True, read_only=True).data
 
 
+class EntityBuyerReadOnlySerializer(DynamicModelSerializer):
+    """Serializer for the Entity buyer model."""
+
+    id = serializers.CharField(read_only=True, source="buyer.id")
+    name = serializers.CharField(read_only=True, source="buyer.name")
+    image = serializers.ImageField(read_only=True, source="buyer.image")
+    description = serializers.CharField(read_only=True, source="buyer.description")
+    entity_card = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EntityBuyer
+        fields = ("id", "name", "image", "description", "entity_card", "is_default",)
+
+    def get_entity_card(self, obj):
+        """Fetch all EntityCard instances related to the company."""
+        if obj.buyer.entity_card:
+            return EntityCardSerializer(obj.buyer.entity_card, read_only=True).data
+        return None
+
+
+class EntityBuyerReadOnlySingleEntityCardSerializer(EntityBuyerReadOnlySerializer):
+    """Serializer for the Entity buyer model."""
+
+    entity_card = serializers.SerializerMethodField()
+
+    def get_entity_card(self, obj):
+        """Fetch all EntityCard instances related to the company."""
+        if obj.buyer.entity_card:
+            return [EntityCardSerializer(obj.buyer.entity_card, read_only=True).data]
+        return []
+
+
+class EntityBuyerSerializer(DynamicModelSerializer):
+    id = serializers.CharField(read_only=True)
+    is_default = serializers.BooleanField(read_only=True)
+    company = serializers.PrimaryKeyRelatedField(
+        required=False,
+        queryset=Entity.objects.all(), source = "entity"
+    )
+    buyer = serializers.PrimaryKeyRelatedField(
+        required=False,
+        queryset=Entity.objects.all(),
+    )
+
+    class Meta:
+        model = EntityBuyer
+        fields = ("id", "company", "buyer", "is_default",)
+
+    def validate(self, attrs):
+        if EntityBuyer.objects.filter(entity=attrs["entity"], buyer=attrs["buyer"]).exists():
+            raise serializers.ValidationError({"buyer": _("buyer company relation already exist.")})
+        return super().validate(attrs)
+
+
 class CompanyFieldVisibiltySerilizer(DynamicModelSerializer):
     """Serializer for CompanyFieldVisibilty.
 
@@ -98,10 +153,8 @@ class CompanySerializer(DynamicModelSerializer):
     """Serializer for the Company model."""
 
     currency = CurrencySerializer(read_only=True)
-    buyer = EntitySerializer(
-        read_only=True,
-        fields=("id", "name", "image", "description", "entity_card"),
-    )
+    buyers = serializers.SerializerMethodField(method_name="get_buyers")
+    buyer = serializers.SerializerMethodField(method_name="get_buyer")
     entity_card = EntityCardSerializer(read_only=True)
     forms = FormSerializer(many=True, read_only=True, exclude_fields=("owner",))
     field_visibilties = CompanyFieldVisibiltySerilizer(many=True, read_only=True)
@@ -110,6 +163,25 @@ class CompanySerializer(DynamicModelSerializer):
     class Meta:
         model = Company
         fields = "__all__"
+
+    def get_buyers(self, obj):
+        buyers = EntityBuyer.objects.filter(entity=obj).all()
+        if buyers:
+            serializer = EntityBuyerReadOnlySerializer(
+                instance=buyers,
+                many=True
+            )
+            return serializer.data
+        return []
+
+    def get_buyer(self, obj):
+        default_buyer = EntityBuyer.objects.filter(entity=obj, is_default=True).first()
+        if default_buyer:
+            serializer = EntityBuyerReadOnlySingleEntityCardSerializer(
+                instance=default_buyer
+            )
+            return serializer.data
+        return None
 
 
 # TODO: Remove this serializer after the migration is complete.
@@ -235,6 +307,38 @@ class CompanyProductSerializer(DynamicModelSerializer):
             return super().create(validated_data)
 
 
+class ExternalServiceSerializer(DynamicModelSerializer):
+    id = serializers.CharField(read_only=True, source="service.id")
+    link = serializers.SerializerMethodField(method_name="get_service_link")
+    name = serializers.CharField(read_only=True, source="service.name")
+    description = serializers.CharField(read_only=True, source="service.description")
+    icon = serializers.ImageField(read_only=True, source="service.icon")
+
+    class Meta:
+        model = FarmerService
+        fields = ["id", "name", "description", "icon", "link",]
+
+    def get_service_link(self, obj):
+        refernce_id = obj.refernce_id
+        return obj.service.service_url.replace("{{refernce_id}}", refernce_id)
+
+
+class ExternalServiceSerializer(DynamicModelSerializer):
+    id = serializers.CharField(read_only=True, source="service.id")
+    link = serializers.SerializerMethodField(method_name="get_service_link")
+    name = serializers.CharField(read_only=True, source="service.name")
+    description = serializers.CharField(read_only=True, source="service.description")
+    icon = serializers.ImageField(read_only=True, source="service.icon")
+
+    class Meta:
+        model = FarmerService
+        fields = ["id", "name", "description", "icon", "link",]
+
+    def get_service_link(self, obj):
+        refernce_id = obj.refernce_id
+        return obj.service.service_url.replace("{{refernce_id}}", refernce_id)
+
+
 class FarmerSerializer(DynamicModelSerializer):
     """Serializer for the Farmer model."""
 
@@ -247,10 +351,18 @@ class FarmerSerializer(DynamicModelSerializer):
     province = serializers.CharField(required=True)
     country = serializers.CharField(required=True)
     meta_data = serializers.JSONField(allow_null=True, required=False)
+    linked_services = serializers.SerializerMethodField(method_name="get_linked_services")
 
     class Meta:
         model = Farmer
         fields = "__all__"
+
+    def get_linked_services(self, obj):
+        qs = FarmerService.objects.filter(farmer=obj, is_active=True, service__is_available=True).all()
+        if qs:
+            serializer = ExternalServiceSerializer(instance=qs, many=True)
+            return serializer.data
+        return []
 
     def validate_country(self, value):
         if value not in COUNTRY_LIST:
@@ -266,14 +378,17 @@ class FarmerSerializer(DynamicModelSerializer):
     def create(self, validated_data):
         """Override the default create."""
         user = utils.get_current_user()
+        buyer = validated_data.pop("buyer", None)
         if not user.is_admin:
-            validated_data["buyer"] = utils.get_current_entity()
+            buyer = utils.get_current_entity()
         submission_data = validated_data.pop("submission", None)
         instance = super().create(validated_data)
         if submission_data:
             submission = self.fields["submission"].create(submission_data)
             instance.submission = submission
         instance.save()
+        if buyer:
+            EntityBuyer.objects.create(entity=instance, buyer=buyer, is_default=True)
         return instance
 
     def to_representation(self, instance):

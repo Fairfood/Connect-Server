@@ -40,6 +40,7 @@ class Company(AbstractCompanyModel):
         incharge (ForeignKey): The user who is in charge of the company.
         currency (ForeignKey): The default currency used by the company.
         premiums (ManyToManyField): The premiums associated with the company.
+        theme_info (json): Theme information associated with the company
     """
 
     name = models.CharField(
@@ -78,6 +79,9 @@ class Company(AbstractCompanyModel):
     )
     allow_multiple_login = models.BooleanField(
         default=True, verbose_name=_("Allow Multiple Login")
+    )
+    theme_info = models.JSONField(
+        null=True, blank=True, verbose_name=_("Theme Info")
     )
 
     class Meta:

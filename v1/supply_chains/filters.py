@@ -3,7 +3,7 @@ from django_filters import rest_framework as filters
 
 from base.authentication import utilities as utils
 from utilities.functions import decode, unix_to_datetime
-from v1.supply_chains.models.base_models import EntityCard
+from v1.supply_chains.models.base_models import EntityBuyer, EntityCard
 from v1.supply_chains.models.farmer_models import Farmer
 
 
@@ -49,12 +49,18 @@ class FarmerFilterSet(filters.FilterSet):
             return parent
 
         entity = utils.get_current_entity()
-        return parent.filter(buyer=entity)
+        return parent.filter(
+                id__in=EntityBuyer.objects.filter(
+                    buyer=entity).values_list("entity__id", flat=True)
+                ).distinct("id")
 
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
         if value:
-            return queryset.filter(buyer__only_connect=False)
+            return queryset.filter(
+                id__in=EntityBuyer.objects.filter(
+                    buyer__only_connect=False).values_list("entity__id", flat=True)
+                )
         return queryset
 
     def after_date_time_filter(self, queryset, name, value):

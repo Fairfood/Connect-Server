@@ -50,7 +50,7 @@ class BlacklistMixin:
             exp = self.payload["exp"]
 
             # Ensure outstanding token exists with given jti
-            token, _ = OutstandingToken.objects.get_or_create(
+            token, created = OutstandingToken.objects.get_or_create(
                 jti=jti,
                 defaults={
                     "token": str(self),
