@@ -1,15 +1,13 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from . import constants as from_consts
 from base.drf.serializers import DynamicModelSerializer
 from v1.catalogs.serializers.products import ProductSerializer
-from v1.forms.models import Form
-from v1.forms.models import FormField
-from v1.forms.models import FormFieldConfig
-from v1.forms.models import Submission
-from v1.forms.models import SubmissionValues
+from v1.forms.models import (Form, FormField, FormFieldConfig, Submission,
+                             SubmissionValues)
 from v1.supply_chains.models.company_models import CompanyProduct
+
+from . import constants as from_consts
 
 
 class FormFieldSerializer(DynamicModelSerializer):
@@ -122,7 +120,7 @@ class SubmissionValuesSerializer(DynamicModelSerializer):
         try:
             field = FormField.objects.get(pk=field)
         except FormField.DoesNotExist:
-            field = FormField.objects.get(key=field)
+            field = FormField.objects.get(key=field, form=validated_data["submission"].form)
         validated_data["field"] = field
         return super().create(validated_data)
 
