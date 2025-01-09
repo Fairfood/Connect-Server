@@ -104,9 +104,9 @@ class EntityCardFilterSet(filters.FilterSet):
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
         if value:
-            return queryset.filter(
-                Q(entity__only_connect=False) & Q(entity__buyer__only_connect=False)
-            )
+            queryset = queryset.filter(
+                Q(entity__only_connect=False) & Q(entity__entity_buyers__entity__only_connect=False)
+            ).distinct()
         return queryset
 
     def after_date_time_filter(self, queryset, name, value):

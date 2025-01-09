@@ -1,10 +1,10 @@
-from rest_framework import generics
-
+from base.exceptions.custom_exceptions import BadRequest
 from base.request_handler.response import SuccessResponse
+from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.country_data import COUNTRY_LIST, COUNTRY_WITH_PROVINCE
 
 
-class CountryListView(generics.ListAPIView):
+class CountryListView(IDDEcodeScopeViewset):
     """
     View for listing all countries.
 
@@ -17,11 +17,13 @@ class CountryListView(generics.ListAPIView):
         "India"
     ]
     """
+    resource_types = ["user"]
+    http_method_names = ("get",)
     def list(self, request, *args, **kwargs):
         return SuccessResponse(COUNTRY_LIST)
 
 
-class CountryWithProvincesListView(generics.ListAPIView):
+class CountryWithProvincesListView(IDDEcodeScopeViewset):
     """
     View for listing countries and their provinces.
 
@@ -39,8 +41,17 @@ class CountryWithProvincesListView(generics.ListAPIView):
         }
     ]
     """
+    resource_types = ["user"]
+    http_method_names = ("get",)
+
     def list(self, request, *args, **kwargs):
         countries = []
         for country, provinces in COUNTRY_WITH_PROVINCE.items():
             countries.append({"country": country, "provinces": provinces})
         return SuccessResponse(countries)
+
+    def retrieve(self, request, *args, **kwargs):
+        country = kwargs.get("country_name", None)
+        if country and country in COUNTRY_WITH_PROVINCE:
+            return SuccessResponse(COUNTRY_WITH_PROVINCE[country])
+        raise BadRequest("Invalid country name.")

@@ -19,12 +19,17 @@ urlpatterns += [
     ),
     path(
         "countries-with-provinces/",
-        utility_views.CountryWithProvincesListView.as_view(),
+        utility_views.CountryWithProvincesListView.as_view({'get': 'list'}),
         name="countries_with_provinces",
     ),
     path(
         "countries/",
-        utility_views.CountryListView.as_view(),
+        utility_views.CountryListView.as_view({'get': 'list'}),
         name="countries",
+    ),
+    path(
+        "provinces/<str:country_name>/",
+        utility_views.CountryWithProvincesListView.as_view({'get': 'retrieve'}),
+        name="provinces",
     ),
 ]
