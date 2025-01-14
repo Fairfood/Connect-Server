@@ -105,7 +105,7 @@ class EntityCardFilterSet(filters.FilterSet):
         """Return queryset."""
         if value:
             queryset = queryset.filter(
-                Q(entity__only_connect=False) & Q(entity__entity_buyers__entity__only_connect=False)
+                Q(entity__only_connect=False) & Q(entity__entity_buyers__buyer__only_connect=False)
             ).distinct()
         return queryset
 

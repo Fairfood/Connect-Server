@@ -1,16 +1,16 @@
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import MethodNotAllowed, ValidationError
 from rest_framework.response import Response
 
 from base.request_handler.response import SuccessResponse
 from base.request_handler.views import IDDEcodeScopeViewset
-from v1.transactions.filters import PaymentTransactionFilterSet
-from v1.transactions.filters import ProductTransactionFilterSet
+from v1.transactions.filters import (PaymentTransactionFilterSet,
+                                     ProductTransactionFilterSet)
 from v1.transactions.models.payment_models import PaymentTransaction
 from v1.transactions.models.transaction_models import ProductTransaction
-from v1.transactions.serializers import PaymentTransactionsSerializer
-from v1.transactions.serializers import ProductTransactionSerializer
+from v1.transactions.serializers import (PaymentTransactionsSerializer,
+                                         ProductTransactionSerializer)
 
 # from rest_framework.response import Response
 
@@ -86,6 +86,8 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_200_OK)
 
+    def update(self, request, *args, **kwargs):
+        raise MethodNotAllowed(request.method)
 
 class PaymentTransactionViewSet(IDDEcodeScopeViewset):
     """ViewSet for managing payment transactions.
