@@ -1,0 +1,12 @@
+<!-- Download Incoming Transactions of company from Djadmin -->
+
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+    <div class="download_csv">
+        <a href="{% url 'download_transactions' object.id %}" 
+        class="button">Download Transactions</a>
+    </div>
+    {{ block.super }}  <!-- This includes the default content from the parent template -->
+
+{% endblock %}

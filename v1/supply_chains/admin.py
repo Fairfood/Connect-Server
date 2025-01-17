@@ -108,6 +108,14 @@ class CompanyAdmin(BaseAdmin):
         "entity_card",
     ]
     inlines = [CompanyProductInline, EntiityBuyerAdminInline]
+    change_form_template = "admin/supply_chains/company/download_transactions.html"
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        obj = self.get_object(request, object_id)
+        extra_context = extra_context or {}
+        extra_context['object'] = obj
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context)
 
 
 class CompanyMemberAdmin(BaseAdmin):
