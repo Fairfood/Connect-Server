@@ -1,4 +1,4 @@
-# Contributing to Trace Mobile app
+# Contributing 
 
 We would love for you to contribute to Trace Mobile app and help make it ever better together! :rocket:
 
