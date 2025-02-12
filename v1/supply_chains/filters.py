@@ -82,6 +82,9 @@ class EntityCardFilterSet(filters.FilterSet):
 
     card_id = filters.CharFilter(field_name="card__card_id", lookup_expr="icontains")
     created_after = filters.NumberFilter(
+        method="after_date_time_filter", field_name="created_on"
+    )
+    updated_after = filters.NumberFilter(
         method="after_date_time_filter", field_name="updated_on"
     )
     skip_only_connect = filters.BooleanFilter(method="skip_only_connect_filter")
@@ -89,7 +92,10 @@ class EntityCardFilterSet(filters.FilterSet):
 
     class Meta:
         model = EntityCard
-        fields = ("card_id",)
+        fields = (
+            "card_id", "created_after", "updated_after", "skip_only_connect", 
+            "entity"
+        )
 
     @property
     def qs(self):
@@ -113,7 +119,7 @@ class EntityCardFilterSet(filters.FilterSet):
         """Return queryset."""
         name += "__gt"
         value = unix_to_datetime(value)
-        return queryset.filter(**{name: value})
+        return queryset.filter(**{name: value}).order_by('created_on')
 
     def entity_filter(self, queryset, name, value):
         """Return queryset."""
