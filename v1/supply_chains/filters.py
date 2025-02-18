@@ -4,6 +4,7 @@ from django_filters import rest_framework as filters
 from base.authentication import utilities as utils
 from utilities.functions import decode, unix_to_datetime
 from v1.supply_chains.models.base_models import EntityBuyer, EntityCard
+from v1.supply_chains.models.company_models import Company
 from v1.supply_chains.models.farmer_models import Farmer
 
 
@@ -26,6 +27,7 @@ class FarmerFilterSet(filters.FilterSet):
     first_name = filters.CharFilter(lookup_expr="icontains")
     last_name = filters.CharFilter(lookup_expr="icontains")
     number = filters.CharFilter(lookup_expr="icontains")
+    entity = filters.CharFilter(method="entity_filter")
 
     class Meta:
         model = Farmer
@@ -37,7 +39,8 @@ class FarmerFilterSet(filters.FilterSet):
             "created_after",
             "skip_only_connect",
             "reference_number",
-            "created_after_farmer"
+            "created_after_farmer",
+            "entity"
         )
 
     @property
@@ -72,6 +75,15 @@ class FarmerFilterSet(filters.FilterSet):
     def after_farmer_id_filter(self, queryset, name, value):
         """Return queryset."""
         return queryset.filter(id__gt= value)
+
+    def entity_filter(self, queryset, name, value):
+        """Return queryset."""
+        queryset = queryset.filter(
+            id__in=EntityBuyer.objects.filter(
+                buyer=decode(value)
+            ).values_list("entity__id", flat=True)
+        ).distinct("id")
+        return queryset
 
 
 class EntityCardFilterSet(filters.FilterSet):
@@ -119,11 +131,22 @@ class EntityCardFilterSet(filters.FilterSet):
         """Return queryset."""
         name += "__gt"
         value = unix_to_datetime(value)
-        return queryset.filter(**{name: value}).order_by('created_on')
+        return queryset.filter(**{name: value}).order_by('updated_on')
 
     def entity_filter(self, queryset, name, value):
-        """Return queryset."""
-        queryset = queryset.filter(entity__id=decode(value), is_active=True)
+        """Filter based on entity"""
+        decoded_value = decode(value)
+
+        # Get the entity IDs associated with the decoded value, for both 
+        # Farmer and Company
+        entity_ids = EntityBuyer.objects.filter(
+            Q(buyer=decoded_value) | Q(entity=decoded_value)
+        ).values_list("entity__id", flat=True).distinct()
+
+        # Filter the queryset using the retrieved entity IDs
+        queryset = queryset.filter(
+            Q(entity__id__in=entity_ids) & Q(is_active=True)
+        )
         return queryset
 
 
