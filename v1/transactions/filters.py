@@ -38,21 +38,37 @@ class ProductTransactionFilterSet(filters.FilterSet):
             "skip_only_connect",
             "entity",
         )
+    
+    def get_filter_query(self, filter_type, entity, user):
+        """
+        Returns the appropriate query filter based on filter_type.
+        """
+        filter_map = {
+            'user': (
+                Q(source=entity, creator=user) | 
+                Q(destination=entity, creator=user)
+            ),
+            'all': Q(source=entity) | Q(destination=entity)
+        }
+        return filter_map.get(filter_type, Q())
 
     @property
     def qs(self):
-        """Return queryset."""
-        parent = super().qs
+        """Return filtered queryset."""
+        parent_queryset = super().qs
 
-        # Skip filters for admin
-        user = auth_utils.get_current_user()
-        if user.is_admin:
-            return parent
+        # If the current user is an admin, return the unfiltered queryset
+        current_user = auth_utils.get_current_user()
+        if current_user.is_admin:
+            return parent_queryset
 
         entity = auth_utils.get_current_entity()
-        return parent.filter(
-            Q(source=entity, creator=user) | Q(destination=entity, creator=user)
-        )
+        filter_type = self.request.query_params.get('filter_by', 'user')
+        
+        # Get the appropriate filter and apply it
+        filter_query = self.get_filter_query(filter_type, entity, current_user)
+        return parent_queryset.filter(filter_query)
+
 
     def skip_only_connect_filter(self, queryset, name, value):
         """Return queryset."""
