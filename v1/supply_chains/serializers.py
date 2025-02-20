@@ -345,13 +345,19 @@ class FarmerSerializer(DynamicModelSerializer):
     entity_card = EntityCardSerializer(read_only=True)
     submission = SubmissionSerializer(required=False)
     phone = PhoneNumberField(required=False, allow_blank=True, allow_null=True)
-    plots = serializers.JSONField(source="geo_json", allow_null=True, validators=[validate_geojson_polygon,
-                                     validate_coordinates], required=False)
-
+    plots = serializers.JSONField(
+        source="geo_json", 
+        allow_null=True, 
+        validators=[validate_geojson_polygon, validate_coordinates], 
+        required=False
+    )
     province = serializers.CharField(required=True)
     country = serializers.CharField(required=True)
     meta_data = serializers.JSONField(allow_null=True, required=False)
-    linked_services = serializers.SerializerMethodField(method_name="get_linked_services")
+    linked_services = serializers.SerializerMethodField(
+        method_name="get_linked_services"
+    )
+    buyer = serializers.CharField(source='buyer.id', default=None)
 
     class Meta:
         model = Farmer
@@ -368,6 +374,7 @@ class FarmerSerializer(DynamicModelSerializer):
         if value not in COUNTRY_LIST:
             raise serializers.ValidationError(_("Invalid country."))
         return value
+    
     def validate(self, attrs):
         if "province" in attrs and "country" in attrs:
             if attrs["province"] not in COUNTRY_WITH_PROVINCE[attrs["country"]]:
