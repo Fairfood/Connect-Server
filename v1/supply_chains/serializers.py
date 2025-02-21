@@ -386,6 +386,11 @@ class FarmerSerializer(DynamicModelSerializer):
         """Override the default create."""
         user = utils.get_current_user()
         buyer = validated_data.pop("buyer", None)
+        request = self.context.get("request")
+        sync_from_trace = request.query_params.get("sync_from_trace", False)
+        if sync_from_trace:
+            buyer_id = buyer.get('id')
+            buyer = Entity.objects.get(id=buyer_id)
         if not user.is_admin:
             buyer = utils.get_current_entity()
         submission_data = validated_data.pop("submission", None)
