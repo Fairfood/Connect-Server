@@ -28,6 +28,17 @@ class ProductTransactionViewSet(IDDEcodeScopeViewset):
     resource_types = ["transaction"]
     filterset_class = ProductTransactionFilterSet
 
+    def get_queryset(self):
+        """
+        Override queryset to sync deleted transaction to trace via 
+        reverse sync
+        """
+        reverse_sync = self.request.query_params.get('reverse_sync', False)
+        queryset = ProductTransaction.objects.all()
+        if not reverse_sync:
+            queryset = queryset.filter(is_deleted=False)
+        return queryset
+
     @action(detail=True, methods=["patch"])
     def invoice(self, request, **kwargs):
         """Custom action to upload invoice for a payment transaction.

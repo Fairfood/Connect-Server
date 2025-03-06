@@ -1,10 +1,15 @@
+import csv
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, serializers, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from base.authentication import utilities as utils
 from base.exceptions.custom_exceptions import BadRequest
@@ -253,3 +258,53 @@ class OpenTransactionDetails(generics.ListAPIView):
         if not serializer.is_valid():
             raise BadRequest(serializer.errors)
         return Response(serializer.data)
+
+
+class DownloadIncomingTransactionsView(APIView):
+    """View to download incoming transactions of a company from djadmin"""
+    
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+
+        decoded_id = decode(kwargs.get('id', None))
+        obj = get_object_or_404(Company, pk=decoded_id)
+
+        # Prepare the data for the CSV
+        input_variable = [
+            ['ID', 'Source', 'Destination', 'Invoice Number', 'Date', 
+             'Quality Correction', 'Product', 'Quantity', 'Currency', 
+             'Reference', 'Base Price', 'Total Price', ]
+        ]  # CSV header
+
+        # Add the incoming transactions for this particular object
+        incoming_trans = obj.incoming_transactions.all().values_list(
+            'id', flat=True)
+        transactions = ProductTransaction.objects.filter(
+            id__in=incoming_trans
+        ).values(
+            'id', 'source__company__name', 'destination__company__name', 
+            'invoice_number', 'date', 'quality_correction', 
+            'product__name', 'quantity', 
+            'transaction_payments__currency__name', 'reference', 
+            'base_price'
+        ).annotate(
+            total_price=Sum('transaction_payments__amount')
+        )
+        
+        for transaction in transactions:
+            input_variable.append(list(transaction.values()))
+
+        # Create an HTTP response with CSV mime type
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; \
+            filename="transactions_{obj.pk}.csv"'
+
+        # Write the CSV data to the response
+        writer = csv.writer(response)
+        writer.writerows(input_variable)
+
+        # Return the response which will trigger the download
+        return response
+    
