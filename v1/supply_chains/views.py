@@ -340,6 +340,19 @@ class FarmerConsentAlertView(generics.GenericAPIView):
             raise BadRequest("Invalid Consent", send_to_sentry=False)
         
         return farmer
+    
+    @staticmethod
+    def _get_text_message(farmer, consent):
+        """Formats text message according to consent"""
+        consent_colour = "#28A745" 
+        if consent != FarmerConsentStatus.GRANTED:
+            consent_colour = "#DC3545"  # Red color if consent is not granted
+        
+        data = {
+            "text": f"{farmer.name}- *{farmer.id}*, consent updated!",
+            "attachments": [{"text": consent, "color": consent_colour}]
+        }
+        return data
 
     def get(self, request, *args, **kwargs):
         farmer_id = request.data.get("farmer", None)
@@ -347,11 +360,7 @@ class FarmerConsentAlertView(generics.GenericAPIView):
 
         farmer = self._is_valid_farmer_and_consent(farmer_id, consent)
 
-        data = {
-            "text": (
-                f"{farmer.name}-{farmer.id} consent updated - {consent}"
-            )
-        }
+        data = self._get_text_message(farmer, consent)
         headers = {"Content-Type": "application/json"}
         url = settings.FARMER_CONSENT_WEBHOOK_URL
         
