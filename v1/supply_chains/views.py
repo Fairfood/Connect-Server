@@ -1,4 +1,6 @@
 import csv
+import requests
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
@@ -10,6 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from sentry_sdk import capture_message
 
 from base.authentication import utilities as utils
 from base.exceptions.custom_exceptions import BadRequest
@@ -29,6 +32,7 @@ from v1.supply_chains.serializers import (AppFarmerSerializer,
                                           EntityCardSerializer,
                                           FarmerSerializer,
                                           OpenTransactionSerializer)
+from v1.supply_chains.constants import FarmerConsentStatus
 from v1.transactions.models.transaction_models import ProductTransaction
 
 from .filters import (EntityCardFilterSet, FarmerFilterSet,
@@ -307,4 +311,53 @@ class DownloadIncomingTransactionsView(APIView):
 
         # Return the response which will trigger the download
         return response
-    
+
+
+class FarmerConsentAlertView(generics.GenericAPIView):
+    """
+    API to send alerts to slack when farmer consent is changed through 
+    passbook
+    """
+
+    permission_classes = (AllowAny,)
+
+    @staticmethod
+    def _is_valid_farmer_and_consent(farmer_id, consent):
+        """Checks farmer and consent are valid or not"""
+
+        if not (farmer_id and consent):
+            raise BadRequest(
+                "Farmer ID and Consent are required", 
+                send_to_sentry=False
+            )
+        
+        try:
+            farmer = Farmer.objects.get(id=decode(farmer_id))
+        except:
+            raise BadRequest("Invalid Farmer", send_to_sentry=False)
+        
+        if not consent in FarmerConsentStatus.values:
+            raise BadRequest("Invalid Consent", send_to_sentry=False)
+        
+        return farmer
+
+    def get(self, request, *args, **kwargs):
+        farmer_id = request.data.get("farmer", None)
+        consent = request.data.get("consent")
+
+        farmer = self._is_valid_farmer_and_consent(farmer_id, consent)
+
+        data = {
+            "text": (
+                f"{farmer.name}-{farmer.id} consent updated - {consent}"
+            )
+        }
+        headers = {"Content-Type": "application/json"}
+        url = settings.FARMER_CONSENT_WEBHOOK_URL
+        
+        response = requests.post(url, json=data, headers=headers)
+        if response.status_code != 200:
+            capture_message(
+                f"Farmer Consent Alert Failed-{farmer.id}"
+            )
+        return Response(response.status_code)
