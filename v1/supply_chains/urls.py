@@ -7,7 +7,8 @@ from v1.supply_chains.views import (CompanyMemberView, CompanyMemberViewSet,
                                     EntityCardViewSet, FarmerDetailsAPI,
                                     FarmerViewSet, OpenTransactionAPI,
                                     OpenTransactionDetails, 
-                                    DownloadIncomingTransactionsView)
+                                    DownloadIncomingTransactionsView, 
+                                    FarmerConsentAlertView)
 
 router = routers.DefaultRouter()
 router.register("entity-cards", EntityCardViewSet, basename="entity-cards")
@@ -24,6 +25,7 @@ urlpatterns = [
     path("open/farmer/<pk>/", FarmerDetailsAPI.as_view()),
     path("open/transaction/", OpenTransactionAPI.as_view()),
     path("open/transaction/<pk>/",OpenTransactionDetails.as_view()),
+    path("open/farmer-consent/alert/", FarmerConsentAlertView.as_view()),
     path(
         'admin/company/<slug:id>/download_transactions/', 
         DownloadIncomingTransactionsView.as_view(), 
