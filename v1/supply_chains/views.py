@@ -385,7 +385,7 @@ class FarmerConsentAlertView(generics.GenericAPIView):
         }
         return data
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         farmer_id = request.data.get("farmer", None)
         consent = request.data.get("consent")
 
