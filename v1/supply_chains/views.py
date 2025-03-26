@@ -15,10 +15,10 @@ from rest_framework.views import APIView
 from sentry_sdk import capture_message
 
 from base.authentication import utilities as utils
-from base.exceptions.custom_exceptions import BadRequest
+from base.exceptions.custom_exceptions import BadRequest, Conflict
 from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.functions import decode
-from v1.supply_chains.models.base_models import EntityBuyer, EntityCard
+from v1.supply_chains.models.base_models import EntityBuyer, EntityCard, Entity
 from v1.supply_chains.models.company_models import (Company, CompanyMember,
                                                     CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
@@ -184,6 +184,30 @@ class FarmerDetailsAPI(generics.ListAPIView):
     serializer_class = AppFarmerSerializer
     permission_classes = (AllowAny,)
 
+    def validate_dob(self, entity: Entity):
+        """To validate dob for companies with 'make_farmers_private' enabled"""
+        entities = Company.objects.filter(
+            id__in=EntityBuyer.objects.filter(
+                entity=entity
+            ).values_list("buyer__id", flat=True),
+            make_farmers_private=True
+        ).distinct("id")
+
+        # private farmers need extra check
+        if any(entities):
+            dob = self.request.data.get("dob", None)
+            if not dob:
+                raise BadRequest(
+                    "Date of birth is required", 
+                    send_to_sentry=False
+                )
+
+            if not entity.farmer.date_of_birth:
+                raise Conflict("Date of birth not set", send_to_sentry=False)
+            
+            if entity.farmer.date_of_birth.strftime("%Y-%m-%d") != dob:
+                raise Conflict("Incorrect DOB", send_to_sentry=False)
+
     def get_queryset(self):
         # """To perform function get_queryset."""
         try:
@@ -191,12 +215,19 @@ class FarmerDetailsAPI(generics.ListAPIView):
                 str(self.kwargs["pk"]).upper().lstrip("FF").replace(" ", "")
             )
             entity = EntityCard.objects.filter(
-                card__display_id__iexact=fair_id).order_by('-created_on').first().entity
+                card__display_id__iexact=fair_id
+            ).order_by('-created_on').first().entity
         except Exception:
-            raise BadRequest("Invalid card number")
+            raise BadRequest("Invalid card number", send_to_sentry=False)
+        
         if not Farmer.objects.filter(id=entity.id).exists():
-            raise BadRequest("No farmer associated with this card number.")
-
+            raise BadRequest(
+                "No farmer associated with this card number.", 
+                send_to_sentry=False
+            )
+        
+        self.validate_dob(entity)
+        
         return  Farmer.objects.filter(id=entity.id)
 
 class CompanyMemberView(generics.ListAPIView):
