@@ -426,6 +426,7 @@ AUTH_TYPE_CLASSES = {
     'client_credentials': 'base.authentication.OAuth2Authentication',
 }
 
+TRACE_URL = env.get("TRACE_URL")
 CONNECT_LOGIN_URL = ROOT_URL + "/v1/auth/login/"
 
 CONNECT_AUTHENTICATION_METHOD = {
