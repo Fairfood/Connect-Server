@@ -381,7 +381,17 @@ class FarmerConsentAlertView(generics.GenericAPIView):
         
         data = {
             "text": f"{farmer.name}- *{farmer.id}*, consent updated!",
-            "attachments": [{"text": consent, "color": consent_colour}]
+            "attachments": [
+                {
+                    "text": consent,
+                    "color": consent_colour,
+                    "fields": [
+                        {
+                            "value": f"<{f'{settings.TRACE_URL}/djadmin-ff/supply_chains/farmer/?external_id={farmer.id}'}|Edit Farmer Consent>",
+                        }
+                    ]
+                }
+            ]
         }
         return data
 
