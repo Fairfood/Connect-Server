@@ -388,7 +388,10 @@ class FarmerConsentAlertView(generics.GenericAPIView):
                     "color": consent_colour,
                     "fields": [
                         {
-                            "value": f"<{f'{settings.TRACE_URL}/djadmin-ff/supply_chains/farmer/?external_id={farmer.id}'}|Edit Farmer Consent>",
+                            "value": f"<{f'{settings.TRACE_URL}/djadmin-ff/supply_chains/farmer/?external_id={farmer.id}'}|Edit Farmer Consent - Trace>"
+                        },
+                        {
+                            "value": f"<{f'{settings.ROOT_URL}/admin/supply_chains/farmer/{farmer.id}'}|Edit Farmer Consent - Connect>"
                         }
                     ]
                 }
