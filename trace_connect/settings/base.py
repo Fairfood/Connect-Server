@@ -441,6 +441,8 @@ SSO_ENABLED = env.get("SSO_ENABLED", default="0")
 CONNECT_REQUEST_SECURITY_INFO = {"nonce_required": True, "hmac_algorithm": "HMAC-SHA256"}
 FARMER_CONSENT_WEBHOOK_URL = env.get("FARMER_CONSENT_WEBHOOK_URL")
 
+TOTP_TOKEN = env.get("TOTP_TOKEN")
+
 if SSO_ENABLED == "1":
     CONNECT_AUTHENTICATION_METHOD = {
         "type": "oauth2",
