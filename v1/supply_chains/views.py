@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from sentry_sdk import capture_message
 
 from base.authentication import utilities as utils
+from base.permissions import ValidTOTP
 from base.exceptions.custom_exceptions import BadRequest, Conflict
 from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.functions import decode
@@ -182,7 +183,7 @@ class FarmerDetailsAPI(generics.ListAPIView):
     """API to get app Farmer details."""
 
     serializer_class = AppFarmerSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
 
     def validate_dob(self, entity: Entity):
         """To validate dob for companies with 'make_farmers_private' enabled"""
@@ -249,7 +250,7 @@ class OpenTransactionAPI(generics.ListAPIView):
     """
 
     serializer_class = OpenTransactionSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
     filterset_class = OpenFilterTransactions
 
     def get_queryset(self):
@@ -270,7 +271,7 @@ class OpenTransactionDetails(generics.ListAPIView):
     """View for transaction details."""
 
     serializer_class = OpenTransactionSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
 
 
     def get(self, request, *args, **kwargs):
@@ -350,7 +351,7 @@ class FarmerConsentAlertView(generics.GenericAPIView):
     passbook
     """
 
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
 
     @staticmethod
     def _is_valid_farmer_and_consent(farmer_id, consent):

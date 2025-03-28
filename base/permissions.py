@@ -1,7 +1,10 @@
+import pyotp
 from django.conf import settings
+from django.utils.timezone import activate as activate_timezone
+from django.utils.translation import activate as activate_translation
 from rest_framework import permissions
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
-
+from base.exceptions.custom_exceptions import BadRequest, AuthenticationFailed
 from base.sso.settings import sso_settings
 
 
@@ -68,3 +71,72 @@ class CombinedPermission(permissions.BasePermission):
                 TokenMatchesOASRequirements
 
             return TokenMatchesOASRequirements()
+
+
+class BaseTOTP(permissions.BasePermission):
+    """
+    Base permission class for checking Time-Based One-Time Password (TOTP)
+    authentication.
+
+    This base permission class is used for checking TOTP authentication. It
+    provides a `has_permission` method that checks the validity of the TOTP
+    against the stored secret.
+
+    Attributes:
+    - otp_secret: The TOTP secret. This should be overridden in derived
+        classes.
+
+    Methods:
+    - has_permission(request, view): Checks the TOTP validity.
+
+    Example Usage:
+    ```
+    class MyTOTP(BaseTOTP):
+        # Custom configurations and methods can be added here
+        otp_secret = "xxx"
+    ```
+    """
+
+    otp_secret = None
+
+    def has_permission(self, request, view):
+        """To check totp."""
+        if settings.ENVIRONMENT == "local":
+            return True
+        
+        if not self.otp_secret:
+            raise AuthenticationFailed("Failed OTP.", send_to_sentry=False)
+        
+        current_otp = request.META.get("HTTP_OTP")
+        if not current_otp:
+            raise BadRequest(
+                "Can not find OTP in the request header.", 
+                send_to_sentry=False
+            )
+        
+        timezone_str = request.META.get("HTTP_TIMEZONE", None)
+        language_str = request.META.get("HTTP_LANGUAGE", None)
+        if timezone_str:
+            activate_timezone(timezone_str)
+        if language_str:
+            activate_translation(language_str)
+        
+        view.kwargs["language"] = language_str
+        totp = pyotp.TOTP(self.otp_secret)
+        if totp.verify(current_otp, valid_window=1):
+            return True
+        
+        raise AuthenticationFailed("Invalid OTP.", send_to_sentry=False)
+
+
+class ValidTOTP(BaseTOTP):
+    """
+    Derived permission class for checking TOTP authentication during
+    validation.
+
+    This permission class is used for checking TOTP authentication
+    during validation. It inherits from the BaseTOTP class and sets the
+    otp_secret to the TOTP token specified in the Django settings.
+    """
+
+    otp_secret = settings.TOTP_TOKEN
