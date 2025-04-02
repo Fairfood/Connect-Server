@@ -1,4 +1,6 @@
 import csv
+import requests
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
@@ -10,12 +12,14 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from sentry_sdk import capture_message
 
 from base.authentication import utilities as utils
-from base.exceptions.custom_exceptions import BadRequest
+from base.permissions import ValidTOTP
+from base.exceptions.custom_exceptions import BadRequest, Conflict
 from base.request_handler.views import IDDEcodeScopeViewset
 from utilities.functions import decode
-from v1.supply_chains.models.base_models import EntityBuyer, EntityCard
+from v1.supply_chains.models.base_models import EntityBuyer, EntityCard, Entity
 from v1.supply_chains.models.company_models import (Company, CompanyMember,
                                                     CompanyProduct)
 from v1.supply_chains.models.farmer_models import Farmer
@@ -29,6 +33,7 @@ from v1.supply_chains.serializers import (AppFarmerSerializer,
                                           EntityCardSerializer,
                                           FarmerSerializer,
                                           OpenTransactionSerializer)
+from v1.supply_chains.constants import FarmerConsentStatus
 from v1.transactions.models.transaction_models import ProductTransaction
 
 from .filters import (EntityCardFilterSet, FarmerFilterSet,
@@ -178,7 +183,31 @@ class FarmerDetailsAPI(generics.ListAPIView):
     """API to get app Farmer details."""
 
     serializer_class = AppFarmerSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
+
+    def validate_dob(self, entity: Entity):
+        """To validate dob for companies with 'make_farmers_private' enabled"""
+        entities = Company.objects.filter(
+            id__in=EntityBuyer.objects.filter(
+                entity=entity
+            ).values_list("buyer__id", flat=True),
+            make_farmers_private=True
+        ).distinct("id")
+
+        # private farmers need extra check
+        if any(entities):
+            dob = self.request.data.get("dob", None)
+            if not dob:
+                raise BadRequest(
+                    "Date of birth is required", 
+                    send_to_sentry=False
+                )
+
+            if not entity.farmer.date_of_birth:
+                raise Conflict("Date of birth not set", send_to_sentry=False)
+            
+            if entity.farmer.date_of_birth.strftime("%Y-%m-%d") != dob:
+                raise Conflict("Incorrect DOB", send_to_sentry=False)
 
     def get_queryset(self):
         # """To perform function get_queryset."""
@@ -187,12 +216,19 @@ class FarmerDetailsAPI(generics.ListAPIView):
                 str(self.kwargs["pk"]).upper().lstrip("FF").replace(" ", "")
             )
             entity = EntityCard.objects.filter(
-                card__display_id__iexact=fair_id).order_by('-created_on').first().entity
+                card__display_id__iexact=fair_id
+            ).order_by('-created_on').first().entity
         except Exception:
-            raise BadRequest("Invalid card number")
+            raise BadRequest("Invalid card number", send_to_sentry=False)
+        
         if not Farmer.objects.filter(id=entity.id).exists():
-            raise BadRequest("No farmer associated with this card number.")
-
+            raise BadRequest(
+                "No farmer associated with this card number.", 
+                send_to_sentry=False
+            )
+        
+        self.validate_dob(entity)
+        
         return  Farmer.objects.filter(id=entity.id)
 
 class CompanyMemberView(generics.ListAPIView):
@@ -214,7 +250,7 @@ class OpenTransactionAPI(generics.ListAPIView):
     """
 
     serializer_class = OpenTransactionSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
     filterset_class = OpenFilterTransactions
 
     def get_queryset(self):
@@ -235,7 +271,7 @@ class OpenTransactionDetails(generics.ListAPIView):
     """View for transaction details."""
 
     serializer_class = OpenTransactionSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (ValidTOTP,)
 
 
     def get(self, request, *args, **kwargs):
@@ -307,4 +343,75 @@ class DownloadIncomingTransactionsView(APIView):
 
         # Return the response which will trigger the download
         return response
+
+
+class FarmerConsentAlertView(generics.GenericAPIView):
+    """
+    API to send alerts to slack when farmer consent is changed through 
+    passbook
+    """
+
+    permission_classes = (ValidTOTP,)
+
+    @staticmethod
+    def _is_valid_farmer_and_consent(farmer_id, consent):
+        """Checks farmer and consent are valid or not"""
+
+        if not (farmer_id and consent):
+            raise BadRequest(
+                "Farmer ID and Consent are required", 
+                send_to_sentry=False
+            )
+        
+        try:
+            farmer = Farmer.objects.get(id=decode(farmer_id))
+        except:
+            raise BadRequest("Invalid Farmer", send_to_sentry=False)
+        
+        if not consent in FarmerConsentStatus.values:
+            raise BadRequest("Invalid Consent", send_to_sentry=False)
+        
+        return farmer
     
+    @staticmethod
+    def _get_text_message(farmer, consent):
+        """Formats text message according to consent"""
+        consent_colour = "#28A745" 
+        if consent != FarmerConsentStatus.GRANTED:
+            consent_colour = "#DC3545"  # Red color if consent is not granted
+        
+        data = {
+            "text": f"{farmer.name}- *{farmer.id}*, consent updated!",
+            "attachments": [
+                {
+                    "text": consent,
+                    "color": consent_colour,
+                    "fields": [
+                        {
+                            "value": f"<{f'{settings.TRACE_URL}/djadmin-ff/supply_chains/farmer/?external_id={farmer.id}'}|Edit Farmer Consent - Trace>"
+                        },
+                        {
+                            "value": f"<{f'{settings.ROOT_URL}/admin/supply_chains/farmer/{farmer.id}'}|Edit Farmer Consent - Connect>"
+                        }
+                    ]
+                }
+            ]
+        }
+        return data
+
+    def post(self, request, *args, **kwargs):
+        farmer_id = request.data.get("farmer", None)
+        consent = request.data.get("consent")
+
+        farmer = self._is_valid_farmer_and_consent(farmer_id, consent)
+
+        data = self._get_text_message(farmer, consent)
+        headers = {"Content-Type": "application/json"}
+        url = settings.FARMER_CONSENT_WEBHOOK_URL
+        
+        response = requests.post(url, json=data, headers=headers)
+        if response.status_code != 200:
+            capture_message(
+                f"Farmer Consent Alert Failed-{farmer.id}"
+            )
+        return Response(response.status_code)
