@@ -83,6 +83,7 @@ class Company(AbstractCompanyModel):
     theme_info = models.JSONField(
         null=True, blank=True, verbose_name=_("Theme Info")
     )
+    make_farmers_private = models.BooleanField(default=False)
 
     class Meta:
         """Meta class defines class level configurations."""

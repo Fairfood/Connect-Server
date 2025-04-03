@@ -431,6 +431,7 @@ class AppFarmerSerializer(serializers.ModelSerializer):
             "sub_province",
             "province",
             "country",
+            "consent_status"
         )
 
     def to_representation(self, instance):
