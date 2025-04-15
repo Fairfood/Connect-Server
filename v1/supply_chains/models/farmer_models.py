@@ -109,7 +109,8 @@ class Farmer(AbstractFarmerModel):
                 if payment_transaction.amount:
                     data["premium"] += payment_transaction.amount
         first_transaction = transactions.first()
-        data["currency"] = first_transaction.currency.name if first_transaction else ""
+        data["currency"] = first_transaction.currency.code \
+            if first_transaction else ""
         return data
 
 
