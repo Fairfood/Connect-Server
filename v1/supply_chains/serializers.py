@@ -493,7 +493,7 @@ class OpenTransactionSerializer(serializers.ModelSerializer):
         )
 
     def get_currency(self, instance):
-        return instance.currency.name
+        return instance.currency.code
 
     def get_premium(self, obj):
         premiums = Premium.objects.filter(premium_payments__transaction=obj)
