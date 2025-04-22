@@ -74,8 +74,9 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
     def get_selected_option_details(self, obj):
         """Return selected option details"""
         if not (
-            obj.premium and \
-            obj.premium.calculation_type == PremiumCalculationType.OPTIONS
+            obj.premium and
+            obj.premium.calculation_type == PremiumCalculationType.OPTIONS and
+            obj.selected_option
         ):
             return {}
         option = PremiumOption.objects.get(
