@@ -86,6 +86,15 @@ class Farmer(AbstractFarmerModel):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
+    def save(self, *args, **kwargs):
+        """
+        Override save to prevent saving last name as None when changing 
+        consent through djadmin.
+        """
+        if self.last_name is None:
+            self.last_name = ''
+        super().save(*args, **kwargs)
 
     @property
     def name(self):
