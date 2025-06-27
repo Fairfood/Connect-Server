@@ -4,10 +4,15 @@ from rest_framework import serializers
 from base.authentication import utilities as utils
 from base.drf import fields
 from base.drf.serializers import DynamicModelSerializer
+from utilities.functions import decode
 from v1.catalogs.models.common_models import Currency
+from v1.catalogs.models.product_models import PremiumOption
 from v1.catalogs.serializers.currency import CurrencySerializer
-from v1.catalogs.serializers.products import ConnectCardSerializer
+from v1.catalogs.serializers.products import (
+    ConnectCardSerializer, PremiumOptionSeriazer
+)
 from v1.catalogs.serializers.products import PremiumSerializer
+from v1.catalogs.constants import PremiumCalculationType
 from v1.forms.serializers import SubmissionSerializer
 from v1.transactions import constants
 from v1.transactions.models.payment_models import PaymentTransaction
@@ -25,6 +30,8 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
     currency_details = CurrencySerializer(source="currency", read_only=True)
     type = serializers.SerializerMethodField()
     currency = serializers.CharField(write_only=True, required=False)
+    submissions = SubmissionSerializer(many=True, required=False)
+    selected_option_details = serializers.SerializerMethodField()
 
     class Meta:
         """Meta class."""
@@ -39,13 +46,17 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
         resolving the currency object based on the provided input.
         """
         curency = validated_data.pop("currency", None)
+        submissions = validated_data.pop("submissions", [])
         if curency:
             try:
                 curency = Currency.objects.get(id=curency)
             except Currency.DoesNotExist:
                 curency = Currency.objects.get(code=curency)
             validated_data["currency"] = curency
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        submission_objs = self.fields["submissions"].create(submissions)
+        instance.submissions.add(*submission_objs)
+        return instance
 
     def get_type(self, obj):
         """Get method for the "type" field.
@@ -59,6 +70,20 @@ class PaymentTransactionsSerializer(DynamicModelSerializer):
             if obj.source.id == entity.id
             else constants.INCOMING
         )
+    
+    def get_selected_option_details(self, obj):
+        """Return selected option details"""
+        if not (
+            obj.premium and
+            obj.premium.calculation_type == PremiumCalculationType.OPTIONS and
+            obj.selected_option
+        ):
+            return {}
+        option = PremiumOption.objects.get(
+            id=decode(obj.selected_option)
+        )
+        data = PremiumOptionSeriazer(option).data
+        return data
 
 
 class ProductTransactionSerializer(DynamicModelSerializer):
@@ -78,6 +103,7 @@ class ProductTransactionSerializer(DynamicModelSerializer):
             "amount",
             "payment_type",
             "premium_details",
+            "selected_option_details"
         ),
         required=False,
     )

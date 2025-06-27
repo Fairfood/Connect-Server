@@ -40,6 +40,7 @@ class Company(AbstractCompanyModel):
         incharge (ForeignKey): The user who is in charge of the company.
         currency (ForeignKey): The default currency used by the company.
         premiums (ManyToManyField): The premiums associated with the company.
+        theme_info (json): Theme information associated with the company
     """
 
     name = models.CharField(
@@ -79,6 +80,10 @@ class Company(AbstractCompanyModel):
     allow_multiple_login = models.BooleanField(
         default=True, verbose_name=_("Allow Multiple Login")
     )
+    theme_info = models.JSONField(
+        null=True, blank=True, verbose_name=_("Theme Info")
+    )
+    make_farmers_private = models.BooleanField(default=False)
 
     class Meta:
         """Meta class defines class level configurations."""
@@ -266,7 +271,7 @@ class CompanyProduct(abstarct_models.AbstractBaseModel):
         """Check if the form is valid."""
         if self.forms.exists():
             for form in self.forms.all():
-                if form != form_consts.FormType.PRODUCT:
+                if form.form_type != form_consts.FormType.PRODUCT:
                     raise ValueError(
                         _("Invalid form type. Not a product form.")
                     )

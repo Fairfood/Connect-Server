@@ -68,6 +68,11 @@ class PaymentTransaction(BaseTransaction):
         null=True,
         blank=True,
     )
+    comment = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("Comment"),
+    )
 
     def save(self, **kwargs):
         """save() override to pre and post save functions."""

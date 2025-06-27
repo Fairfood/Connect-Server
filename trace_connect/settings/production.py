@@ -4,9 +4,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa
-from .base import DEPLOYMENT
-from .base import env
-from .base import REST_FRAMEWORK
+from .base import DEPLOYMENT, REST_FRAMEWORK, env
 
 ENVIRONMENT = "production"
 DEBUG = False
@@ -17,7 +15,16 @@ ALLOWED_HOSTS = [
 
 CORS_ORIGIN_WHITELIST = ("https://v2.api.fairfood.org",)
 
-REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "5/min"
+CORS_ORIGIN_WHITELIST = [
+    "https://v2.api.fairfood.org",
+    "https://id.fairfood.org",
+]
+
+CORS_ALLOW_HEADERS += [
+    "Otp"
+]
+
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "50/min"
 
 HEDERA_NETWORK = 3  # For Mainnet
 

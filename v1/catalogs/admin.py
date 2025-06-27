@@ -31,10 +31,12 @@ class ConnectCardAdmin(BaseAdmin):
     """ConnectCard admin class."""
 
     list_display = (
-        "display_id",
         "id",
+        "display_id",
+        "card_id",
+        "is_active"
     )
-    search_fields = ["name"]
+    search_fields = ["display_id", "display_id"]
 
 
 class PremiumOptionTabularInline(admin.TabularInline):
@@ -45,6 +47,13 @@ class PremiumOptionTabularInline(admin.TabularInline):
     """
 
     model = product_models.PremiumOption
+    extra = 0
+
+
+class PremiumRangeTabularInline(admin.TabularInline):
+    """A tabular inline admin class for the PremiumRange model."""
+
+    model = product_models.PremiumRange
     extra = 0
 
 
@@ -59,9 +68,7 @@ class PremiumAdmin(BaseAdmin):
         "owner",
         "id",
     )
-    inlines = [
-        PremiumOptionTabularInline,
-    ]
+    inlines = [PremiumOptionTabularInline, PremiumRangeTabularInline]
     search_fields = ["name", "owner"]
 
 

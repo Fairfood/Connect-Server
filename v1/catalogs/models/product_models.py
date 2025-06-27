@@ -55,8 +55,9 @@ class ConnectCard(AbstractBaseModel):
         max_length=100, null=True, blank=True, verbose_name=_("Display ID")
     )
     card_id = models.CharField(
-        max_length=100, unique=True, verbose_name=_("Card ID")
+        max_length=100, null=True, blank=True, verbose_name=_("Card ID")
     )
+    is_active = models.BooleanField(default=True, verbose_name=_("Is Active"))
 
     def __str__(self):
         """Function to return value in django admin."""
@@ -92,6 +93,9 @@ class Premium(AbstractBaseModel):
         verbose_name=_("Premium Category"),
     )
     name = models.CharField(max_length=100, verbose_name=_("Premium Name"))
+    label = models.CharField(
+        max_length=100, null=True, blank=True, verbose_name=_("Label")
+    )
     owner = models.ForeignKey(
         "supply_chains.Company",
         on_delete=models.CASCADE,
@@ -154,3 +158,30 @@ class PremiumOption(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.premium.name} : {self.name} : {self.amount}"
+
+
+class PremiumRange(AbstractBaseModel):
+    """Represents a premium range for a project's premium.
+
+    Attributes:
+        premium (ForeignKey): The project premium associated with the range.
+        range_from (float): The range from value.
+        range_to (float): The range to value.
+        amount (float): The amount for the premium range.
+    """
+
+    premium = models.ForeignKey(
+        Premium,
+        on_delete=models.CASCADE,
+        related_name="ranges",
+        verbose_name=_("Premium"),
+    )
+    range_from = models.FloatField(verbose_name=_("Range From"))
+    range_to = models.FloatField(verbose_name=_("Range To"))
+    amount = models.FloatField(verbose_name=_("Amount"))
+
+    def __str__(self):
+        return (
+            f"{self.premium.name} : {self.range_from}"
+            f" - {self.range_to} : {self.amount}"
+        )

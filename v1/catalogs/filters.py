@@ -1,10 +1,11 @@
 """Filters used in the catalogs api."""
 from django_filters import rest_framework as filters
 
-from .models import product_models
 from base.authentication import utilities as utils
 from utilities.functions import unix_to_datetime
 from v1.catalogs.models import common_models as catalog_models
+
+from .models import product_models
 
 
 class CurrencyFilterSet(filters.FilterSet):
@@ -35,6 +36,7 @@ class ProductFilterSet(filters.FilterSet):
     updated_after = filters.NumberFilter(
         method="updated_after_filter", field_name="updated_on"
     )
+    name = filters.CharFilter(field_name="name", lookup_expr="icontains")
 
     class Meta:
         """Meta Info."""
@@ -65,12 +67,12 @@ class PremiumFilterSet(filters.FilterSet):
     updated_after = filters.NumberFilter(
         method="updated_after_filter", field_name="updated_on"
     )
-
+    name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     class Meta:
         """Meta Info."""
 
         model = product_models.Premium
-        fields = ("name",)
+        fields = ("name", "updated_after",)
 
     @property
     def qs(self):

@@ -1,10 +1,7 @@
 from datetime import timedelta
 
 from .base import *  # noqa
-from .base import env
-from .base import REST_FRAMEWORK
-from .base import SIMPLE_JWT
-
+from .base import REST_FRAMEWORK, SIMPLE_JWT, env
 
 ENVIRONMENT = "staging"
 DEBUG = True
@@ -13,12 +10,19 @@ ALLOWED_HOSTS = [
     "v2.staging.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://v2.staging.api.fairfood.org",)
+CORS_ORIGIN_WHITELIST = [
+    "https://v2.staging.api.fairfood.org",
+    "https://id-stage.fairfood.org",
+]
+CORS_ALLOW_HEADERS += [
+    "Otp"
+]
+
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
 
 SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(minutes=5)
-SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(days=7)
+SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(minutes=10)
 
 # Media file settings for S3
 

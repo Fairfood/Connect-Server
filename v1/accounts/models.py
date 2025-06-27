@@ -455,6 +455,12 @@ class UserDevice(AbstractBaseModel):
         blank=True,
         null=True,
     )
+    version = models.CharField(
+        max_length=255,
+        verbose_name=_("Device Version"),
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         """Meta data."""
