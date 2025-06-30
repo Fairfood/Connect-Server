@@ -38,7 +38,7 @@ CORS_ALLOW_CREDENTIALS = True
 DEBUG = True
 
 INSTALLED_APPS += [
-    "drf_yasg",
+    # "drf_yasg",
 ]
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "500/min"
