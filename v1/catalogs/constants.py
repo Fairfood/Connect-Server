@@ -55,8 +55,10 @@ class PremiumCalculationType(models.TextChoices):
     - NORMAL: Represents a normal calculation type with a value of 'NOR'.
     - MANUAL: Represents a manual calculation type with a value of 'MAN
     - OPTIONS: Represents an options calculation type with a value of 'OPT'.
+    - RANGE: Represents a range calculation type with a value of 'RAN'.
     """
 
     NORMAL = "NORMAL", _("Normal")
     MANUAL = "MANUAL", _("Manual")
     OPTIONS = "OPTIONS", _("Options")
+    RANGE = "RANGE", _("Range")
