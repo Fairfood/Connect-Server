@@ -7,17 +7,31 @@ from .base import *  # noqa
 from .base import DEPLOYMENT, REST_FRAMEWORK, env
 
 ENVIRONMENT = "production"
-DEBUG = False
+DEBUG = True
 
+ALLOWED_HOSTS_ENV = env.get("ALLOWED_HOSTS", "v2.api.fairfood.org").strip('"').strip("'").split(",")
 ALLOWED_HOSTS = [
-    "v2.api.fairfood.org",
+    # "v2.api.fairfood.org",
+    # "localhost"
+    # "http://localhost",
 ]
+ALLOWED_HOSTS.extend([host.strip() for host in ALLOWED_HOSTS_ENV if host.strip()])
 
-CORS_ORIGIN_WHITELIST = ("https://v2.api.fairfood.org",)
+CSRF_TRUSTED_ORIGINS_ENV = env.get("CSRF_TRUSTED_ORIGINS", "https://v2.api.fairfood.org").strip('"').strip("'").split(",")
+CSRF_TRUSTED_ORIGINS = [
+    # "http://localhost",
+    # "http://localhost:8000",
+    # "http://127.0.0.1:8000",
+]
+CSRF_TRUSTED_ORIGINS.extend([
+    origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV if origin.strip()
+])
 
 CORS_ORIGIN_WHITELIST = [
     "https://v2.api.fairfood.org",
     "https://id.fairfood.org",
+    "http://localhost:8000",
+    "http://localhost",
 ]
 
 CORS_ALLOW_HEADERS += [
