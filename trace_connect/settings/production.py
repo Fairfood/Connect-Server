@@ -11,7 +11,7 @@ DEBUG = True
 
 ALLOWED_HOSTS_ENV = env.get("ALLOWED_HOSTS", "v2.api.fairfood.org").strip('"').strip("'").split(",")
 ALLOWED_HOSTS = [
-    # "v2.api.fairfood.org",
+    "v2.api.fairfood.org",
     # "localhost"
     # "http://localhost",
 ]
@@ -19,6 +19,7 @@ ALLOWED_HOSTS.extend([host.strip() for host in ALLOWED_HOSTS_ENV if host.strip()
 
 CSRF_TRUSTED_ORIGINS_ENV = env.get("CSRF_TRUSTED_ORIGINS", "https://v2.api.fairfood.org").strip('"').strip("'").split(",")
 CSRF_TRUSTED_ORIGINS = [
+    "https://v2.api.fairfood.org",
     # "http://localhost",
     # "http://localhost:8000",
     # "http://127.0.0.1:8000",
