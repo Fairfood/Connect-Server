@@ -47,14 +47,14 @@ urlpatterns = [
         base_views.Constants.as_view(),
         name="constants",
     ),
-    path("auth/", include("v1.apiauth.urls")),
-    path("accounts/", include("v1.accounts.urls")),
-    path("notifications/", include("v1.notifications.urls")),
-    path("supply-chains/", include("v1.supply_chains.urls")),
-    path("catalogs/", include("v1.catalogs.urls")),
-    path("transactions/", include("v1.transactions.urls")),
-    path("forms/", include("v1.forms.urls")),
-    path("oauth/", include("v1.oauth.urls")),
+    path("connect/v1/auth/", include("v1.apiauth.urls")),
+    path("connect/v1/accounts/", include("v1.accounts.urls")),
+    path("connect/v1/notifications/", include("v1.notifications.urls")),
+    path("connect/v1/supply-chains/", include("v1.supply_chains.urls")),
+    path("connect/v1/catalogs/", include("v1.catalogs.urls")),
+    path("connect/v1/transactions/", include("v1.transactions.urls")),
+    path("connect/v1/forms/", include("v1.forms.urls")),
+    path("connect/v1/oauth/", include("v1.oauth.urls")),
 ]
 
 if settings.DEBUG and settings.ENVIRONMENT in ["development", "local"]:
