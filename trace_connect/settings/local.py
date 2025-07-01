@@ -9,7 +9,7 @@ from .base import timedelta
 
 DEBUG = True
 
-ALLOWED_HOSTS += ["0.0.0.0", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS += ["0.0.0.0", "localhost", "127.0.0.1", "django"]
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000"]
 INSTALLED_APPS += [
     # "drf_yasg",

@@ -51,4 +51,4 @@ RUN chmod +x /usr/src/app/docker/entrypoint.sh
 
 # run entrypoint.sh
 #RUN ["chmod", "+x", "/usr/src/app/entrypoint.sh"]
-# ENTRYPOINT ["/usr/src/app/docker/entrypoint.sh"]
+ENTRYPOINT ["/usr/src/app/docker/entrypoint.sh"]
