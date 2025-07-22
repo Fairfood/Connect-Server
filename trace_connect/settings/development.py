@@ -1,13 +1,17 @@
 from datetime import timedelta
 
 from .base import *  # noqa
-from .base import INSTALLED_APPS, REST_FRAMEWORK, SIMPLE_JWT, env
+from .base import INSTALLED_APPS, REST_FRAMEWORK, SIMPLE_JWT, env, CSRF_TRUSTED_ORIGINS
 
 ENVIRONMENT = "development"
 DEBUG = True
 
-ALLOWED_HOSTS = [
+ALLOWED_HOSTS += [
     "v2.dev.api.fairfood.org",
+]
+
+CSRF_TRUSTED_ORIGINS += [
+    "https://v2.api.fairfood.org",
 ]
 
 CORS_ORIGIN_WHITELIST = [
