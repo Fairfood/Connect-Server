@@ -59,3 +59,5 @@ pytype==2023.10.5
 django-otp==1.5.4
 qrcode==8.0
 pyotp==2.9.0
+
+whitenoise==6.9.0

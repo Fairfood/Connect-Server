@@ -4,7 +4,9 @@
 
 {% block content %}
     <div class="download_csv">
-        <a href="{% url 'download_transactions' object.id %}" 
+        {% if object.id %}
+            <a href="{% url 'download_transactions' object.id %}" 
+        {% endif %}
         class="button">Download Transactions</a>
     </div>
     {{ block.super }}  <!-- This includes the default content from the parent template -->
