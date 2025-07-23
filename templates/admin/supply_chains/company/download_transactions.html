@@ -4,10 +4,10 @@
 
 {% block content %}
     <div class="download_csv">
-        {% if object.id %}
+        {% if company.id %}
             <a href="{% url 'download_transactions' object.id %}" 
+            class="button">Download Transactions</a>
         {% endif %}
-        class="button">Download Transactions</a>
     </div>
     {{ block.super }}  <!-- This includes the default content from the parent template -->
 
