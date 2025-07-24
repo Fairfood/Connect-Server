@@ -4,20 +4,24 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa
-from .base import DEPLOYMENT, REST_FRAMEWORK, env
+from .base import DEPLOYMENT, REST_FRAMEWORK, env, CSRF_TRUSTED_ORIGINS
 
 ENVIRONMENT = "production"
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [
+ALLOWED_HOSTS += [
     "v2.api.fairfood.org",
 ]
 
-CORS_ORIGIN_WHITELIST = ("https://v2.api.fairfood.org",)
+CSRF_TRUSTED_ORIGINS += [
+    "https://v2.api.fairfood.org",
+]
 
 CORS_ORIGIN_WHITELIST = [
     "https://v2.api.fairfood.org",
     "https://id.fairfood.org",
+    "http://localhost:8000",
+    "http://localhost",
 ]
 
 CORS_ALLOW_HEADERS += [

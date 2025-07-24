@@ -41,12 +41,14 @@ SECRET_KEY = env.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+ALLOWED_HOSTS_ENV = env.get("ALLOWED_HOSTS", "v2.api.fairfood.org").strip(
+    '"').strip("'").split(",")
 ALLOWED_HOSTS = [
     ROOT_URL,
     "localhost",
     "127.0.0.1",
-]
-
+    "django",
+] + [host.strip() for host in ALLOWED_HOSTS_ENV if host.strip()]
 
 # Application definition
 
@@ -90,6 +92,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # CORS header middlewares
     "corsheaders.middleware.CorsMiddleware",
@@ -478,3 +481,18 @@ if SSO_ENABLED == "1":
 
     AUTH_TYPE_CLASSES['external_auth'] = 'base.sso.authentication.SSOJWTAuthentication'
     VALIDATE_HMAC_SIGNATURE = False
+
+CSRF_TRUSTED_ORIGINS_ENV = env.get(
+    "CSRF_TRUSTED_ORIGINS", "https://v2.api.fairfood.org").strip('"').strip("'").split(",")
+CSRF_TRUSTED_ORIGINS = [
+    "https://v2.api.fairfood.org",
+    # "http://localhost:8000",
+    # "http://127.0.0.1:8000",
+] + [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV if origin.strip()]
+
+STORAGES = {
+    # ...
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
