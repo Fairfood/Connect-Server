@@ -4,7 +4,6 @@ from .base import *  # noqa
 from .base import INSTALLED_APPS, REST_FRAMEWORK, SIMPLE_JWT, env, CSRF_TRUSTED_ORIGINS
 
 ENVIRONMENT = "development"
-DEBUG = True
 
 ALLOWED_HOSTS += [
     "v2.dev.api.fairfood.org",
