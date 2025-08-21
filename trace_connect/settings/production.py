@@ -7,7 +7,6 @@ from .base import *  # noqa
 from .base import DEPLOYMENT, REST_FRAMEWORK, env, CSRF_TRUSTED_ORIGINS
 
 ENVIRONMENT = "production"
-DEBUG = True
 
 ALLOWED_HOSTS += [
     "v2.api.fairfood.org",

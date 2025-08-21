@@ -4,7 +4,6 @@ from .base import *  # noqa
 from .base import REST_FRAMEWORK, SIMPLE_JWT, env
 
 ENVIRONMENT = "staging"
-DEBUG = True
 
 ALLOWED_HOSTS = [
     "v2.staging.api.fairfood.org",

@@ -39,7 +39,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = env.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = str(env.get("DEBUG", default=True)).lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS_ENV = env.get("ALLOWED_HOSTS", "v2.api.fairfood.org").strip(
     '"').strip("'").split(",")
