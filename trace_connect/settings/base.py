@@ -496,3 +496,7 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# When behind a reverse proxy that terminates SSL, trust X-Forwarded-Proto
+# so pagination "next" links and build_absolute_uri() use https.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
